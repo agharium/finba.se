@@ -1,58 +1,115 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# finba.se
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A flexible personal finance platform built for people who outgrew rigid finance apps.
 
-## About Laravel
+## Why?
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+I’ve tried many finance apps over the years, but they always felt limiting.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Some were too rigid.
+Some didn’t let me organize data the way I wanted.
+Others completely ignored an important dimension: people.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+I wanted to track:
 
-## Learning Laravel
+- Categories and subcategories
+- Who owes me
+- Who I owe
+- Purchases linked to people
+- Shared household finances
+- Recurring and installment transactions
+- Financial organization that adapts to *my* workflow
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+So I built my own.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+fun fact: the first version of this idea was built in Xamarin back in 2019 — and I actually used it for years before deciding to rebuild it properly.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## Current stack
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Backend:
+- PHP 8+
+- Laravel
+- Filament PHP
 
-```bash
-composer require laravel/boost --dev
+Database:
+- PostgreSQL (Supabase)
 
-php artisan boost:install
-```
+Mobile strategy:
+- Web-first
+- PWA and/or Capacitor (TBD)
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## Core principles
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+finba.se is built around a few ideas:
 
-## Code of Conduct
+- Flexibility over rigid workflows
+- Simple UX, powerful organization
+- Productive, pragmatic engineering
+- Build in public
+- Open source by default
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## Planned features
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Financial organization
+- [x] Categories
+- [x] Subcategories
+- [x] People tracking
+- [x] Transaction management
+- [ ] Recurring transactions
+- [ ] Installment transactions
+- [ ] Transfers between accounts
+- [ ] Attachments / receipts
 
-## License
+### Authentication
+- [x] Email/password
+- [x] Google OAuth
+- [ ] Multi-user collaboration
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Product
+- [ ] Shared household mode
+- [ ] Dashboard / analytics
+- [ ] Budgeting
+- [ ] Notifications
+- [ ] Mobile app experience
+
+---
+
+## Why PHP?
+
+Because building matters more than hype.
+
+finba is intentionally built with a stack that optimizes delivery speed, maintainability, and developer experience.
+
+---
+
+## Open source
+
+Licensed under the GNU AGPL v3.
+
+This means:
+- you can use it
+- modify it
+- self-host it
+
+But if you modify it and offer it as a networked service, your changes must remain open as well.
+
+---
+
+## Build in public
+
+I’m documenting the journey publicly on LinkedIn.
+
+Follow along:
+[https://www.linkedin.com/in/jose-paulo-oliveira-filho/]
+
+---
+
+## Status
+
+🚧 Active development

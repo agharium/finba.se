@@ -106,7 +106,7 @@ But if you modify it and offer it as a networked service, your changes must rema
 I’m documenting the journey publicly on LinkedIn.
 
 Follow along:
-[https://www.linkedin.com/in/jose-paulo-oliveira-filho/]
+https://www.linkedin.com/in/jose-paulo-oliveira-filho/
 
 ---
 

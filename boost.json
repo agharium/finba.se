@@ -1,0 +1,11 @@
+{
+    "agents": [
+        "claude_code"
+    ],
+    "skills": [
+        "laravel-best-practices",
+        "socialite-development",
+        "pest-testing",
+        "tailwindcss-development"
+    ]
+}

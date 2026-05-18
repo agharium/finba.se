@@ -11,6 +11,7 @@
         "laravel/framework": "^13.0",
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
+        "marcelweidum/filament-expiration-notice": "^1.0",
         "openplain/filament-shadcn-theme": "^1.1"
     },
     "require-dev": {

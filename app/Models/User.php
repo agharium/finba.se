@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'username', 'password', 'avatar', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'username', 'password', 'avatar', 'is_advanced', 'is_tither', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasAvatar
 {
@@ -25,6 +25,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_advanced' => 'boolean',
+            'is_tither' => 'boolean',
         ];
     }
 

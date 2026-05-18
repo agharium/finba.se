@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Models\Person;
+
 #[Fillable(['name', 'types', 'user_id', 'parent_id'])]
 class Category extends Model
 {
@@ -41,6 +43,11 @@ class Category extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function people(): BelongsToMany
+    {
+        return $this->belongsToMany(Person::class, 'category_person')->withPivot('user_id');
     }
 
     public function descendantsIds(): array

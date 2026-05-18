@@ -11,15 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('people', function (Blueprint $table) {
+        Schema::create('loans', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            
-            $table->string('name');
-            $table->jsonb('types')->index();
-            $table->uuid('user_id')->index();
+        
+            $table->string('description')->nullable();
+            $table->decimal('total_amount', 12, 2);
+            $table->string('status')->default('OPEN')->index();
+            $table->string('type')->index(); // INCOME | EXPENSE
+
+            $table->uuid('user_id');
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-            
+        
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -28,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('loans');
     }
 };

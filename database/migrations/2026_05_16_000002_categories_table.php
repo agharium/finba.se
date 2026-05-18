@@ -26,8 +26,8 @@ return new class extends Migration
             $table->uuid('parent_id')->nullable()->index();
     
             $table->timestamps();
+            $table->softDeletes();
     
-            $table->index(['user_id', 'type']);
             $table->unique(['user_id', 'name']);
         });
         

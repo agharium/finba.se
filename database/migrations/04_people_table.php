@@ -16,6 +16,11 @@ return new class extends Migration
             
             $table->string('name');
             $table->jsonb('types');
+
+            $table->date('birth_date')->nullable()->after('types');
+            $table->string('email')->nullable()->after('birth_date');
+            $table->string('phone')->nullable()->after('email');
+
             $table->uuid('user_id')->index();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             

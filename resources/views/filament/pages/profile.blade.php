@@ -1,4 +1,18 @@
 <x-filament-panels::page>
+    @once
+        <style>
+            @media (max-width: 640px) {
+                .finba-mobile-email-spacing {
+                    margin-bottom: 0.35rem;
+                }
+            }
+
+            .finba-mobile-submit-spacing {
+                margin-top: 1rem;
+            }
+        </style>
+    @endonce
+
     <div class="mx-auto w-full max-w-3xl">
         <x-filament::section>
             <x-slot name="heading">
@@ -13,7 +27,7 @@
                 {{ $this->form }}
 
                 <div class="flex justify-end">
-                    <x-filament::button type="submit">
+                    <x-filament::button type="submit" class="finba-mobile-submit-spacing">
                         Salvar alterações
                     </x-filament::button>
                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Purpose;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use App\Models\Person;
 
-#[Fillable(['name', 'types', 'user_id', 'parent_id'])]
+#[Fillable(['name', 'types', 'purpose', 'user_id', 'parent_id'])]
 class Category extends Model
 {
     use HasUuids;
@@ -22,6 +23,7 @@ class Category extends Model
     {
         return [
             'types' => 'array',
+            'purpose' => Purpose::class,
         ];
     }
 

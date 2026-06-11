@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\People;
 
 use App\Filament\Resources\People\Pages\ManagePeople;
+use App\Models\Category;
 use App\Models\Person;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -20,6 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
 
 class PersonResource extends Resource
 {
@@ -35,6 +37,11 @@ class PersonResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return (bool) auth()->user()?->is_advanced;
+    }
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -49,18 +56,44 @@ class PersonResource extends Resource
                     ->label('Nome')
                     ->required()
                     ->maxLength(255),
-
+    
                 CheckboxList::make('types')
-                    ->label('Tipo')
+                    ->label('Tipos')
                     ->options([
                         'INCOME' => 'Receita',
                         'EXPENSE' => 'Despesa',
                     ])
                     ->columns(2)
                     ->required()
-                    ->minItems(1),
-
-                
+                    ->minItems(1)
+                    ->live()
+                    ->afterStateUpdated(fn (callable $set) => $set('categories', [])),
+    
+                Select::make('categories')
+                    ->label('Categorias vinculadas')
+                    ->helperText('Quando esta pessoa for selecionada em uma transação, estas categorias serão disponibilizadas.')
+                    ->relationship(
+                        name: 'categories',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (Builder $query, callable $get) => $query
+                            ->where('categories.user_id', Auth::id())
+                            ->whereNull('categories.parent_id')
+                            ->when(
+                                filled($get('types')),
+                                fn (Builder $query) => $query->where(function (Builder $query) use ($get) {
+                                    foreach ($get('types') as $type) {
+                                        $query->orWhereJsonContains('categories.types', $type);
+                                    }
+                                }),
+                            )
+                            ->orderBy('categories.name'),
+                    )
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->columnSpanFull()
+                    ->disabled(fn (callable $get): bool => blank($get('types')))
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
             ]);
     }
 

@@ -1,0 +1,161 @@
+/* =========================
+TRANSACTIONS PAGE ONLY
+========================= */
+
+.finba-transactions-page .fi-sc-tabs {
+    width: 100% !important;
+}
+
+.finba-transactions-page .fi-page-header-main-ctn {
+    row-gap: calc(var(--spacing) * 6);
+}
+
+.finba-transactions-page #content\.resourceTabs > nav {
+    width: 100% !important;
+    display: flex !important;
+    gap: 0.5rem !important;
+}
+
+.finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item {
+    flex: 1 !important;
+    justify-content: center !important;
+    min-height: 3rem !important;
+    border-radius: 0.85rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item.fi-active:first-of-type,
+.finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item.fi-active:first-of-type * {
+    color: rgb(22 163 74) !important;
+}
+
+.finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item.fi-active:last-of-type,
+.finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item.fi-active:last-of-type * {
+    color: rgb(220 38 38) !important;
+}
+
+.finba-transactions-page .fi-fo-toggle-buttons.fi-btn-group {
+    width: 100% !important;
+}
+
+/* =========================
+TRANSACTIONS MOBILE
+========================= */
+
+@media (max-width: 640px) {
+    .finba-transactions-page .fi-page-header-main-ctn {
+        row-gap: calc(var(--spacing) * 0);
+    }
+
+    header {
+        margin-bottom: 0 !important;
+    }
+
+    .fi-page-content .fi-sc-has-gap:first-child {
+        row-gap: calc(var(--spacing) * 3);
+    }
+
+    .finba-transactions-page .finba-mobile-fab {
+        position: fixed !important;
+        right: 1.25rem !important;
+        bottom: calc(6.2rem + env(safe-area-inset-bottom)) !important;
+        z-index: 25 !important;
+
+        width: 3.75rem !important;
+        height: 3.75rem !important;
+        min-width: 3.75rem !important;
+        padding: 0 !important;
+        border-radius: 9999px !important;
+
+        font-size: 0 !important;
+        overflow: hidden !important;
+
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .finba-transactions-page .finba-mobile-fab svg {
+        display: none !important;
+    }
+
+    .finba-transactions-page .finba-mobile-fab::after {
+        content: "+";
+        position: absolute;
+        inset: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 2rem;
+        line-height: 1;
+        font-weight: 300;
+
+        transform: translateY(-1px);
+    }
+
+    .finba-transactions-page .fi-sc-tabs {
+        position: fixed !important;
+        left: 1rem !important;
+        right: auto !important;
+        width: calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
+        bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+        z-index: 25 !important;
+
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+
+        transition: all 0.2s ease !important;
+        box-sizing: border-box !important;
+    }
+
+    .finba-transactions-page #content\.resourceTabs > nav {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+
+        gap: 0.35rem !important;
+        padding: 0.45rem !important;
+        border-radius: 1.35rem !important;
+
+        background: rgba(235, 235, 240, 0.96) !important;
+        backdrop-filter: blur(14px) !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10) !important;
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .dark.finba-transactions-page #content\.resourceTabs > nav,
+    .dark .finba-transactions-page #content\.resourceTabs > nav {
+        background: rgba(24, 24, 27, 0.92) !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item {
+        max-width: none !important;
+        border-radius: 1rem !important;
+        min-height: 2.75rem !important;
+    }
+
+    .finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item.fi-active {
+        background: rgba(255, 255, 255, 0.92) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .dark.finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item.fi-active,
+    .dark .finba-transactions-page #content\.resourceTabs > nav > button.fi-tabs-item.fi-active {
+        background: rgba(255, 255, 255, 0.08) !important;
+        box-shadow: none !important;
+    }
+
+    .finba-transactions-page:has(.fi-modal-content) .finba-mobile-fab,
+    .finba-transactions-page:has(.fi-modal-content) .fi-sc-tabs {
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transform: translateY(20px) !important;
+    }
+}

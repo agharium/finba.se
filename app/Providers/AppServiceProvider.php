@@ -8,6 +8,7 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Vite;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,7 +24,10 @@ class AppServiceProvider extends ServiceProvider
 
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_END,
-            fn () => new HtmlString('<meta name="referrer" content="no-referrer">')
+            fn () => new HtmlString('
+                <meta name="referrer" content="no-referrer">   
+                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/transactions.css') . '">
+            ')
         );
     }
 

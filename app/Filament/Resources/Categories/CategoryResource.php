@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Categories;
 
 use App\Filament\Resources\Categories\Pages\ManageCategories;
 use App\Models\Category;
+use App\Enums\Purpose;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -21,6 +22,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class CategoryResource extends Resource
 {
@@ -49,7 +51,12 @@ class CategoryResource extends Resource
                 TextInput::make('name')
                     ->label('Nome')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->rule(fn (callable $get) => Rule::unique('categories', 'name')
+                    ->where('user_id', Auth::id())
+                    ->where(fn ($query) => $get('parent_id')
+                        ? $query->where('parent_id', $get('parent_id'))
+                        : $query->whereNull('parent_id'))),
 
                 Select::make('parent_id')
                     ->label('Categoria pai')
@@ -95,15 +102,32 @@ class CategoryResource extends Resource
                             ? 'Nenhuma categoria disponível para vincular como pai.'
                             : null),
 
+                Select::make('purpose')
+                    ->native(false)
+                    ->label('Finalidade especial')
+                    ->options(Purpose::class)
+                    ->nullable()
+                    ->live()
+                    ->required(false)
+                    ->helperText('Opcional. Marque apenas categorias que representem contribuições como dízimo ou oferta. Isso impactará cálculos automáticos.')
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_tither)
+                    ->afterStateUpdated(function (?Purpose $state, callable $set) {
+                        if ($state) {
+                            $set('types', ['EXPENSE']);
+                        }
+                    }),
+
                 CheckboxList::make('types')
                     ->label('Tipo')
                     ->options([
                         'INCOME' => 'Receita',
                         'EXPENSE' => 'Despesa',
                     ])
-                    ->columns(2)
                     ->required()
                     ->minItems(1)
+                    ->live()
+                    ->disabled(fn (callable $get): bool => filled($get('purpose')))
+                    ->afterStateUpdated(fn (callable $set) => $set('categories', [])),
             ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Transactions;
 
+use App\Enums\Purpose;
 use App\Filament\Resources\Transactions\Pages\ManageTransactions;
 use App\Models\Category;
 use App\Models\Loan;
@@ -28,6 +29,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
+use Illuminate\Validation\Rule;
+use Filament\Forms\Components\Hidden;
 
 class TransactionResource extends Resource
 {
@@ -61,17 +66,35 @@ class TransactionResource extends Resource
                         'INCOME' => 'Receita',
                         'EXPENSE' => 'Despesa',
                     ])
-                    ->required()
-                    ->live()
-                    ->inline()
+                    ->icons([
+                        'INCOME' => 'heroicon-m-arrow-trending-up',
+                        'EXPENSE' => 'heroicon-m-arrow-trending-down',
+                    ])
                     ->colors([
                         'INCOME' => 'success',
                         'EXPENSE' => 'danger',
                     ])
-                    ->icons([
-                        'INCOME' => 'heroicon-m-arrow-trending-up',
-                        'EXPENSE' => 'heroicon-m-arrow-trending-down',
-                    ]),
+                    ->inline()
+                    ->grouped()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function (callable $get, callable $set, ?string $state): void {
+                        $parentId = $get('parent_category_id');
+
+                        if (! $parentId || ! $state) {
+                            return;
+                        }
+
+                        $parent = Category::query()
+                            ->where('user_id', Auth::id())
+                            ->find($parentId);
+
+                        if (! $parent || ! in_array($state, $parent->types ?? [])) {
+                            $set('parent_category_id', null);
+                            $set('child_category_id', null);
+                            $set('person_id', null); // opcional, se pessoa também depende do type
+                        }
+                    }),
     
                 TextInput::make('amount')
                     ->label('Valor')
@@ -80,10 +103,159 @@ class TransactionResource extends Resource
                     ->prefix('R$')
                     ->minValue(0.01),
     
+                TextInput::make('description')
+                    ->label('Descrição'),
+    
                 DatePicker::make('date')
                     ->label('Data')
                     ->required()
                     ->default(now()),
+    
+                Select::make('parent_category_id')
+                    ->label('Categoria')
+                    ->options(fn (callable $get): array => Category::query()
+                        ->where('user_id', Auth::id())
+                        ->whereNull('parent_id')
+                        ->when(
+                            $get('type'),
+                            fn (Builder $query, string $type) => $query->whereJsonContains('types', $type),
+                        )
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->all())
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->live()
+                    ->dehydrated(false)
+                    ->disabled(fn (callable $get): bool => blank($get('type')))
+                    ->afterStateUpdated(function (callable $set, ?string $state): void {
+                        $set('child_category_id', null);
+
+                        self::applyCategoryPurpose($state, $set);
+                    })
+                    ->hintAction(
+                        Action::make('createCategory')
+                            ->label('Adicionar categoria')
+                            ->icon('heroicon-m-plus')
+                            ->visible(fn (callable $get): bool => filled($get('type')))
+                            ->form(fn (callable $get): array => [
+                                TextInput::make('name')
+                                    ->label('Nome')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->rule(fn (callable $get) => Rule::unique('categories', 'name')
+                                        ->where('user_id', Auth::id())
+                                        ->where(fn ($query) => $get('parent_id')
+                                            ? $query->where('parent_id', $get('parent_id'))
+                                            : $query->whereNull('parent_id')))
+                                    ->validationMessages([
+                                        'unique' => 'Você já possui uma categoria com este nome neste nível.',
+                                    ]),
+                    
+                                Select::make('parent_id')
+                                    ->label('Categoria pai')
+                                    ->options(fn (): array => Category::query()
+                                        ->where('user_id', Auth::id())
+                                        ->whereNull('parent_id')
+                                        ->whereJsonContains('types', $get('type'))
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id')
+                                        ->all())
+                                    ->native(false)
+                                    ->searchable()
+                                    ->preload()
+                                    ->nullable()
+                                    ->helperText('Se selecionar uma categoria pai, a nova categoria será criada como subcategoria.'),
+                    
+                                CheckboxList::make('types')
+                                    ->label('Tipo')
+                                    ->options([
+                                        'INCOME' => 'Receita',
+                                        'EXPENSE' => 'Despesa',
+                                    ])
+                                    ->default(fn () => [$get('type')])
+                                    ->columns(2)
+                                    ->required()
+                                    ->minItems(1)
+                                    ->live()
+                                    ->disabled(fn (callable $get): bool => filled($get('purpose'))),
+                    
+                                Select::make('purpose')
+                                    ->label('Finalidade especial')
+                                    ->options(Purpose::class)
+                                    ->native(false)
+                                    ->nullable()
+                                    ->live()
+                                    ->helperText('Opcional. Marque apenas categorias que representem contribuições como dízimo ou oferta. Isso impactará cálculos automáticos.')
+                                    ->visible(fn (): bool => (bool) Auth::user()?->is_tither)
+                                    ->afterStateUpdated(function (?Purpose $state, callable $set): void {
+                                        if ($state) {
+                                            $set('types', ['EXPENSE']);
+                                        }
+                                    }),
+                            ])
+                            ->action(function (array $data, callable $set): void {
+                                $category = Category::create([
+                                    'name' => $data['name'],
+                                    'types' => $data['types'],
+                                    'purpose' => $data['purpose'] ?? null,
+                                    'user_id' => Auth::id(),
+                                    'parent_id' => $data['parent_id'] ?? null,
+                                ]);
+                    
+                                if (count($data['types']) === 1) {
+                                    $set('type', $data['types'][0]);
+                                }
+                    
+                                $set('purpose', $category->purpose?->value ?? $category->purpose);
+                    
+                                if ($category->parent_id) {
+                                    $set('parent_category_id', $category->parent_id);
+                                    $set('child_category_id', $category->id);
+                                } else {
+                                    $set('parent_category_id', $category->id);
+                                    $set('child_category_id', null);
+                                }
+                            })
+                    ),
+                
+                Select::make('child_category_id')
+                    ->label('Subcategoria')
+                    ->options(fn (callable $get): array => Category::query()
+                        ->where('user_id', Auth::id())
+                        ->where('parent_id', $get('parent_category_id'))
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->all())
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->live()
+                    ->dehydrated(false)
+                    ->visible(fn (callable $get): bool => filled($get('parent_category_id'))
+                        && Category::query()
+                            ->where('user_id', Auth::id())
+                            ->where('parent_id', $get('parent_category_id'))
+                            ->exists()
+                    )
+                    ->afterStateUpdated(function (callable $set, ?string $state): void {
+                        if (! $state) {
+                            return;
+                        }
+                    
+                        $category = Category::query()
+                            ->where('user_id', Auth::id())
+                            ->find($state);
+                    
+                        $types = $category?->types ?? [];
+                    
+                        if (count($types) === 1) {
+                            $set('type', $types[0]);
+                        }
+
+                        self::applyCategoryPurpose($state, $set);
+                    }),
     
                 Select::make('person_id')
                     ->label('Pessoa')
@@ -106,56 +278,8 @@ class TransactionResource extends Resource
                         ? 'Selecione o tipo para carregar as pessoas compatíveis.'
                         : null),
     
-                Select::make('category_id')
-                    ->label('Categoria')
-                    ->options(function (callable $get): array {
-                        $query = Category::query()
-                            ->where('user_id', Auth::id());
-    
-                        if ($type = $get('type')) {
-                            $query->whereJsonContains('types', $type);
-                        }
-    
-                        if (
-                            Auth::user()?->is_advanced
-                            && filled($get('person_id'))
-                        ) {
-                            $person = Person::query()
-                                ->where('user_id', Auth::id())
-                                ->find($get('person_id'));
-    
-                            if ($person && $person->categories()->exists()) {
-                                $query->whereIn(
-                                    'id',
-                                    $person->categories()->pluck('categories.id')
-                                );
-                            }
-                        }
-    
-                        return $query
-                            ->orderBy('name')
-                            ->pluck('name', 'id')
-                            ->all();
-                    })
-                    ->searchable()
-                    ->preload()
-                    ->nullable()
-                    ->disabled(fn (callable $get): bool => blank($get('type')))
-                    ->helperText(fn (callable $get): ?string => blank($get('type'))
-                        ? 'Selecione o tipo para carregar as categorias compatíveis.'
-                        : null),
-    
-                Toggle::make('is_titheable')
-                    ->label(fn (callable $get): string => $get('type') === 'EXPENSE'
-                        ? 'Descontar esta despesa no cálculo de dízimos'
-                        : 'Entregar dízimos deste provento')
-                    ->helperText(fn (callable $get): string => $get('type') === 'EXPENSE'
-                        ? 'Esta despesa será considerada na base de cálculo.'
-                        : 'Esta receita entrará na base de cálculo dos dízimos, ofertas e primícias.')
-                    ->default(false)
-                    ->visible(fn (callable $get): bool => (bool) Auth::user()?->is_tither && filled($get('type'))),
-    
-                    Toggle::make('has_loan')
+                Toggle::make('has_loan')
+                    ->columnSpanFull()
                     ->label(fn (callable $get): string => match ($get('type')) {
                         'INCOME' => 'Relacionar com empréstimo',
                         'EXPENSE' => 'Relacionar com dívida',
@@ -201,10 +325,41 @@ class TransactionResource extends Resource
                         && filled($get('type'))
                         && (bool) $get('has_loan')
                     ),
-    
-                TextInput::make('description')
-                    ->label('Descrição')
-                    ->columnSpanFull(),
+
+                Toggle::make('contribution_toggle')
+                    ->columnSpanFull()
+                    ->label(fn (callable $get): string => $get('type') === 'EXPENSE'
+                        ? 'Esta despesa é uma contribuição (dízimo ou oferta)'
+                        : 'Entregar dízimo desta receita')
+                    ->helperText(fn (callable $get): string => $get('type') === 'EXPENSE'
+                        ? 'Despesas marcadas como contribuição não entram novamente nos cálculos automáticos.'
+                        : 'Receitas marcadas aqui serão registradas como dízimo.')
+                    ->default(false)
+                    ->dehydrated(false)
+                    ->live()
+                    ->afterStateHydrated(function (callable $set, callable $get): void {
+                        $set('contribution_toggle', filled($get('purpose')));
+                    })
+                    ->afterStateUpdated(function (bool $state, callable $set, callable $get): void {
+                        if (! $state) {
+                            $set('purpose', null);
+                            return;
+                        }
+                
+                        $set(
+                            'purpose',
+                            $get('type') === 'EXPENSE'
+                                ? Purpose::OFFERING->value
+                                : Purpose::TITHE->value
+                        );
+                    })
+                    ->visible(fn (callable $get): bool =>
+                        (bool) Auth::user()?->is_tither
+                        && filled($get('type'))
+                    ),
+
+                Hidden::make('purpose')
+                    ->dehydrated(),
             ]);
     }
 
@@ -338,7 +493,31 @@ class TransactionResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->mutateRecordDataUsing(function (array $data): array {
+                        $category = isset($data['category_id'])
+                            ? Category::find($data['category_id'])
+                            : null;
+
+                        if ($category?->parent_id) {
+                            $data['parent_category_id'] = $category->parent_id;
+                            $data['child_category_id'] = $category->id;
+                        } else {
+                            $data['parent_category_id'] = $category?->id;
+                            $data['child_category_id'] = null;
+                        }
+
+                        return $data;
+                    })
+                    ->mutateDataUsing(function (array $data): array {
+                        $data['category_id'] = $data['child_category_id']
+                            ?? $data['parent_category_id']
+                            ?? null;
+
+                        unset($data['parent_category_id'], $data['child_category_id']);
+
+                        return $data;
+                    }),
                 DeleteAction::make()
                     ->requiresConfirmation()
                     ->modalHeading('Excluir transação')
@@ -395,5 +574,19 @@ class TransactionResource extends Resource
             'CANCELED' => 'gray',
             default => 'gray',
         };
+    }
+
+    private static function applyCategoryPurpose(?string $categoryId, callable $set): void
+    {
+        if (! $categoryId) {
+            $set('purpose', null);
+            return;
+        }
+
+        $category = Category::query()
+            ->where('user_id', Auth::id())
+            ->find($categoryId);
+
+        $set('purpose', $category?->purpose?->value ?? null);
     }
 }

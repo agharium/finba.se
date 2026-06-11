@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Purpose;
 use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -9,19 +10,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['amount', 'type', 'description', 'user_id', 'category_id', 'person_id', 'loan_id', 'installment'])]
+#[Fillable(['status', 'type', 'purpose', 'amount', 'description', 'date', 'user_id', 'category_id', 'person_id', 'loan_id', 'installment_group_id', 'installment_number', 'recurring_transaction_id'])]
 class Transaction extends Model
 {
     use HasUuids;
 
-    /**
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
-            'installment' => 'integer',
+            'date' => 'date',
+            'purpose' => Purpose::class,
         ];
     }
 
@@ -43,5 +42,15 @@ class Transaction extends Model
     public function loan(): BelongsTo
     {
         return $this->belongsTo(Loan::class, 'loan_id');
+    }
+
+    public function installmentGroup(): BelongsTo
+    {
+        return $this->belongsTo(InstallmentGroup::class, 'installment_group_id');
+    }
+
+    public function recurringTransaction(): BelongsTo
+    {
+        return $this->belongsTo(RecurringTransaction::class, 'recurring_transaction_id');
     }
 }

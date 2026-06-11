@@ -16,6 +16,9 @@ return new class extends Migration
             
             $table->string('name');
             $table->jsonb('types'); // INCOME | EXPENSE
+            $table->string('purpose')
+                ->nullable()
+                ->index();
     
             $table->uuid('user_id')->index();
             $table->foreign('user_id')
@@ -28,7 +31,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
     
-            $table->unique(['user_id', 'name']);
+            $table->unique(['user_id', 'parent_id', 'name']);
         });
         
         Schema::table('categories', function (Blueprint $table) {

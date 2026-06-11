@@ -51,7 +51,6 @@ class Profile extends Page
     
                 TextInput::make('username')
                     ->label('Nome de usuário')
-                    ->required()
                     ->maxLength(255)
                     ->rule(fn () => Rule::unique('users', 'username')->ignore(auth()->id())),
     
@@ -60,16 +59,19 @@ class Profile extends Page
                     ->email()
                     ->required()
                     ->maxLength(255)
-                    ->rule(fn () => Rule::unique('users', 'email')->ignore(auth()->id())),
-    
+                    ->rule(fn () => Rule::unique('users', 'email')->ignore(auth()->id()))
+                    ->extraAttributes([
+                        'class' => 'finba-mobile-email-spacing',
+                    ]),
+
                 Toggle::make('is_advanced')
                     ->label('Modo avançado')
-                    ->helperText('Habilita recursos mais específicos, como vínculos entre pessoas e categorias.')
+                    ->helperText('Desbloqueia recursos avançados como empréstimos, dívidas, subcategorias, pessoas e vínculos entre categorias. Ideal para quem deseja um controle financeiro mais detalhado.')
                     ->columnSpanFull(),
     
                 Toggle::make('is_tither')
                     ->label('Calcular dízimos, ofertas e primícias')
-                    ->helperText('Mostra opções relacionadas ao cálculo de dízimos nas transações e relatórios.')
+                    ->helperText('Habilita ferramentas para cálculo automático de dízimos, ofertas e primícias com base nas movimentações financeiras.')
                     ->columnSpanFull(),
             ]);
     }

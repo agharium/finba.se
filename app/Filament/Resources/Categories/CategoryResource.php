@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Categories;
 
 use App\Filament\Resources\Categories\Pages\ManageCategories;
 use App\Models\Category;
+use App\Models\Person;
 use App\Enums\Purpose;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -12,6 +13,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -48,6 +50,78 @@ class CategoryResource extends Resource
     {
         return $schema
             ->components([
+                ToggleButtons::make('types')
+                    ->label('Tipo')
+                    ->options([
+                        'INCOME' => 'Receita',
+                        'EXPENSE' => 'Despesa',
+                    ])
+                    ->icons([
+                        'INCOME' => 'heroicon-m-arrow-trending-up',
+                        'EXPENSE' => 'heroicon-m-arrow-trending-down',
+                    ])
+                    ->colors([
+                        'INCOME' => 'success',
+                        'EXPENSE' => 'danger',
+                    ])
+                    ->inline()
+                    ->grouped()
+                    ->required()
+                    ->live()
+                    ->multiple()
+                    ->extraAttributes([
+                        'class' => 'finba-full-toggle-buttons',
+                    ])
+                    ->afterStateUpdated(function (?array $state, callable $get, callable $set): void {
+                        $types = $state ?? [];
+
+                        if (! in_array('EXPENSE', $types, true)) {
+                            $set('purpose', null);
+                        }
+
+                        if (blank($types)) {
+                            $set('parent_id', null);
+                            $set('people', []);
+
+                            return;
+                        }
+
+                        $parentId = $get('parent_id');
+
+                        if ($parentId) {
+                            $parentStillValid = Category::query()
+                                ->where('user_id', Auth::id())
+                                ->whereKey($parentId)
+                                ->where(function (Builder $query) use ($types) {
+                                    foreach ($types as $type) {
+                                        $query->orWhereJsonContains('types', $type);
+                                    }
+                                })
+                                ->exists();
+
+                            if (! $parentStillValid) {
+                                $set('parent_id', null);
+                            }
+                        }
+
+                        $peopleIds = $get('people') ?? [];
+
+                        if (filled($peopleIds)) {
+                            $validPeopleIds = Person::query()
+                                ->where('user_id', Auth::id())
+                                ->whereIn('id', $peopleIds)
+                                ->where(function (Builder $query) use ($types) {
+                                    foreach ($types as $type) {
+                                        $query->orWhereJsonContains('types', $type);
+                                    }
+                                })
+                                ->pluck('id')
+                                ->all();
+
+                            $set('people', $validPeopleIds);
+                        }
+                    }),
+
                 TextInput::make('name')
                     ->label('Nome')
                     ->required()
@@ -63,19 +137,29 @@ class CategoryResource extends Resource
                     ->relationship(
                         name: 'parent',
                         titleAttribute: 'name',
-                        modifyQueryUsing: function (Builder $query, ?Category $record): Builder {
+                        modifyQueryUsing: function (Builder $query, callable $get, ?Category $record): Builder {
                             $query->where('user_id', Auth::id());
-                
+
+                            if (filled($get('types'))) {
+                                $query->where(function (Builder $query) use ($get) {
+                                    foreach ($get('types') as $type) {
+                                        $query->orWhereJsonContains('types', $type);
+                                    }
+                                });
+                            }
+
                             if (! $record) {
                                 return $query;
                             }
-                
+
                             return $query->whereNotIn('id', [
                                 $record->id,
                                 ...$record->descendantsIds(),
                             ]);
                         },
                     )
+                    ->live()
+                    ->afterStateUpdated(fn (callable $set) => $set('people', []))
                     ->searchable()
                     ->preload()
                     ->nullable()
@@ -102,6 +186,34 @@ class CategoryResource extends Resource
                             ? 'Nenhuma categoria disponível para vincular como pai.'
                             : null),
 
+                Select::make('people')
+                    ->label('Pessoas vinculadas')
+                    ->helperText('Quando esta categoria for usada em uma transação, estas pessoas estarão relacionadas a ela.')
+                    ->relationship(
+                        name: 'people',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (Builder $query, callable $get) => $query
+                            ->where('people.user_id', Auth::id())
+                            ->when(
+                                filled($get('types')),
+                                fn (Builder $query) => $query->where(function (Builder $query) use ($get) {
+                                    foreach ($get('types') as $type) {
+                                        $query->orWhereJsonContains('people.types', $type);
+                                    }
+                                }),
+                            )
+                            ->orderBy('people.name'),
+                    )
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->disabled(fn (callable $get): bool => blank($get('types')) || filled($get('parent_id')))
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced)
+                    ->helperText(fn (callable $get): string => filled($get('parent_id'))
+                        ? 'Subcategorias não podem ser vinculadas diretamente a pessoas. Vincule a categoria pai.'
+                        : 'Quando esta categoria for usada em uma transação, estas pessoas estarão relacionadas a ela.'),
+
                 Select::make('purpose')
                     ->native(false)
                     ->label('Finalidade especial')
@@ -111,23 +223,19 @@ class CategoryResource extends Resource
                     ->required(false)
                     ->helperText('Opcional. Marque apenas categorias que representem contribuições como dízimo ou oferta. Isso impactará cálculos automáticos.')
                     ->visible(fn (): bool => (bool) Auth::user()?->is_tither)
-                    ->afterStateUpdated(function (?Purpose $state, callable $set) {
-                        if ($state) {
-                            $set('types', ['EXPENSE']);
+                    ->afterStateUpdated(function (?Purpose $state, callable $get, callable $set): void {
+                        if (! $state) {
+                            return;
                         }
-                    }),
 
-                CheckboxList::make('types')
-                    ->label('Tipo')
-                    ->options([
-                        'INCOME' => 'Receita',
-                        'EXPENSE' => 'Despesa',
-                    ])
-                    ->required()
-                    ->minItems(1)
-                    ->live()
-                    ->disabled(fn (callable $get): bool => filled($get('purpose')))
-                    ->afterStateUpdated(fn (callable $set) => $set('categories', [])),
+                        $types = $get('types') ?? [];
+
+                        if (! in_array('EXPENSE', $types, true)) {
+                            $types[] = 'EXPENSE';
+                        }
+
+                        $set('types', array_values(array_unique($types)));
+                    })
             ]);
     }
 

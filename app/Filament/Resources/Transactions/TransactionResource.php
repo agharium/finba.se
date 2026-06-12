@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Transactions;
 
 use App\Enums\Purpose;
 use App\Filament\Resources\Transactions\Pages\ManageTransactions;
+use App\Filament\Components\MoneyInput;
 use App\Models\Category;
 use App\Models\Loan;
 use App\Models\Person;
@@ -81,7 +82,7 @@ class TransactionResource extends Resource
                     ->afterStateUpdated(function (callable $get, callable $set, ?string $state): void {
                         $parentId = $get('parent_category_id');
 
-                        if (! $parentId || ! $state) {
+                        if (!$parentId || !$state) {
                             return;
                         }
 
@@ -89,18 +90,16 @@ class TransactionResource extends Resource
                             ->where('user_id', Auth::id())
                             ->find($parentId);
 
-                        if (! $parent || ! in_array($state, $parent->types ?? [])) {
+                        if (!$parent || !in_array($state, $parent->types ?? [])) {
                             $set('parent_category_id', null);
                             $set('child_category_id', null);
                             $set('person_id', null); // opcional, se pessoa também depende do type
                         }
                     }),
     
-                TextInput::make('amount')
+                MoneyInput::make('amount')
                     ->label('Valor')
                     ->required()
-                    ->numeric()
-                    ->prefix('R$')
                     ->minValue(0.01),
     
                 TextInput::make('description')

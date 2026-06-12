@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 use App\Models\Person;
 
@@ -49,7 +50,9 @@ class Category extends Model
 
     public function people(): BelongsToMany
     {
-        return $this->belongsToMany(Person::class, 'category_person')->withPivot('user_id');
+        return $this->belongsToMany(Person::class, 'category_person')
+            ->using(CategoryPerson::class)
+            ->withPivot('user_id');
     }
 
     public function descendantsIds(): array

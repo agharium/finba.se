@@ -35,6 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->emailVerification()
             ->colors([
                 'primary' => Color::Green,
+                'danger' => Color::Rose,
             ])
             ->brandLogo(asset('images/logo/light.png'))
             ->darkModeBrandLogo(asset('images/logo/dark.png'))

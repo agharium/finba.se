@@ -33,14 +33,8 @@ class ManageTransactions extends ManageRecords
                 ->mutateDataUsing(function (array $data): array {
                     $data['user_id'] = Auth::id();
                     $data['status'] ??= 'PAID';
-                
-                    $data['category_id'] = $data['child_category_id']
-                        ?? $data['parent_category_id']
-                        ?? null;
-                
-                    unset($data['parent_category_id'], $data['child_category_id']);
-                
-                    return $data;
+
+                    return TransactionResource::mutateTransactionFormDataForSave($data);
                 })
                 ->extraAttributes([
                     'class' => 'finba-mobile-fab',

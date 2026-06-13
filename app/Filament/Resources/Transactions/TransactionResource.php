@@ -10,6 +10,7 @@ use App\Models\Loan;
 use App\Models\Person;
 use App\Models\Transaction;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -27,6 +28,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -52,6 +54,7 @@ class TransactionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with(['category.parent', 'person', 'loan'])
             ->where('user_id', Auth::id());
     }
 
@@ -93,7 +96,9 @@ class TransactionResource extends Resource
                         if (!$parent || !in_array($state, $parent->types ?? [])) {
                             $set('parent_category_id', null);
                             $set('child_category_id', null);
+                            $set('category_id', null);
                             $set('person_id', null); // opcional, se pessoa também depende do type
+                            $set('purpose', null);
                         }
                     }),
     
@@ -130,6 +135,7 @@ class TransactionResource extends Resource
                     ->disabled(fn (callable $get): bool => blank($get('type')))
                     ->afterStateUpdated(function (callable $set, ?string $state): void {
                         $set('child_category_id', null);
+                        $set('category_id', $state);
 
                         self::applyCategoryPurpose($state, $set);
                     })
@@ -212,9 +218,11 @@ class TransactionResource extends Resource
                                 if ($category->parent_id) {
                                     $set('parent_category_id', $category->parent_id);
                                     $set('child_category_id', $category->id);
+                                    $set('category_id', $category->id);
                                 } else {
                                     $set('parent_category_id', $category->id);
                                     $set('child_category_id', null);
+                                    $set('category_id', $category->id);
                                 }
                             })
                     ),
@@ -238,8 +246,14 @@ class TransactionResource extends Resource
                             ->where('parent_id', $get('parent_category_id'))
                             ->exists()
                     )
-                    ->afterStateUpdated(function (callable $set, ?string $state): void {
+                    ->afterStateUpdated(function (callable $get, callable $set, ?string $state): void {
+                        $categoryId = $state ?: $get('parent_category_id');
+
+                        $set('category_id', $categoryId);
+
                         if (! $state) {
+                            self::applyCategoryPurpose($categoryId, $set);
+
                             return;
                         }
                     
@@ -359,6 +373,9 @@ class TransactionResource extends Resource
 
                 Hidden::make('purpose')
                     ->dehydrated(),
+
+                Hidden::make('category_id')
+                    ->dehydrated(),
             ]);
     }
 
@@ -425,109 +442,165 @@ class TransactionResource extends Resource
             ->recordTitleAttribute('description')
             ->defaultSort('date', 'desc')
             ->columns([
+                ViewColumn::make('mobile_card')
+                    ->label('')
+                    ->view('filament.resources.transactions.mobile-card')
+                    ->extraCellAttributes([
+                        'class' => 'finba-mobile-card-cell',
+                    ]),
+
                 TextColumn::make('date')
                     ->label('Data')
                     ->date()
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('md'),
 
                 TextColumn::make('description')
                     ->label('Descrição')
                     ->placeholder('-')
                     ->searchable()
-                    ->limit(40),
+                    ->limit(40)
+                    ->visibleFrom('md'),
 
-                TextColumn::make('type')
-                    ->label('Tipo')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => self::formatType($state))
-                    ->color(fn (?string $state): string => self::typeColor($state))
-                    ->sortable(),
+                // TextColumn::make('type')
+                //     ->label('Tipo')
+                //     ->badge()
+                //     ->formatStateUsing(fn (?string $state): string => self::formatType($state))
+                //     ->color(fn (?string $state): string => self::typeColor($state))
+                //     ->sortable(),
 
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => self::formatStatus($state))
-                    ->color(fn (?string $state): string => self::statusColor($state))
-                    ->sortable(),
+                // TextColumn::make('status')
+                //     ->label('Status')
+                //     ->badge()
+                //     ->formatStateUsing(fn (?string $state): string => self::formatStatus($state))
+                //     ->color(fn (?string $state): string => self::statusColor($state))
+                //     ->sortable(),
 
                 TextColumn::make('amount')
                     ->label('Valor')
                     ->money('BRL')
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('md'),
 
                 TextColumn::make('category.name')
                     ->label('Categoria')
                     ->placeholder('-')
-                    ->searchable(),
+                    ->searchable()
+                    ->visibleFrom('md'),
 
                 TextColumn::make('person.name')
                     ->label('Pessoa')
                     ->placeholder('-')
-                    ->searchable(),
+                    ->searchable()
+                    ->visibleFrom('md'),
 
                 TextColumn::make('loan.description')
                     ->label('Empréstimo / dívida')
                     ->placeholder('-')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md'),
 
                 TextColumn::make('installment_number')
                     ->label('Parcela')
                     ->placeholder('-')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md'),
 
-                TextColumn::make('created_at')
-                    ->label('Criado em')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // TextColumn::make('created_at')
+                //     ->label('Criado em')
+                //     ->dateTime()
+                //     ->sortable()
+                //     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
                     ->label('Atualizado em')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md'),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
+                ActionGroup::make([
+                    ViewAction::make('mobileView')
+                        ->label('Visualizar'),
+                    EditAction::make('mobileEdit')
+                        ->label('Editar')
+                        ->mutateRecordDataUsing(fn (array $data): array => self::mutateTransactionRecordDataForForm($data))
+                        ->mutateDataUsing(fn (array $data): array => self::mutateTransactionFormDataForSave($data)),
+                    DeleteAction::make('mobileDelete')
+                        ->label('Excluir')
+                        ->requiresConfirmation()
+                        ->modalHeading('Excluir transação')
+                        ->modalDescription('Tem certeza que deseja excluir esta transação?'),
+                ])
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->label('Ações')
+                    ->color('gray')
+                    ->iconButton()
+                    ->extraAttributes([
+                        'class' => 'finba-mobile-actions-menu',
+                    ]),
+                ViewAction::make()
+                    ->extraAttributes([
+                        'class' => 'finba-desktop-record-action',
+                    ]),
                 EditAction::make()
-                    ->mutateRecordDataUsing(function (array $data): array {
-                        $category = isset($data['category_id'])
-                            ? Category::find($data['category_id'])
-                            : null;
-
-                        if ($category?->parent_id) {
-                            $data['parent_category_id'] = $category->parent_id;
-                            $data['child_category_id'] = $category->id;
-                        } else {
-                            $data['parent_category_id'] = $category?->id;
-                            $data['child_category_id'] = null;
-                        }
-
-                        return $data;
-                    })
-                    ->mutateDataUsing(function (array $data): array {
-                        $data['category_id'] = $data['child_category_id']
-                            ?? $data['parent_category_id']
-                            ?? null;
-
-                        unset($data['parent_category_id'], $data['child_category_id']);
-
-                        return $data;
-                    }),
+                    ->extraAttributes([
+                        'class' => 'finba-desktop-record-action',
+                    ])
+                    ->mutateRecordDataUsing(fn (array $data): array => self::mutateTransactionRecordDataForForm($data))
+                    ->mutateDataUsing(fn (array $data): array => self::mutateTransactionFormDataForSave($data)),
                 DeleteAction::make()
+                    ->extraAttributes([
+                        'class' => 'finba-desktop-record-action',
+                    ])
                     ->requiresConfirmation()
                     ->modalHeading('Excluir transação')
                     ->modalDescription('Tem certeza que deseja excluir esta transação?'),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->requiresConfirmation(),
-                ]),
             ]);
+
+            // ->toolbarActions([
+            //     BulkActionGroup::make([
+            //         DeleteBulkAction::make()
+            //             ->requiresConfirmation(),
+            //     ]),
+            // ]);
+    }
+
+    private static function mutateTransactionRecordDataForForm(array $data): array
+    {
+        $category = isset($data['category_id'])
+            ? Category::find($data['category_id'])
+            : null;
+
+        if ($category?->parent_id) {
+            $data['parent_category_id'] = $category->parent_id;
+            $data['child_category_id'] = $category->id;
+        } else {
+            $data['parent_category_id'] = $category?->id;
+            $data['child_category_id'] = null;
+        }
+
+        return $data;
+    }
+
+    public static function mutateTransactionFormDataForSave(array $data): array
+    {
+        $data['category_id'] = $data['child_category_id']
+            ?? $data['parent_category_id']
+            ?? $data['category_id']
+            ?? null;
+
+        $data['category_id'] = filled($data['category_id'])
+            ? $data['category_id']
+            : null;
+
+        unset($data['parent_category_id'], $data['child_category_id']);
+
+        return $data;
     }
 
     public static function getPages(): array
@@ -572,6 +645,65 @@ class TransactionResource extends Resource
             'PENDING' => 'warning',
             'CANCELED' => 'gray',
             default => 'gray',
+        };
+    }
+
+    /**
+     * @return array{
+     *     description: string,
+     *     amount: string,
+     *     date: string,
+     *     category: string,
+     *     category_path: string,
+     *     person: ?string,
+     *     counterparty: string,
+     *     purpose: ?string,
+     *     type: ?string,
+     *     type_icon: string,
+     *     type_label: string,
+     *     status: ?string,
+     *     status_label: string
+     * }
+     */
+    public static function mobileCardData(Transaction $record): array
+    {
+        $person = $record->person?->name;
+        $category = $record->category;
+        $categoryPath = match (true) {
+            $category?->parent !== null => "{$category->parent->name} • {$category->name}",
+            $category !== null => $category->name,
+            default => '-',
+        };
+
+        return [
+            'description' => filled($record->description) ? $record->description : '-',
+            'amount' => 'R$ ' . number_format((float) $record->amount, 2, ',', '.'),
+            'date' => $record->date?->format('d/m/Y') ?? '-',
+            'category' => $category?->name ?? '-',
+            'category_path' => $categoryPath,
+            'person' => $person,
+            'counterparty' => collect([$person, $categoryPath !== '-' ? $categoryPath : null])
+                ->filter()
+                ->implode(' • ') ?: '-',
+            'purpose' => self::formatPurpose($record->purpose),
+            'type' => $record->type,
+            'type_icon' => $record->type === 'INCOME' ? '+' : '-',
+            'type_label' => self::formatType($record->type),
+            'status' => $record->status,
+            'status_label' => self::formatStatus($record->status),
+        ];
+    }
+
+    private static function formatPurpose(Purpose|string|null $purpose): ?string
+    {
+        if ($purpose instanceof Purpose) {
+            return $purpose->getLabel();
+        }
+
+        return match ($purpose) {
+            Purpose::TITHE->value => Purpose::TITHE->getLabel(),
+            Purpose::OFFERING->value => Purpose::OFFERING->getLabel(),
+            default => null,
         };
     }
 

@@ -51,6 +51,62 @@ TRANSACTIONS PAGE ONLY
 }
 
 /* =========================
+TRANSACTION VIEW MODAL
+========================= */
+
+.finba-transaction-view {
+    border: 1px solid rgba(15, 23, 42, 0.055) !important;
+    border-radius: 18px !important;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(249, 250, 252, 0.96)) !important;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06) !important;
+    overflow: hidden !important;
+}
+
+.dark .finba-transaction-view {
+    border-color: rgba(255, 255, 255, 0.07) !important;
+    background:
+        linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(29, 29, 33, 0.96)) !important;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18) !important;
+}
+
+.finba-transaction-view__hero {
+    margin-bottom: 0.75rem !important;
+}
+
+.finba-transaction-view__title {
+    color: rgb(17, 24, 39) !important;
+    letter-spacing: -0.02em !important;
+}
+
+.dark .finba-transaction-view__title {
+    color: rgb(244, 244, 245) !important;
+}
+
+.finba-transaction-view__amount {
+    color: rgb(17, 24, 39) !important;
+    letter-spacing: -0.045em !important;
+}
+
+.dark .finba-transaction-view__amount {
+    color: rgb(244, 244, 245) !important;
+}
+
+.finba-transaction-view__detail {
+    border-radius: 14px !important;
+    background: rgba(15, 23, 42, 0.03) !important;
+    padding: 0.9rem 1rem !important;
+}
+
+.dark .finba-transaction-view__detail {
+    background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.finba-transaction-view__muted {
+    opacity: 0.72 !important;
+}
+
+/* =========================
 TRANSACTIONS MOBILE
 ========================= */
 

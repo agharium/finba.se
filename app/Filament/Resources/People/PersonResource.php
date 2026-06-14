@@ -27,7 +27,7 @@ class PersonResource extends Resource
 {
     protected static ?string $model = Person::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
     protected static ?string $navigationLabel = 'Pessoas';
 
@@ -37,6 +37,8 @@ class PersonResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?int $navigationSort = 30;
+
     public static function shouldRegisterNavigation(): bool
     {
         return (bool) auth()->user()?->is_advanced;
@@ -45,6 +47,7 @@ class PersonResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with('cities')
             ->where('user_id', Auth::id());
     }
 
@@ -94,6 +97,23 @@ class PersonResource extends Resource
                     ->columnSpanFull()
                     ->disabled(fn (callable $get): bool => blank($get('types')))
                     ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
+
+                Select::make('cities')
+                    ->label('Cidades vinculadas')
+                    ->helperText('Quando esta pessoa for selecionada em uma transação, estas cidades poderão ser escolhidas.')
+                    ->relationship(
+                        name: 'cities',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (Builder $query) => $query
+                            ->where('cities.user_id', Auth::id())
+                            ->orderBy('cities.name'),
+                    )
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->columnSpanFull()
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
             ]);
     }
 
@@ -108,6 +128,12 @@ class PersonResource extends Resource
                     ->label('Tipo')
                     ->badge()
                     ->formatStateUsing(fn (array|string|null $state): string => self::formatTypes($state)),
+
+                TextEntry::make('cities.name')
+                    ->label('Cidades vinculadas')
+                    ->badge()
+                    ->placeholder('-')
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
 
                 TextEntry::make('created_at')
                     ->label('Criado em')
@@ -137,6 +163,13 @@ class PersonResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (array|string|null $state): string => self::formatTypes($state))
                     ->color(fn (array|string|null $state): string => self::typesColor($state)),
+
+                TextColumn::make('cities.name')
+                    ->label('Cidades')
+                    ->badge()
+                    ->limitList(3)
+                    ->placeholder('-')
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
 
                 TextColumn::make('created_at')
                     ->label('Criado em')

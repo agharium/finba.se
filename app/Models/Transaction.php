@@ -10,7 +10,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['status', 'type', 'purpose', 'amount', 'description', 'date', 'user_id', 'category_id', 'person_id', 'loan_id', 'installment_group_id', 'installment_number', 'recurring_transaction_id'])]
+#[Fillable(['status',
+    'type',
+    'purpose',
+    'amount',
+    'description',
+    'date',
+    'user_id',
+    'category_id',
+    'person_id',
+    'city_id',
+    'loan_id',
+    'installment_group_id',
+    'installment_number',
+    'recurring_transaction_id',
+])]
 class Transaction extends Model
 {
     use HasUuids;
@@ -37,6 +51,11 @@ class Transaction extends Model
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class, 'person_id');
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'city_id');
     }
 
     public function loan(): BelongsTo

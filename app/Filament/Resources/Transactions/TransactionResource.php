@@ -33,8 +33,11 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -45,7 +48,7 @@ class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWallet;
 
     protected static ?string $navigationLabel = 'Transações';
 
@@ -55,10 +58,12 @@ class TransactionResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'description';
 
+    protected static ?int $navigationSort = 10;
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['category.parent', 'person', 'loan'])
+            ->with(['category.parent', 'person', 'city', 'loan'])
             ->where('user_id', Auth::id());
     }
 
@@ -118,6 +123,71 @@ class TransactionResource extends Resource
                     ->label('Data')
                     ->required()
                     ->default(now()),
+    
+                Select::make('person_id')
+                    ->label('Pessoa')
+                    ->options(fn (callable $get): array => Person::query()
+                        ->where('user_id', Auth::id())
+                        ->when(
+                            $get('type'),
+                            fn (Builder $query, string $type) => $query->whereJsonContains('types', $type),
+                        )
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->all())
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->live()
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced)
+                    ->disabled(fn (callable $get): bool => blank($get('type')))
+                    ->helperText(fn (callable $get): ?string => blank($get('type'))
+                        ? 'Selecione o tipo para carregar as pessoas compatíveis.'
+                        : null)
+                    ->live()
+                    ->afterStateUpdated(function (?string $state, callable $set): void {
+                        $set('city_id', null);
+                    
+                        if (! $state) {
+                            return;
+                        }
+                    
+                        $cityIds = Person::query()
+                            ->where('user_id', Auth::id())
+                            ->whereKey($state)
+                            ->first()
+                            ?->cities()
+                            ->pluck('cities.id')
+                            ->all() ?? [];
+                    
+                        if (count($cityIds) === 1) {
+                            $set('city_id', $cityIds[0]);
+                        }
+                    }),
+
+                Select::make('city_id')
+                    ->label('Cidade')
+                    ->relationship(
+                        name: 'city',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function (Builder $query, callable $get) {
+                            $query->where('cities.user_id', Auth::id());
+                
+                            $personId = $get('person_id');
+                
+                            if ($personId) {
+                                $query->whereHas('people', fn (Builder $query) => $query->whereKey($personId));
+                            }
+                
+                            return $query->orderBy('cities.name');
+                        },
+                    )
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->live()
+                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced)
+                    ->nullable(),
     
                 Select::make('parent_category_id')
                     ->label('Categoria')
@@ -274,29 +344,8 @@ class TransactionResource extends Resource
                         self::applyCategoryPurpose($state, $set);
                     }),
     
-                Select::make('person_id')
-                    ->label('Pessoa')
-                    ->options(fn (callable $get): array => Person::query()
-                        ->where('user_id', Auth::id())
-                        ->when(
-                            $get('type'),
-                            fn (Builder $query, string $type) => $query->whereJsonContains('types', $type),
-                        )
-                        ->orderBy('name')
-                        ->pluck('name', 'id')
-                        ->all())
-                    ->searchable()
-                    ->preload()
-                    ->nullable()
-                    ->live()
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced)
-                    ->disabled(fn (callable $get): bool => blank($get('type')))
-                    ->helperText(fn (callable $get): ?string => blank($get('type'))
-                        ? 'Selecione o tipo para carregar as pessoas compatíveis.'
-                        : null),
-    
                 Toggle::make('has_loan')
-                    ->columnSpanFull()
+                    ->columnSpanFull(fn (callable $get): bool => !filled($get('parent_category_id')))
                     ->label(fn (callable $get): string => match ($get('type')) {
                         'INCOME' => 'Relacionar com empréstimo',
                         'EXPENSE' => 'Relacionar com dívida',
@@ -535,11 +584,11 @@ class TransactionResource extends Resource
                         'class' => 'finba-mobile-card-cell',
                     ]),
 
-                TextColumn::make('date')
-                    ->label('Data')
-                    ->date()
-                    ->sortable()
-                    ->visibleFrom('md'),
+                // TextColumn::make('date')
+                //     ->label('Data')
+                //     ->date()
+                //     ->sortable()
+                //     ->visibleFrom('md'),
 
                 TextColumn::make('description')
                     ->label('Descrição')
@@ -562,14 +611,20 @@ class TransactionResource extends Resource
                 //     ->color(fn (?string $state): string => self::statusColor($state))
                 //     ->sortable(),
 
-                TextColumn::make('amount')
-                    ->label('Valor')
-                    ->money('BRL')
-                    ->sortable()
-                    ->visibleFrom('md'),
+                // TextColumn::make('amount')
+                //     ->label('Valor')
+                //     ->money('BRL')
+                //     ->sortable()
+                //     ->visibleFrom('md'),
 
                 TextColumn::make('category.name')
                     ->label('Categoria')
+                    ->placeholder('-')
+                    ->searchable()
+                    ->visibleFrom('md'),
+
+                TextColumn::make('city.name')
+                    ->label('Cidade')
                     ->placeholder('-')
                     ->searchable()
                     ->visibleFrom('md'),
@@ -580,17 +635,17 @@ class TransactionResource extends Resource
                     ->searchable()
                     ->visibleFrom('md'),
 
-                TextColumn::make('loan.description')
-                    ->label('Empréstimo / dívida')
-                    ->placeholder('-')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->visibleFrom('md'),
+                // TextColumn::make('loan.description')
+                //     ->label('Empréstimo / dívida')
+                //     ->placeholder('-')
+                //     ->toggleable(isToggledHiddenByDefault: true)
+                //     ->visibleFrom('md'),
 
-                TextColumn::make('installment_number')
-                    ->label('Parcela')
-                    ->placeholder('-')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->visibleFrom('md'),
+                // TextColumn::make('installment_number')
+                //     ->label('Parcela')
+                //     ->placeholder('-')
+                //     ->toggleable(isToggledHiddenByDefault: true)
+                //     ->visibleFrom('md'),
 
                 // TextColumn::make('created_at')
                 //     ->label('Criado em')
@@ -598,16 +653,45 @@ class TransactionResource extends Resource
                 //     ->sortable()
                 //     ->toggleable(isToggledHiddenByDefault: true),
 
-                TextColumn::make('updated_at')
-                    ->label('Atualizado em')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->visibleFrom('md'),
+                // TextColumn::make('updated_at')
+                //     ->label('Atualizado em')
+                //     ->dateTime()
+                //     ->sortable()
+                //     ->toggleable(isToggledHiddenByDefault: true)
+                //     ->visibleFrom('md'),
             ])
             ->filters([
-                //
+                SelectFilter::make('year')
+                    ->label('Ano')
+                    ->placeholder('Todos os anos')
+                    ->options(fn (): array => self::availableYearOptions())
+                    ->native(false)
+                    ->query(function (Builder $query, array $data): void {
+                        if (blank($data['value'] ?? null)) {
+                            return;
+                        }
+
+                        $query->whereYear('date', (int) $data['value']);
+                    }),
+
+                SelectFilter::make('month')
+                    ->label('Mês')
+                    ->placeholder('Todos os meses')
+                    ->options(fn (): array => self::availableMonthOptions())
+                    ->native(false)
+                    ->query(function (Builder $query, array $data): void {
+                        if (blank($data['value'] ?? null)) {
+                            return;
+                        }
+
+                        $query->whereMonth('date', (int) $data['value']);
+                    }),
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns([
+                'default' => 1,
+                'md' => 2,
             ])
+            ->deferFilters(false)
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make('mobileView')
@@ -758,13 +842,14 @@ class TransactionResource extends Resource
         $categoryPath = self::formatCategoryPath($record);
 
         return [
-            'description' => filled($record->description) ? $record->description : '-',
+            'description' => filled($record->description) ? $record->description : null,
             'amount' => 'R$ ' . number_format((float) $record->amount, 2, ',', '.'),
-            'date' => $record->date?->format('d/m/Y') ?? '-',
-            'category' => $category?->name ?? '-',
+            'date' => $record->date?->format('d/m/Y'),
+            'category' => $category?->name,
             'category_path' => $categoryPath,
             'person' => $person,
-            'counterparty' => collect([$person, $categoryPath !== '-' ? $categoryPath : null])
+            'city' => $record->city?->name,
+            'counterparty' => collect([$person, $categoryPath])
                 ->filter()
                 ->implode(' • ') ?: '-',
             'purpose' => self::formatPurpose($record->purpose),
@@ -776,15 +861,59 @@ class TransactionResource extends Resource
         ];
     }
 
-    private static function formatCategoryPath(Transaction $record): string
+    private static function formatCategoryPath(Transaction $record): ?string
     {
         $category = $record->category;
 
         return match (true) {
             $category?->parent !== null => "{$category->parent->name} • {$category->name}",
             $category !== null => $category->name,
-            default => '-',
+            default => null,
         };
+    }
+
+    private static function availableYearOptions(): array
+    {
+        return Transaction::query()
+            ->where('user_id', Auth::id())
+            ->whereNotNull('date')
+            ->pluck('date')
+            ->map(fn ($date): int => Carbon::parse($date)->year)
+            ->unique()
+            ->sortDesc()
+            ->mapWithKeys(fn (int $year): array => [$year => (string) $year])
+            ->all();
+    }
+
+    private static function availableMonthOptions(): array
+    {
+        return Transaction::query()
+            ->where('user_id', Auth::id())
+            ->whereNotNull('date')
+            ->pluck('date')
+            ->map(fn ($date): int => Carbon::parse($date)->month)
+            ->unique()
+            ->sort()
+            ->mapWithKeys(fn (int $month): array => [$month => self::monthLabel($month)])
+            ->all();
+    }
+
+    private static function monthLabel(int $month): string
+    {
+        return [
+            1 => 'Janeiro',
+            2 => 'Fevereiro',
+            3 => 'Março',
+            4 => 'Abril',
+            5 => 'Maio',
+            6 => 'Junho',
+            7 => 'Julho',
+            8 => 'Agosto',
+            9 => 'Setembro',
+            10 => 'Outubro',
+            11 => 'Novembro',
+            12 => 'Dezembro',
+        ][$month] ?? (string) $month;
     }
 
     private static function formatPurpose(Purpose|string|null $purpose): ?string

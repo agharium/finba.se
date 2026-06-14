@@ -515,6 +515,9 @@ TRANSACTIONS CARD LIST
 
 .finba-transactions-page .finba-transaction-card {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
     width: 100%;
     min-width: 0;
     max-width: none;
@@ -526,6 +529,10 @@ TRANSACTIONS CARD LIST
     padding: 1.5rem;
     text-align: left;
     box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.fi-icon-btn {
+    margin-right: -16px !important;
 }
 
 .dark.finba-transactions-page .finba-transaction-card,
@@ -553,7 +560,7 @@ TRANSACTIONS CARD LIST
 }
 
 .finba-transactions-page .finba-transaction-card__amount {
-    margin-top: 1.15rem;
+    margin-top: 0;
     color: rgb(17, 24, 39);
     font-size: 1.85rem;
     font-weight: 800;
@@ -569,7 +576,7 @@ TRANSACTIONS CARD LIST
 }
 
 .finba-transactions-page .finba-transaction-card__details {
-    margin-top: 1.15rem;
+    margin-top: 0;
     display: grid;
     gap: .05rem;
     color: rgb(55, 65, 81);
@@ -690,7 +697,7 @@ tbody {
 
 .finba-transactions-page .fi-ta-row > td:has(.fi-ta-actions) {
     position: absolute !important;
-    top: 2.25rem !important;
+    top: 1.75rem !important;
     right: 1.75rem !important;
     z-index: 4 !important;
     display: flex !important;

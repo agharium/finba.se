@@ -20,6 +20,8 @@ class Profile extends Page
 
     protected static ?string $slug = 'profile';
 
+    protected static ?int $navigationSort = 1000;
+
     protected string $view = 'filament.pages.profile';
 
     public ?array $data = [];

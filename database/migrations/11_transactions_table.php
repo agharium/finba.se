@@ -34,6 +34,12 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('people')
                 ->nullOnDelete();
+
+            $table->foreignUuid('city_id')
+                ->nullable()
+                ->after('person_id')
+                ->constrained()
+                ->nullOnDelete();
         
             $table->foreignUuid('loan_id')
                 ->nullable()
@@ -66,6 +72,7 @@ return new class extends Migration
             $table->index(['user_id', 'status']);
             $table->index(['user_id', 'category_id']);
             $table->index(['user_id', 'person_id']);
+            $table->index(['user_id', 'city_id']);
             $table->index(['user_id', 'type']);
             $table->index(['user_id', 'purpose']);
         });

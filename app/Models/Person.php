@@ -42,4 +42,11 @@ class Person extends Model
             ->using(CategoryPerson::class)
             ->withPivot('user_id');
     }
+
+    public function cities(): BelongsToMany
+    {
+        return $this->belongsToMany(City::class, 'person_city')
+            ->using(PersonCity::class)
+            ->withPivot('user_id');
+    }
 }

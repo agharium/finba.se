@@ -50,6 +50,23 @@ TRANSACTIONS PAGE ONLY
     width: 100% !important;
 }
 
+.finba-transactions-page .fi-ta-header-toolbar:has(input[type="search"]),
+.finba-transactions-page .fi-ta-toolbar:has(input[type="search"]) {
+    align-items: stretch !important;
+}
+
+.finba-transactions-page .fi-ta-header-toolbar:has(input[type="search"]) > *,
+.finba-transactions-page .fi-ta-toolbar:has(input[type="search"]) > *,
+.fi-ta-search-field {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.finba-transactions-page .fi-ta-header-toolbar input[type="search"],
+.finba-transactions-page .fi-ta-toolbar input[type="search"] {
+    width: 100% !important;
+}
+
 /* =========================
 TRANSACTION VIEW MODAL
 ========================= */

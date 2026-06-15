@@ -71,6 +71,15 @@ TRANSACTIONS PAGE ONLY
 TRANSACTION VIEW MODAL
 ========================= */
 
+.finba-transaction-view .fi-sc.fi-sc-has-gap.fi-grid.lg\:fi-grid-cols {
+    height: 100% !important;
+}
+
+.finba-transaction-view__meta > div > .fi-grid-col:last-child > div.fi-sc-component {
+    align-items: self-end !important;
+    display: flex !important;
+}
+
 .finba-transaction-view {
     border: 1px solid rgba(15, 23, 42, 0.055) !important;
     border-radius: 18px !important;
@@ -89,6 +98,27 @@ TRANSACTION VIEW MODAL
 
 .finba-transaction-view__hero {
     margin-bottom: 0.75rem !important;
+    position: relative !important;
+}
+
+.finba-transaction-view__header-line {
+    align-items: start !important;
+}
+
+.finba-transaction-view__meta {
+    align-content: space-between !important;
+    height: 100% !important;
+    justify-items: end !important;
+    text-align: right !important;
+}
+
+.finba-transaction-view__meta > .fi-grid-col {
+    display: flex !important;
+    justify-content: flex-end !important;
+}
+
+.finba-transaction-view__meta > .fi-grid-col:last-child {
+    align-items: flex-end !important;
 }
 
 .finba-transaction-view__title {
@@ -96,13 +126,24 @@ TRANSACTION VIEW MODAL
     letter-spacing: -0.02em !important;
 }
 
+.finba-transaction-view__title--empty {
+    color: rgb(148, 156, 169) !important;
+}
+
 .dark .finba-transaction-view__title {
     color: rgb(244, 244, 245) !important;
 }
 
+.dark .finba-transaction-view__title--empty {
+    color: rgb(137, 141, 153) !important;
+}
+
 .finba-transaction-view__amount {
     color: rgb(17, 24, 39) !important;
+    font-size: 1.65rem !important;
+    line-height: 1.15 !important;
     letter-spacing: -0.045em !important;
+    text-align: left !important;
 }
 
 .dark .finba-transaction-view__amount {

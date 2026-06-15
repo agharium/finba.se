@@ -440,45 +440,25 @@ class TransactionResource extends Resource
                     ->schema([
                         Grid::make([
                             'default' => 1,
-                            'md' => 3,
+                            'sm' => 4,
                         ])
                             ->schema([
-                                Grid::make([
-                                    'default' => 1,
-                                    'sm' => 4,
-                                ])
+                                Grid::make(1)
                                     ->schema([
                                         TextEntry::make('description')
                                             ->label('Descrição')
                                             ->hiddenLabel()
-                                            ->placeholder('-')
+                                            ->state(fn (Transaction $record): string => filled($record->description)
+                                                ? $record->description
+                                                : 'Sem descrição')
                                             ->size(TextSize::Large)
                                             ->weight(FontWeight::Bold)
-                                            ->extraAttributes([
-                                                'class' => 'finba-transaction-view__title',
-                                            ])
-                                            ->columnSpan([
-                                                'default' => 1,
-                                                'sm' => 3,
+                                            ->extraAttributes(fn (Transaction $record): array => [
+                                                'class' => filled($record->description)
+                                                    ? 'finba-transaction-view__title'
+                                                    : 'finba-transaction-view__title finba-transaction-view__title--empty',
                                             ]),
 
-                                        TextEntry::make('type')
-                                            ->label('Tipo')
-                                            ->hiddenLabel()
-                                            ->badge()
-                                            ->formatStateUsing(fn (?string $state): string => self::formatType($state))
-                                            ->color(fn (?string $state): string => self::typeColor($state))
-                                            ->extraAttributes([
-                                                'class' => 'finba-transaction-view__type',
-                                            ]),
-                                    ])
-                                    ->columnSpan([
-                                        'default' => 1,
-                                        'md' => 2,
-                                    ]),
-
-                                Grid::make(1)
-                                    ->schema([
                                         TextEntry::make('amount')
                                             ->label('Valor')
                                             ->hiddenLabel()
@@ -488,22 +468,34 @@ class TransactionResource extends Resource
                                             ->extraAttributes([
                                                 'class' => 'finba-transaction-view__amount',
                                             ]),
+                                    ])
+                                    ->columnSpan([
+                                        'default' => 1,
+                                        'sm' => 3,
+                                    ]),
 
-                                        Grid::make(2)
-                                            ->schema([
-                                                TextEntry::make('status')
-                                                    ->label('Status')
-                                                    ->badge()
-                                                    ->formatStateUsing(fn (?string $state): string => self::formatStatus($state))
-                                                    ->color(fn (?string $state): string => self::statusColor($state)),
-
-                                                TextEntry::make('date')
-                                                    ->label('Data')
-                                                    ->date()
-                                                    ->extraAttributes([
-                                                        'class' => 'finba-transaction-view__muted',
-                                                    ]),
+                                Grid::make(1)
+                                    ->schema([
+                                        TextEntry::make('type')
+                                            ->label('Tipo')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->formatStateUsing(fn (?string $state): string => self::formatType($state))
+                                            ->color(fn (?string $state): string => self::typeColor($state))
+                                            ->extraAttributes([
+                                                'class' => 'finba-transaction-view__type',
                                             ]),
+
+                                        TextEntry::make('date')
+                                            ->label('Data')
+                                            ->hiddenLabel()
+                                            ->date('d/m/Y')
+                                            ->extraAttributes([
+                                                'class' => 'finba-transaction-view__muted',
+                                            ]),
+                                    ])
+                                    ->extraAttributes([
+                                        'class' => 'finba-transaction-view__meta',
                                     ]),
                             ]),
                     ])
@@ -519,51 +511,42 @@ class TransactionResource extends Resource
                             'md' => 2,
                         ])
                             ->schema([
-                                TextEntry::make('person.name')
-                                    ->label('Pessoa')
-                                    ->placeholder('-')
-                                    ->extraAttributes([
-                                        'class' => 'finba-transaction-view__detail',
-                                    ]),
-
                                 TextEntry::make('category_path')
                                     ->label('Categoria')
-                                    ->state(fn (Transaction $record): string => self::formatCategoryPath($record))
+                                    ->state(fn (Transaction $record): ?string => self::formatCategoryPath($record))
+                                    ->visible(fn (Transaction $record): bool => filled(self::formatCategoryPath($record)))
                                     ->extraAttributes([
                                         'class' => 'finba-transaction-view__detail',
                                     ]),
 
-                                TextEntry::make('loan.description')
-                                    ->label('Empréstimo / dívida')
-                                    ->placeholder('-')
+                                TextEntry::make('subcategory_name')
+                                    ->label('Subcategoria')
+                                    ->state(fn (Transaction $record): ?string => $record->category?->parent ? $record->category->name : null)
+                                    ->visible(fn (Transaction $record): bool => filled($record->category?->parent))
                                     ->extraAttributes([
                                         'class' => 'finba-transaction-view__detail',
                                     ]),
 
-                                TextEntry::make('installment_number')
-                                    ->label('Parcela')
-                                    ->placeholder('-')
+                                TextEntry::make('person.name')
+                                    ->label('Pessoa')
+                                    ->visible(fn (Transaction $record): bool => filled($record->person?->name))
                                     ->extraAttributes([
                                         'class' => 'finba-transaction-view__detail',
                                     ]),
 
-                                TextEntry::make('created_at')
-                                    ->label('Criado em')
-                                    ->dateTime()
-                                    ->placeholder('-')
+                                TextEntry::make('city_display')
+                                    ->label('Cidade')
+                                    ->state(fn (Transaction $record): ?string => self::formatCityDisplay($record))
+                                    ->visible(fn (Transaction $record): bool => filled(self::formatCityDisplay($record)))
                                     ->extraAttributes([
-                                        'class' => 'finba-transaction-view__detail finba-transaction-view__muted',
-                                    ]),
-
-                                TextEntry::make('updated_at')
-                                    ->label('Atualizado em')
-                                    ->dateTime()
-                                    ->placeholder('-')
-                                    ->extraAttributes([
-                                        'class' => 'finba-transaction-view__detail finba-transaction-view__muted',
+                                        'class' => 'finba-transaction-view__detail',
                                     ]),
                             ]),
                     ])
+                    ->visible(fn (Transaction $record): bool => filled($record->person?->name)
+                        || filled(self::formatCategoryPath($record))
+                        || filled($record->city?->name)
+                        || filled($record->category?->parent))
                     ->extraAttributes([
                         'class' => 'finba-transaction-view finba-transaction-view__details',
                     ])
@@ -866,10 +849,23 @@ class TransactionResource extends Resource
         $category = $record->category;
 
         return match (true) {
-            $category?->parent !== null => "{$category->parent->name} • {$category->name}",
+            $category?->parent !== null => $category->parent->name,
             $category !== null => $category->name,
             default => null,
         };
+    }
+
+    private static function formatCityDisplay(Transaction $record): ?string
+    {
+        $city = $record->city;
+
+        if (! $city) {
+            return null;
+        }
+
+        return collect([$city->name, $city->region_code])
+            ->filter()
+            ->implode(' - ');
     }
 
     private static function availableYearOptions(): array

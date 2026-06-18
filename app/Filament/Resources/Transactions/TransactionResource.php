@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Transactions;
 
+use App\Enums\LoanStatus;
+use App\Enums\LoanType;
 use App\Enums\Purpose;
 use App\Filament\Resources\Transactions\Pages\ManageTransactions;
 use App\Filament\Components\MoneyInput;
@@ -347,9 +349,9 @@ class TransactionResource extends Resource
                 Toggle::make('has_loan')
                     ->columnSpanFull(fn (callable $get): bool => !filled($get('parent_category_id')))
                     ->label(fn (callable $get): string => match ($get('type')) {
-                        'INCOME' => 'Relacionar com empréstimo',
-                        'EXPENSE' => 'Relacionar com dívida',
-                        default => 'Relacionar',
+                        'INCOME' => 'Relacionar com dívida',
+                        'EXPENSE' => 'Relacionar com empréstimo',
+                        default => null,
                     })
                     ->live()
                     ->dehydrated(false)
@@ -360,24 +362,23 @@ class TransactionResource extends Resource
                 
                 Select::make('loan_id')
                     ->label(fn (callable $get): string => match ($get('type')) {
-                        'INCOME' => 'Empréstimo',
-                        'EXPENSE' => 'Dívida',
-                        default => 'Relacionamento financeiro',
+                        'INCOME' => 'Dívida',
+                        'EXPENSE' => 'Empréstimo',
                     })
                     ->options(function (callable $get): array {
                         $loanType = match ($get('type')) {
-                            'INCOME' => 'EXPENSE',
-                            'EXPENSE' => 'INCOME',
+                            'INCOME' => LoanType::BORROWED->value,
+                            'EXPENSE' => LoanType::LENT->value,
                             default => null,
                         };
                 
                         if (!$loanType) {
                             return [];
                         }
-                
+
                         return Loan::query()
                             ->where('user_id', Auth::id())
-                            ->where('status', 'OPEN')
+                            ->where('status', LoanStatus::OPEN->value)
                             ->where('type', $loanType)
                             ->orderBy('description')
                             ->pluck('description', 'id')

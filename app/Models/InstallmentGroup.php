@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\LoanStatus;
-use App\Enums\LoanType;
+use App\Enums\InstallmentGroupStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -13,12 +12,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'user_id',
-    'description',
+    'category_id',
+    'person_id',
     'total_amount',
+    'installments_count',
+    'description',
+    'first_date',
     'status',
-    'type',
 ])]
-class Loan extends Model
+class InstallmentGroup extends Model
 {
     use HasUuids;
     use SoftDeletes;
@@ -30,8 +32,9 @@ class Loan extends Model
     {
         return [
             'total_amount' => 'decimal:2',
-            'status' => LoanStatus::class,
-            'type' => LoanType::class,
+            'installments_count' => 'integer',
+            'first_date' => 'date',
+            'status' => InstallmentGroupStatus::class,
         ];
     }
 
@@ -40,8 +43,18 @@ class Loan extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function person(): BelongsTo
+    {
+        return $this->belongsTo(Person::class, 'person_id');
+    }
+
     public function transactions(): HasMany
     {
-        return $this->hasMany(Transaction::class, 'loan_id');
+        return $this->hasMany(Transaction::class, 'installment_group_id');
     }
 }

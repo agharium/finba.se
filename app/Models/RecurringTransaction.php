@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AmountMode;
+use App\Enums\RecurringFrequency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -35,6 +36,7 @@ class RecurringTransaction extends Model
             'next_occurrence_at' => 'date',
             'is_active' => 'boolean',
             'amount_mode' => AmountMode::class,
+            'frequency' => RecurringFrequency::class,
         ];
     }
 

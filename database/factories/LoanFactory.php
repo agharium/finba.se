@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\LoanStatus;
+use App\Enums\LoanType;
 use App\Models\Loan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -16,9 +18,10 @@ class LoanFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->sentence(2),
+            'description' => fake()->sentence(3),
             'total_amount' => fake()->randomFloat(2, 100, 50_000),
-            'day_of_month' => fake()->numberBetween(1, 28),
+            'status' => fake()->randomElement(LoanStatus::cases())->value,
+            'type' => fake()->randomElement(LoanType::cases())->value,
             'user_id' => User::factory(),
         ];
     }

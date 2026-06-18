@@ -6,6 +6,7 @@ use App\Filament\Resources\Categories\Pages\ManageCategories;
 use App\Models\Category;
 use App\Models\Person;
 use App\Enums\Purpose;
+use App\Enums\TransactionType;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -54,18 +55,9 @@ class CategoryResource extends Resource
             ->components([
                 ToggleButtons::make('types')
                     ->label('Tipo')
-                    ->options([
-                        'INCOME' => 'Receita',
-                        'EXPENSE' => 'Despesa',
-                    ])
-                    ->icons([
-                        'INCOME' => 'heroicon-m-arrow-trending-up',
-                        'EXPENSE' => 'heroicon-m-arrow-trending-down',
-                    ])
-                    ->colors([
-                        'INCOME' => 'success',
-                        'EXPENSE' => 'danger',
-                    ])
+                    ->options(TransactionType::options())
+                    ->icons(TransactionType::icons())
+                    ->colors(TransactionType::colors())
                     ->inline()
                     ->grouped()
                     ->required()
@@ -77,7 +69,7 @@ class CategoryResource extends Resource
                     ->afterStateUpdated(function (?array $state, callable $get, callable $set): void {
                         $types = $state ?? [];
 
-                        if (! in_array('EXPENSE', $types, true)) {
+                        if (! in_array(TransactionType::EXPENSE->value, $types, true)) {
                             $set('purpose', null);
                         }
 
@@ -232,8 +224,8 @@ class CategoryResource extends Resource
 
                         $types = $get('types') ?? [];
 
-                        if (! in_array('EXPENSE', $types, true)) {
-                            $types[] = 'EXPENSE';
+                        if (! in_array(TransactionType::EXPENSE->value, $types, true)) {
+                            $types[] = TransactionType::EXPENSE->value;
                         }
 
                         $set('types', array_values(array_unique($types)));
@@ -325,32 +317,12 @@ class CategoryResource extends Resource
 
     private static function formatTypes(array|string|null $state): string
     {
-        $types = is_array($state) ? $state : [$state];
-
-        $hasIncome = in_array('INCOME', $types, true);
-        $hasExpense = in_array('EXPENSE', $types, true);
-
-        return match (true) {
-            $hasIncome && $hasExpense => 'Receita + Despesa',
-            $hasIncome => 'Receita',
-            $hasExpense => 'Despesa',
-            default => '-',
-        };
+        return TransactionType::listLabel($state);
     }
 
     private static function typesColor(array|string|null $state): string
     {
-        $types = is_array($state) ? $state : [$state];
-
-        $hasIncome = in_array('INCOME', $types, true);
-        $hasExpense = in_array('EXPENSE', $types, true);
-
-        return match (true) {
-            $hasIncome && $hasExpense => 'info',
-            $hasIncome => 'success',
-            $hasExpense => 'danger',
-            default => 'gray',
-        };
+        return TransactionType::listColor($state);
     }
 
     public static function getPages(): array

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Purpose;
+use App\Enums\TransactionType;
 use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -35,6 +36,7 @@ class Transaction extends Model
             'amount' => 'decimal:2',
             'date' => 'date',
             'purpose' => Purpose::class,
+            'type' => TransactionType::class,
         ];
     }
 

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\AmountMode;
 use App\Enums\RecurringFrequency;
+use App\Enums\TransactionType;
 use App\Models\RecurringTransaction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,7 +23,7 @@ class RecurringTransactionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->words(2, true),
-            'type' => fake()->randomElement(['INCOME', 'EXPENSE']),
+            'type' => fake()->randomElement(TransactionType::cases())->value,
             'amount_mode' => $amountMode->value,
             'amount' => $amountMode === AmountMode::FIXED
                 ? fake()->randomFloat(2, 20, 5_000)

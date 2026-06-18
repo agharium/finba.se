@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Pages;
 
+use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\TransactionResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
@@ -17,10 +18,10 @@ class ManageTransactions extends ManageRecords
     {
         return [
             CreateAction::make()
-                ->label(fn (): string => $this->currentType() === 'INCOME'
+                ->label(fn (): string => $this->currentType() === TransactionType::INCOME->value
                     ? 'Nova receita'
                     : 'Nova despesa')
-                ->modalHeading(fn (): string => $this->currentType() === 'INCOME'
+                ->modalHeading(fn (): string => $this->currentType() === TransactionType::INCOME->value
                     ? 'Criar receita'
                     : 'Criar despesa')
                 ->icon('heroicon-m-plus')
@@ -46,20 +47,20 @@ class ManageTransactions extends ManageRecords
     {
         return [
             'incomes' => Tab::make('Receitas')
-                ->icon('heroicon-m-arrow-trending-up')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', 'INCOME')),
+                ->icon(TransactionType::INCOME->getIcon())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', TransactionType::INCOME->value)),
     
             'expenses' => Tab::make('Despesas')
-                ->icon('heroicon-m-arrow-trending-down')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', 'EXPENSE')),
+                ->icon(TransactionType::EXPENSE->getIcon())
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('type', TransactionType::EXPENSE->value)),
         ];
     }
 
     private function currentType(): string
     {
         return $this->activeTab === 'incomes'
-            ? 'INCOME'
-            : 'EXPENSE';
+            ? TransactionType::INCOME->value
+            : TransactionType::EXPENSE->value;
     }
 
     public function getExtraBodyAttributes(): array

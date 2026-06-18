@@ -5,12 +5,15 @@ namespace App\Filament\Resources\Transactions;
 use App\Enums\LoanStatus;
 use App\Enums\LoanType;
 use App\Enums\Purpose;
+use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\Pages\ManageTransactions;
 use App\Filament\Components\MoneyInput;
 use App\Models\Category;
+use App\Models\City;
 use App\Models\Loan;
 use App\Models\Person;
 use App\Models\Transaction;
+use App\Support\Helpers;
 use BackedEnum;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -77,18 +80,9 @@ class TransactionResource extends Resource
             ->components([
                 ToggleButtons::make('type')
                     ->label('Tipo')
-                    ->options([
-                        'INCOME' => 'Receita',
-                        'EXPENSE' => 'Despesa',
-                    ])
-                    ->icons([
-                        'INCOME' => 'heroicon-m-arrow-trending-up',
-                        'EXPENSE' => 'heroicon-m-arrow-trending-down',
-                    ])
-                    ->colors([
-                        'INCOME' => 'success',
-                        'EXPENSE' => 'danger',
-                    ])
+                    ->options(TransactionType::options())
+                    ->icons(TransactionType::icons())
+                    ->colors(TransactionType::colors())
                     ->inline()
                     ->grouped()
                     ->required()
@@ -251,10 +245,7 @@ class TransactionResource extends Resource
                     
                                 CheckboxList::make('types')
                                     ->label('Tipo')
-                                    ->options([
-                                        'INCOME' => 'Receita',
-                                        'EXPENSE' => 'Despesa',
-                                    ])
+                                    ->options(TransactionType::options())
                                     ->default(fn () => [$get('type')])
                                     ->columns(2)
                                     ->required()
@@ -272,7 +263,7 @@ class TransactionResource extends Resource
                                     ->visible(fn (): bool => (bool) Auth::user()?->is_tither)
                                     ->afterStateUpdated(function (?Purpose $state, callable $set): void {
                                         if ($state) {
-                                            $set('types', ['EXPENSE']);
+                                            $set('types', [TransactionType::EXPENSE->value]);
                                         }
                                     }),
                             ])
@@ -349,8 +340,8 @@ class TransactionResource extends Resource
                 Toggle::make('has_loan')
                     ->columnSpanFull(fn (callable $get): bool => !filled($get('parent_category_id')))
                     ->label(fn (callable $get): string => match ($get('type')) {
-                        'INCOME' => 'Relacionar com dívida',
-                        'EXPENSE' => 'Relacionar com empréstimo',
+                        TransactionType::INCOME->value => 'Relacionar com dívida',
+                        TransactionType::EXPENSE->value => 'Relacionar com empréstimo',
                         default => null,
                     })
                     ->live()
@@ -362,13 +353,13 @@ class TransactionResource extends Resource
                 
                 Select::make('loan_id')
                     ->label(fn (callable $get): string => match ($get('type')) {
-                        'INCOME' => 'Dívida',
-                        'EXPENSE' => 'Empréstimo',
+                        TransactionType::INCOME->value => 'Dívida',
+                        TransactionType::EXPENSE->value => 'Empréstimo',
                     })
                     ->options(function (callable $get): array {
                         $loanType = match ($get('type')) {
-                            'INCOME' => LoanType::BORROWED->value,
-                            'EXPENSE' => LoanType::LENT->value,
+                            TransactionType::INCOME->value => LoanType::BORROWED->value,
+                            TransactionType::EXPENSE->value => LoanType::LENT->value,
                             default => null,
                         };
                 
@@ -395,10 +386,10 @@ class TransactionResource extends Resource
 
                 Toggle::make('contribution_toggle')
                     ->columnSpanFull()
-                    ->label(fn (callable $get): string => $get('type') === 'EXPENSE'
+                    ->label(fn (callable $get): string => $get('type') === TransactionType::EXPENSE->value
                         ? 'Esta despesa é uma contribuição (dízimo ou oferta)'
                         : 'Entregar dízimo desta receita')
-                    ->helperText(fn (callable $get): string => $get('type') === 'EXPENSE'
+                    ->helperText(fn (callable $get): string => $get('type') === TransactionType::EXPENSE->value
                         ? 'Despesas marcadas como contribuição não entram novamente nos cálculos automáticos.'
                         : 'Receitas marcadas aqui serão registradas como dízimo.')
                     ->default(false)
@@ -415,7 +406,7 @@ class TransactionResource extends Resource
                 
                         $set(
                             'purpose',
-                            $get('type') === 'EXPENSE'
+                            $get('type') === TransactionType::EXPENSE->value
                                 ? Purpose::OFFERING->value
                                 : Purpose::TITHE->value
                         );
@@ -481,8 +472,8 @@ class TransactionResource extends Resource
                                             ->label('Tipo')
                                             ->hiddenLabel()
                                             ->badge()
-                                            ->formatStateUsing(fn (?string $state): string => self::formatType($state))
-                                            ->color(fn (?string $state): string => self::typeColor($state))
+                                            ->formatStateUsing(fn (TransactionType|string|null $state): string => self::formatType($state))
+                                            ->color(fn (TransactionType|string|null $state): string => self::typeColor($state))
                                             ->extraAttributes([
                                                 'class' => 'finba-transaction-view__type',
                                             ]),
@@ -577,7 +568,11 @@ class TransactionResource extends Resource
                 TextColumn::make('description')
                     ->label('Descrição')
                     ->placeholder('-')
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search): Builder => Helpers::whereUnaccentedLike(
+                        $query,
+                        'transactions.description',
+                        $search,
+                    ))
                     ->limit(40)
                     ->visibleFrom('md'),
 
@@ -604,19 +599,33 @@ class TransactionResource extends Resource
                 TextColumn::make('category.name')
                     ->label('Categoria')
                     ->placeholder('-')
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
+                        'category',
+                        fn (Builder $query): Builder => $query
+                            ->where(fn (Builder $query): Builder => Helpers::whereUnaccentedLike($query, 'name', $search))
+                            ->orWhereHas(
+                                'parent',
+                                fn (Builder $query): Builder => Helpers::whereUnaccentedLike($query, 'name', $search),
+                            ),
+                    ))
                     ->visibleFrom('md'),
 
                 TextColumn::make('city.name')
                     ->label('Cidade')
                     ->placeholder('-')
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
+                        'city',
+                        fn (Builder $query): Builder => Helpers::whereUnaccentedLike($query, 'name', $search),
+                    ))
                     ->visibleFrom('md'),
 
                 TextColumn::make('person.name')
                     ->label('Pessoa')
                     ->placeholder('-')
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
+                        'person',
+                        fn (Builder $query): Builder => Helpers::whereUnaccentedLike($query, 'name', $search),
+                    ))
                     ->visibleFrom('md'),
 
                 // TextColumn::make('loan.description')
@@ -661,7 +670,9 @@ class TransactionResource extends Resource
                 SelectFilter::make('month')
                     ->label('Mês')
                     ->placeholder('Todos os meses')
-                    ->options(fn (): array => self::availableMonthOptions())
+                    ->options(fn (mixed $livewire = null): array => self::availableMonthOptions(
+                        Helpers::filamentFilterValue($livewire, 'year')
+                    ))
                     ->native(false)
                     ->query(function (Builder $query, array $data): void {
                         if (blank($data['value'] ?? null)) {
@@ -670,10 +681,62 @@ class TransactionResource extends Resource
 
                         $query->whereMonth('date', (int) $data['value']);
                     }),
-            ], layout: FiltersLayout::AboveContent)
+
+                SelectFilter::make('category_id')
+                    ->label('Categoria')
+                    ->placeholder('Todas as categorias')
+                    ->options(fn (): array => self::parentCategoryOptions())
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->query(function (Builder $query, array $data): void {
+                        if (blank($data['value'] ?? null)) {
+                            return;
+                        }
+
+                        $categoryIds = self::categoryAndDescendantIds((string) $data['value']);
+
+                        if ($categoryIds === []) {
+                            return;
+                        }
+
+                        $query->whereIn('category_id', $categoryIds);
+                    }),
+
+                SelectFilter::make('person_id')
+                    ->label('Pessoa')
+                    ->placeholder('Todas as pessoas')
+                    ->options(fn (): array => self::personOptions())
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->query(function (Builder $query, array $data): void {
+                        if (blank($data['value'] ?? null)) {
+                            return;
+                        }
+
+                        $query->where('person_id', $data['value']);
+                    }),
+
+                SelectFilter::make('city_id')
+                    ->label('Cidade')
+                    ->placeholder('Todas as cidades')
+                    ->options(fn (): array => self::cityOptions())
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->query(function (Builder $query, array $data): void {
+                        if (blank($data['value'] ?? null)) {
+                            return;
+                        }
+
+                        $query->where('city_id', $data['value']);
+                    }),
+            ], layout: FiltersLayout::AboveContentCollapsible)
             ->filtersFormColumns([
                 'default' => 1,
                 'md' => 2,
+                'xl' => 5,
             ])
             ->deferFilters(false)
             ->recordActions([
@@ -726,6 +789,10 @@ class TransactionResource extends Resource
 
     private static function mutateTransactionRecordDataForForm(array $data): array
     {
+        if (($data['type'] ?? null) instanceof TransactionType) {
+            $data['type'] = $data['type']->value;
+        }
+
         $category = isset($data['category_id'])
             ? Category::find($data['category_id'])
             : null;
@@ -743,6 +810,10 @@ class TransactionResource extends Resource
 
     public static function mutateTransactionFormDataForSave(array $data): array
     {
+        if (($data['type'] ?? null) instanceof TransactionType) {
+            $data['type'] = $data['type']->value;
+        }
+
         $data['category_id'] = $data['child_category_id']
             ?? $data['parent_category_id']
             ?? $data['category_id']
@@ -764,22 +835,14 @@ class TransactionResource extends Resource
         ];
     }
 
-    private static function formatType(?string $state): string
+    private static function formatType(TransactionType|string|null $state): string
     {
-        return match ($state) {
-            'INCOME' => 'Receita',
-            'EXPENSE' => 'Despesa',
-            default => $state ?? '-',
-        };
+        return TransactionType::labelFor($state);
     }
 
-    private static function typeColor(?string $state): string
+    private static function typeColor(TransactionType|string|null $state): string
     {
-        return match ($state) {
-            'INCOME' => 'success',
-            'EXPENSE' => 'danger',
-            default => 'gray',
-        };
+        return TransactionType::colorFor($state);
     }
 
     private static function formatStatus(?string $state): string
@@ -837,8 +900,8 @@ class TransactionResource extends Resource
                 ->filter()
                 ->implode(' • ') ?: '-',
             'purpose' => self::formatPurpose($record->purpose),
-            'type' => $record->type,
-            'type_icon' => $record->type === 'INCOME' ? '+' : '-',
+            'type' => TransactionType::fromState($record->type)?->value,
+            'type_icon' => TransactionType::fromState($record->type) === TransactionType::INCOME ? '+' : '-',
             'type_label' => self::formatType($record->type),
             'status' => $record->status,
             'status_label' => self::formatStatus($record->status),
@@ -882,35 +945,82 @@ class TransactionResource extends Resource
             ->all();
     }
 
-    private static function availableMonthOptions(): array
+    private static function availableMonthOptions(null|int|string $year = null): array
     {
         return Transaction::query()
             ->where('user_id', Auth::id())
             ->whereNotNull('date')
+            ->when(
+                filled($year),
+                fn (Builder $query): Builder => $query->whereYear('date', (int) $year),
+            )
             ->pluck('date')
             ->map(fn ($date): int => Carbon::parse($date)->month)
             ->unique()
             ->sort()
-            ->mapWithKeys(fn (int $month): array => [$month => self::monthLabel($month)])
+            ->mapWithKeys(fn (int $month): array => [$month => Helpers::monthLabelPtBr($month)])
             ->all();
     }
 
-    private static function monthLabel(int $month): string
+    private static function parentCategoryOptions(): array
     {
-        return [
-            1 => 'Janeiro',
-            2 => 'Fevereiro',
-            3 => 'Março',
-            4 => 'Abril',
-            5 => 'Maio',
-            6 => 'Junho',
-            7 => 'Julho',
-            8 => 'Agosto',
-            9 => 'Setembro',
-            10 => 'Outubro',
-            11 => 'Novembro',
-            12 => 'Dezembro',
-        ][$month] ?? (string) $month;
+        return Category::query()
+            ->where('user_id', Auth::id())
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function categoryAndDescendantIds(string $categoryId): array
+    {
+        $categories = Category::query()
+            ->where('user_id', Auth::id())
+            ->get(['id', 'parent_id']);
+
+        if (! $categories->contains('id', $categoryId)) {
+            return [];
+        }
+
+        $ids = [$categoryId];
+
+        do {
+            $added = false;
+
+            foreach ($categories as $category) {
+                if (
+                    $category->parent_id
+                    && in_array($category->parent_id, $ids, true)
+                    && ! in_array($category->id, $ids, true)
+                ) {
+                    $ids[] = $category->id;
+                    $added = true;
+                }
+            }
+        } while ($added);
+
+        return $ids;
+    }
+
+    private static function personOptions(): array
+    {
+        return Person::query()
+            ->where('user_id', Auth::id())
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
+
+    private static function cityOptions(): array
+    {
+        return City::query()
+            ->where('user_id', Auth::id())
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     private static function formatPurpose(Purpose|string|null $purpose): ?string

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\TransactionType;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,7 +18,11 @@ class CategoryFactory extends Factory
     {
         return [
             'name' => fake()->word(),
-            'type' => fake()->randomElement(['INCOME', 'EXPENSE', 'BOTH']),
+            'types' => fake()->randomElement([
+                [TransactionType::INCOME->value],
+                [TransactionType::EXPENSE->value],
+                [TransactionType::INCOME->value, TransactionType::EXPENSE->value],
+            ]),
             'user_id' => User::factory(),
             'parent_id' => null,
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\People;
 
+use App\Enums\TransactionType;
 use App\Filament\Resources\People\Pages\ManagePeople;
 use App\Models\Category;
 use App\Models\Person;
@@ -62,10 +63,7 @@ class PersonResource extends Resource
     
                 CheckboxList::make('types')
                     ->label('Tipos')
-                    ->options([
-                        'INCOME' => 'Receita',
-                        'EXPENSE' => 'Despesa',
-                    ])
+                    ->options(TransactionType::options())
                     ->columns(2)
                     ->required()
                     ->minItems(1)
@@ -204,33 +202,12 @@ class PersonResource extends Resource
 
     private static function formatTypes(array|string|null $state): string
     {
-        $types = is_array($state) ? $state : [$state];
-
-        $hasIncome = in_array('INCOME', $types, true);
-        $hasExpense = in_array('EXPENSE', $types, true);
-
-        return match (true) {
-            $hasIncome && $hasExpense => 'Receita + Despesa',
-            $hasIncome => 'Receita',
-            $hasExpense => 'Despesa',
-            default => '-',
-        };
+        return TransactionType::listLabel($state);
     }
 
     private static function typesColor(array|string|null $state): string
     {
-        $types = is_array($state) ? $state : [$state];
-
-        $hasIncome = in_array('INCOME', $types, true);
-
-        $hasExpense = in_array('EXPENSE', $types, true);
-
-        return match (true) {
-            $hasIncome && $hasExpense => 'info',
-            $hasIncome => 'success',
-            $hasExpense => 'danger',
-            default => 'gray',
-        };
+        return TransactionType::listColor($state);
     }
 
     public static function getPages(): array

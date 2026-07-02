@@ -1,0 +1,858 @@
+/* =========================
+DASHBOARD PAGE
+========================= */
+
+.finba-dashboard-page .fi-page-header-main-ctn {
+    row-gap: calc(var(--spacing) * 4);
+}
+
+.finba-dashboard-page .fi-dashboard-filters,
+.finba-dashboard-page .finba-dashboard-filters {
+    margin-bottom: 0.25rem;
+    width: 100%;
+}
+
+.finba-dashboard-page .finba-dashboard-filters .fi-sc.fi-grid,
+.finba-dashboard-page .fi-dashboard-filters .fi-sc.fi-grid {
+    width: 100%;
+    gap: 0.85rem;
+}
+
+.finba-dashboard-page .finba-dashboard-filters .fi-grid-col,
+.finba-dashboard-page .fi-dashboard-filters .fi-grid-col {
+    min-width: 0;
+    width: 100%;
+}
+
+.finba-dashboard-page .finba-dashboard-filters .fi-fo-field,
+.finba-dashboard-page .fi-dashboard-filters .fi-fo-field,
+.finba-dashboard-page .finba-dashboard-filters .fi-input-wrp,
+.finba-dashboard-page .fi-dashboard-filters .fi-input-wrp,
+.finba-dashboard-page .finba-dashboard-filters .fi-select-input,
+.finba-dashboard-page .fi-dashboard-filters .fi-select-input {
+    width: 100%;
+    max-width: none;
+}
+
+.finba-dashboard-page .fi-dashboard-filters .fi-sc-component {
+    width: 100%;
+}
+
+.finba-dashboard-page .fi-header-subheading {
+    color: rgb(107, 114, 128);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.dark .finba-dashboard-page .fi-header-subheading {
+    color: rgb(161, 161, 170);
+}
+
+.finba-dashboard-page .fi-wi-widget {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.finba-dashboard-page .fi-wi-widget + .fi-wi-widget {
+    margin-top: 1.75rem;
+}
+
+.finba-dashboard-page .fi-wi-widget > section,
+.finba-dashboard-page .fi-wi-widget > div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.finba-dashboard-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.finba-dashboard-section__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.finba-dashboard-section__title {
+    color: rgb(17, 24, 39);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-section__title {
+    color: rgb(244, 244, 245);
+}
+
+.finba-dashboard-section__subtitle,
+.finba-dashboard-section__link {
+    color: rgb(107, 114, 128);
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.finba-dashboard-section__link {
+    color: rgb(22, 163, 74);
+    text-decoration: none;
+}
+
+.finba-dashboard-section__link:hover {
+    text-decoration: underline;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-section__subtitle {
+    color: rgb(161, 161, 170);
+}
+
+.finba-dashboard-empty {
+    border: 1px dashed rgba(15, 23, 42, 0.12);
+    border-radius: 16px;
+    color: rgb(107, 114, 128);
+    font-size: 0.92rem;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-empty {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgb(161, 161, 170);
+}
+
+/* KPI cards */
+
+.finba-dashboard-kpis {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 1fr;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .finba-dashboard-kpis {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .finba-dashboard-kpi--balance {
+        grid-column: 1 / -1;
+    }
+}
+
+.finba-dashboard-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+    border: 1px solid rgba(15, 23, 42, 0.055);
+    border-radius: 18px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(249, 250, 252, 0.96));
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-kpi {
+    border-color: rgba(255, 255, 255, 0.07);
+    background:
+        linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(29, 29, 33, 0.96));
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+.finba-dashboard-kpi__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.finba-dashboard-kpi__label {
+    color: rgb(107, 114, 128);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-kpi__label {
+    color: rgb(161, 161, 170);
+}
+
+.finba-dashboard-kpi__icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    color: rgb(148, 156, 169);
+}
+
+.finba-dashboard-kpi__icon--income {
+    color: rgb(22, 163, 74);
+}
+
+.finba-dashboard-kpi__icon--expense {
+    color: rgb(220, 38, 38);
+}
+
+.finba-dashboard-kpi__amount {
+    color: rgb(17, 24, 39);
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-kpi__amount {
+    color: rgb(244, 244, 245);
+}
+
+.finba-dashboard-kpi__hint {
+    color: rgb(148, 156, 169);
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.finba-dashboard-kpi--balance {
+    padding: 1.45rem 1.5rem;
+}
+
+.finba-dashboard-kpi--balance .finba-dashboard-kpi__amount {
+    font-size: 2.15rem;
+}
+
+.finba-dashboard-kpi--link {
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease;
+}
+
+.finba-dashboard-kpi--link::after {
+    color: rgb(148, 156, 169);
+    content: "›";
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1;
+    opacity: 0;
+    position: absolute;
+    right: 1.15rem;
+    top: 1.15rem;
+    transform: translateX(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.finba-dashboard-kpi--link:hover,
+.finba-dashboard-kpi--link:focus-visible {
+    transform: translateY(-2px);
+}
+
+.finba-dashboard-kpi--link:focus-visible {
+    outline: 2px solid rgba(22, 163, 74, 0.35);
+    outline-offset: 2px;
+}
+
+.finba-dashboard-kpi--income.finba-dashboard-kpi--link:hover,
+.finba-dashboard-kpi--income.finba-dashboard-kpi--link:focus-visible {
+    border-color: rgba(22, 163, 74, 0.28);
+    box-shadow:
+        0 14px 30px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(22, 163, 74, 0.06);
+    background:
+        linear-gradient(145deg, rgba(240, 253, 244, 0.98), rgba(249, 250, 252, 0.96));
+}
+
+.finba-dashboard-kpi--expense.finba-dashboard-kpi--link:hover,
+.finba-dashboard-kpi--expense.finba-dashboard-kpi--link:focus-visible {
+    border-color: rgba(220, 38, 38, 0.24);
+    box-shadow:
+        0 14px 30px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(220, 38, 38, 0.05);
+    background:
+        linear-gradient(145deg, rgba(254, 242, 242, 0.98), rgba(249, 250, 252, 0.96));
+}
+
+.finba-dashboard-kpi--link:hover::after,
+.finba-dashboard-kpi--link:focus-visible::after {
+    opacity: 0.85;
+    transform: translateX(0);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-kpi--income.finba-dashboard-kpi--link:hover,
+.dark .finba-dashboard-page .finba-dashboard-kpi--income.finba-dashboard-kpi--link:focus-visible {
+    border-color: rgba(74, 222, 128, 0.22);
+    box-shadow:
+        0 14px 30px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(74, 222, 128, 0.08);
+    background:
+        linear-gradient(145deg, rgba(20, 83, 45, 0.35), rgba(29, 29, 33, 0.96));
+}
+
+.dark .finba-dashboard-page .finba-dashboard-kpi--expense.finba-dashboard-kpi--link:hover,
+.dark .finba-dashboard-page .finba-dashboard-kpi--expense.finba-dashboard-kpi--link:focus-visible {
+    border-color: rgba(248, 113, 113, 0.22);
+    box-shadow:
+        0 14px 30px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(248, 113, 113, 0.08);
+    background:
+        linear-gradient(145deg, rgba(127, 29, 29, 0.28), rgba(29, 29, 33, 0.96));
+}
+
+.finba-dashboard-kpi--balance.finba-dashboard-kpi--positive .finba-dashboard-kpi__amount {
+    color: rgb(22, 163, 74);
+}
+
+.finba-dashboard-kpi--balance.finba-dashboard-kpi--negative .finba-dashboard-kpi__amount {
+    color: rgb(220, 38, 38);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-kpi--balance.finba-dashboard-kpi--positive .finba-dashboard-kpi__amount {
+    color: rgb(74, 222, 128);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-kpi--balance.finba-dashboard-kpi--negative .finba-dashboard-kpi__amount {
+    color: rgb(248, 113, 113);
+}
+
+/* Recent transactions list */
+
+.finba-dashboard-transactions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.finba-dashboard-transaction {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
+    border: 1px solid rgba(15, 23, 42, 0.055);
+    border-radius: 18px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(249, 250, 252, 0.96));
+    padding: 1.15rem 1.25rem;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.finba-dashboard-transaction--clickable {
+    cursor: pointer;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease;
+}
+
+.finba-dashboard-transaction--clickable:hover,
+.finba-dashboard-transaction--clickable:focus-visible {
+    border-color: rgba(22, 163, 74, 0.2);
+    box-shadow:
+        0 14px 30px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(22, 163, 74, 0.05);
+    transform: translateY(-1px);
+}
+
+.finba-dashboard-transaction--clickable:focus-visible {
+    outline: 2px solid rgba(22, 163, 74, 0.3);
+    outline-offset: 2px;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-transaction--clickable:hover,
+.dark .finba-dashboard-page .finba-dashboard-transaction--clickable:focus-visible {
+    border-color: rgba(74, 222, 128, 0.2);
+    box-shadow:
+        0 14px 30px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(74, 222, 128, 0.08);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-transaction {
+    border-color: rgba(255, 255, 255, 0.07);
+    background:
+        linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(29, 29, 33, 0.96));
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+.finba-dashboard-transaction__main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.finba-dashboard-transaction__title {
+    overflow: hidden;
+    color: rgb(17, 24, 39);
+    font-size: 0.98rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.finba-dashboard-transaction__title--muted {
+    color: #5f636d;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-transaction__title--muted {
+    color: #5f636d;
+    font-weight: 500;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-transaction__title:not(.finba-dashboard-transaction__title--muted) {
+    color: rgb(244, 244, 245);
+}
+
+.finba-dashboard-transaction__category {
+    display: block;
+    overflow: hidden;
+    color: rgb(107, 114, 128);
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-transaction__category {
+    color: rgb(161, 161, 170);
+}
+
+.finba-dashboard-transaction__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3rem;
+    flex: none;
+}
+
+.finba-dashboard-transaction__aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    flex: none;
+    min-width: 0;
+}
+
+.finba-dashboard-transaction__amount {
+    color: rgb(17, 24, 39);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.35;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-transaction__amount {
+    color: rgb(244, 244, 245);
+}
+
+.finba-dashboard-transaction__date {
+    color: rgb(148, 156, 169);
+    font-size: 0.74rem;
+    font-weight: 500;
+    line-height: 1.3;
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Expense breakdown */
+
+.finba-dashboard-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.finba-dashboard-category {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
+    border: 1px solid rgba(15, 23, 42, 0.055);
+    border-radius: 16px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(249, 250, 252, 0.96));
+    padding: 0.95rem 1.15rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-category {
+    border-color: rgba(255, 255, 255, 0.07);
+    background:
+        linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(29, 29, 33, 0.96));
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+}
+
+.finba-dashboard-category__name {
+    overflow: hidden;
+    color: rgb(45, 55, 72);
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-category__name {
+    color: rgb(232, 232, 236);
+}
+
+.finba-dashboard-category__amount {
+    color: rgb(17, 24, 39);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-category__amount {
+    color: rgb(244, 244, 245);
+}
+
+/* Tithe summary */
+
+.finba-dashboard-tithe__card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    border: 1px solid rgba(15, 23, 42, 0.055);
+    border-radius: 18px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(249, 250, 252, 0.96));
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-tithe__card {
+    border-color: rgba(255, 255, 255, 0.07);
+    background:
+        linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(29, 29, 33, 0.96));
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+.finba-dashboard-tithe__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.finba-dashboard-tithe__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.finba-dashboard-tithe__row--total {
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    margin-top: 0.25rem;
+    padding-top: 0.85rem;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-tithe__row--total {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.finba-dashboard-tithe__label {
+    color: rgb(107, 114, 128);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-tithe__label {
+    color: rgb(161, 161, 170);
+}
+
+.finba-dashboard-tithe__value {
+    color: rgb(17, 24, 39);
+    font-size: 0.98rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.finba-dashboard-tithe__value--total {
+    color: rgb(22, 163, 74);
+    font-size: 1.12rem;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-tithe__value {
+    color: rgb(244, 244, 245);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-tithe__value--total {
+    color: rgb(74, 222, 128);
+}
+
+.finba-dashboard-tithe__cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    border-radius: 14px;
+    background: rgb(22, 163, 74);
+    color: rgb(255, 255, 255);
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.25;
+    padding: 0.95rem 1rem;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+.finba-dashboard-tithe__cta-trigger {
+    width: 100%;
+}
+
+.finba-dashboard-tithe .finba-dashboard-tithe__cta-trigger.fi-btn {
+    width: 100%;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.25;
+    min-height: 3rem;
+    padding: 0.95rem 1rem;
+    transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+.finba-dashboard-page .finba-dashboard-tithe .finba-dashboard-tithe__cta-trigger.fi-btn.fi-color:not(label),
+.dark .finba-dashboard-page .finba-dashboard-tithe .finba-dashboard-tithe__cta-trigger.fi-btn.fi-color:not(label) {
+    --bg: rgb(22, 163, 74);
+    --dark-bg: rgb(22, 163, 74);
+    --hover-bg: rgb(21, 128, 61);
+    --dark-hover-bg: rgb(21, 128, 61);
+    --text: #ffffff;
+    --dark-text: #ffffff;
+    --hover-text: #ffffff;
+    --dark-hover-text: #ffffff;
+    background: rgb(22, 163, 74);
+    color: #ffffff;
+}
+
+.finba-dashboard-page .finba-dashboard-tithe .finba-dashboard-tithe__cta-trigger.fi-btn.fi-color:not(label):not(.fi-disabled):not([disabled]):hover,
+.dark .finba-dashboard-page .finba-dashboard-tithe .finba-dashboard-tithe__cta-trigger.fi-btn.fi-color:not(label):not(.fi-disabled):not([disabled]):hover {
+    background: rgb(21, 128, 61);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.finba-dashboard-page .finba-dashboard-tithe .finba-dashboard-tithe__cta-trigger.fi-btn.fi-color:not(label) > .fi-icon,
+.dark .finba-dashboard-page .finba-dashboard-tithe .finba-dashboard-tithe__cta-trigger.fi-btn.fi-color:not(label) > .fi-icon {
+    color: #ffffff;
+}
+
+.finba-dashboard-tithe__cta:hover:not(:disabled) {
+    background: rgb(21, 128, 61);
+    transform: translateY(-1px);
+}
+
+.finba-dashboard-tithe__cta--disabled {
+    background: rgb(229, 231, 235);
+    color: rgb(107, 114, 128);
+    cursor: not-allowed;
+    opacity: 1;
+    transform: none;
+}
+
+.dark .finba-dashboard-page .finba-dashboard-tithe__cta--disabled {
+    background: rgb(63, 63, 70);
+    color: rgb(161, 161, 170);
+}
+
+.dark .finba-dashboard-page .finba-dashboard-tithe__cta {
+    background: rgb(22, 163, 74);
+}
+
+/* Tithe confirmation modal */
+
+.finba-tithe-modal__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.finba-tithe-modal__intro {
+    color: rgb(75, 85, 99);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.finba-tithe-modal__intro strong {
+    color: rgb(17, 24, 39);
+    font-weight: 700;
+}
+
+.dark .finba-tithe-modal__intro {
+    color: rgb(161, 161, 170);
+}
+
+.dark .finba-tithe-modal__intro strong {
+    color: rgb(244, 244, 245);
+}
+
+.finba-tithe-modal__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    border: 1px solid rgba(15, 23, 42, 0.055);
+    border-radius: 16px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(249, 250, 252, 0.96));
+    padding: 1rem 1.1rem;
+}
+
+.dark .finba-tithe-modal__rows {
+    border-color: rgba(255, 255, 255, 0.07);
+    background:
+        linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(29, 29, 33, 0.96));
+}
+
+.finba-tithe-modal__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.finba-tithe-modal__row--selectable {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.7rem;
+}
+
+.finba-tithe-modal__row-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.finba-tithe-modal__row--fulfilled .finba-tithe-modal__value {
+    color: rgb(107, 114, 128);
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.finba-tithe-modal__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: rgb(55, 65, 81);
+    cursor: pointer;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.finba-tithe-modal__toggle-input {
+    accent-color: rgb(22, 163, 74);
+    height: 1rem;
+    width: 1rem;
+}
+
+.dark .finba-tithe-modal__toggle {
+    color: rgb(212, 212, 216);
+}
+
+.dark .finba-tithe-modal__row--fulfilled .finba-tithe-modal__value {
+    color: rgb(161, 161, 170);
+}
+
+.finba-tithe-modal__row--total {
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    margin-top: 0.25rem;
+    padding-top: 0.85rem;
+}
+
+.dark .finba-tithe-modal__row--total {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.finba-tithe-modal__label {
+    color: rgb(107, 114, 128);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.finba-tithe-modal__value {
+    color: rgb(17, 24, 39);
+    font-size: 0.98rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+}
+
+.finba-tithe-modal__value--total {
+    color: rgb(22, 163, 74);
+    font-size: 1.1rem;
+}
+
+.dark .finba-tithe-modal__value {
+    color: rgb(244, 244, 245);
+}
+
+.dark .finba-tithe-modal__value--total {
+    color: rgb(74, 222, 128);
+}
+
+.finba-tithe-modal__pix-slot {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .finba-dashboard-page .fi-main {
+        overflow-x: hidden;
+    }
+
+    .finba-dashboard-kpi--balance .finba-dashboard-kpi__amount {
+        font-size: 1.95rem;
+    }
+
+    .finba-dashboard-kpi__amount {
+        font-size: 1.4rem;
+    }
+
+    .finba-dashboard-transaction {
+        gap: 0.75rem;
+        padding: 1rem 1.05rem;
+    }
+
+    .finba-dashboard-transaction__amount {
+        font-size: 0.92rem;
+    }
+
+    .finba-dashboard-section__header {
+        flex-wrap: wrap;
+    }
+}

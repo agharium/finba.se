@@ -47,7 +47,7 @@ class CityResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return (bool) auth()->user()?->is_advanced;
+        return (bool) auth()->user()?->hasAdvancedMode();
     }
 
     public static function getEloquentQuery(): Builder

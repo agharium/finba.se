@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable(['status',
     'type',
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'installment_group_id',
     'installment_number',
     'recurring_transaction_id',
+    'tithe_calculation_id',
 ])]
 class Transaction extends Model
 {
@@ -73,5 +75,20 @@ class Transaction extends Model
     public function recurringTransaction(): BelongsTo
     {
         return $this->belongsTo(RecurringTransaction::class, 'recurring_transaction_id');
+    }
+
+    public function titheCalculation(): BelongsTo
+    {
+        return $this->belongsTo(TitheCalculation::class, 'tithe_calculation_id');
+    }
+
+    public function titheCalculations(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            TitheCalculation::class,
+            'tithe_calculation_transaction',
+            'transaction_id',
+            'tithe_calculation_id',
+        );
     }
 }

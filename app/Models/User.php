@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -14,20 +13,55 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'username', 'password', 'avatar', 'is_advanced', 'is_tither', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'username', 'password', 'avatar', 'settings', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasAvatar
 {
     use HasUuids, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $user): void {
+            if (! $user->hasAdvancedMode()) {
+                $user->setSetting('accounts_receivable', false);
+            }
+        });
+    }
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_advanced' => 'boolean',
-            'is_tither' => 'boolean',
+            'settings' => 'array',
         ];
+    }
+
+    public function hasSetting(string $key): bool
+    {
+        return (bool) ($this->settings[$key] ?? false);
+    }
+
+    public function hasAdvancedMode(): bool
+    {
+        return $this->hasSetting('advanced');
+    }
+
+    public function isTither(): bool
+    {
+        return $this->hasSetting('tither');
+    }
+
+    public function usesAccountsReceivable(): bool
+    {
+        return $this->hasAdvancedMode() && $this->hasSetting('accounts_receivable');
+    }
+
+    public function setSetting(string $key, bool $value): void
+    {
+        $settings = $this->settings ?? [];
+        $settings[$key] = $value;
+        $this->settings = $settings;
     }
 
     public function getFilamentAvatarUrl(): ?string

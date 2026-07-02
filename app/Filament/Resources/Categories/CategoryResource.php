@@ -203,7 +203,7 @@ class CategoryResource extends Resource
                     ->preload()
                     ->native(false)
                     ->disabled(fn (callable $get): bool => blank($get('types')) || filled($get('parent_id')))
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced)
+                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode())
                     ->helperText(fn (callable $get): string => filled($get('parent_id'))
                         ? 'Subcategorias não podem ser vinculadas diretamente a pessoas. Vincule a categoria pai.'
                         : 'Quando esta categoria for usada em uma transação, estas pessoas estarão relacionadas a ela.'),
@@ -216,7 +216,7 @@ class CategoryResource extends Resource
                     ->live()
                     ->required(false)
                     ->helperText('Opcional. Marque apenas categorias que representem contribuições como dízimo ou oferta. Isso impactará cálculos automáticos.')
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_tither)
+                    ->visible(fn (): bool => (bool) Auth::user()?->isTither())
                     ->afterStateUpdated(function (?Purpose $state, callable $get, callable $set): void {
                         if (! $state) {
                             return;

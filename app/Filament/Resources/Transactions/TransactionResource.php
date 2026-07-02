@@ -135,7 +135,7 @@ class TransactionResource extends Resource
                     ->preload()
                     ->nullable()
                     ->live()
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced)
+                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode())
                     ->disabled(fn (callable $get): bool => blank($get('type')))
                     ->helperText(fn (callable $get): ?string => blank($get('type'))
                         ? 'Selecione o tipo para carregar as pessoas compatíveis.'
@@ -182,7 +182,7 @@ class TransactionResource extends Resource
                     ->preload()
                     ->native(false)
                     ->live()
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced)
+                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode())
                     ->nullable(),
     
                 Select::make('parent_category_id')
@@ -260,7 +260,7 @@ class TransactionResource extends Resource
                                     ->nullable()
                                     ->live()
                                     ->helperText('Opcional. Marque apenas categorias que representem contribuições como dízimo ou oferta. Isso impactará cálculos automáticos.')
-                                    ->visible(fn (): bool => (bool) Auth::user()?->is_tither)
+                                    ->visible(fn (): bool => (bool) Auth::user()?->isTither())
                                     ->afterStateUpdated(function (?Purpose $state, callable $set): void {
                                         if ($state) {
                                             $set('types', [TransactionType::EXPENSE->value]);
@@ -340,37 +340,53 @@ class TransactionResource extends Resource
                 Toggle::make('has_loan')
                     ->columnSpanFull(fn (callable $get): bool => !filled($get('parent_category_id')))
                     ->label(fn (callable $get): string => match ($get('type')) {
-                        TransactionType::INCOME->value => 'Relacionar com dívida',
+                        TransactionType::INCOME->value => self::userUsesAccountsReceivable()
+                            ? 'Relacionar com dívida ou conta a receber'
+                            : 'Relacionar com dívida',
                         TransactionType::EXPENSE->value => 'Relacionar com empréstimo',
-                        default => null,
+                        default => 'Relacionar',
                     })
                     ->live()
                     ->dehydrated(false)
                     ->visible(fn (callable $get): bool =>
-                        (bool) Auth::user()?->is_advanced
+                        (bool) Auth::user()?->hasAdvancedMode()
                         && filled($get('type'))
                     ),
-                
+
+                Select::make('loan_link_kind')
+                    ->label('Tipo de vínculo')
+                    ->options([
+                        LoanType::BORROWED->value => 'Dívida',
+                        LoanType::RECEIVABLE->value => 'Conta a receber',
+                    ])
+                    ->default(LoanType::BORROWED->value)
+                    ->live()
+                    ->dehydrated(false)
+                    ->visible(fn (callable $get): bool =>
+                        self::userUsesAccountsReceivable()
+                        && $get('type') === TransactionType::INCOME->value
+                        && (bool) $get('has_loan')
+                    ),
+
                 Select::make('loan_id')
                     ->label(fn (callable $get): string => match ($get('type')) {
-                        TransactionType::INCOME->value => 'Dívida',
-                        TransactionType::EXPENSE->value => 'Empréstimo',
+                        TransactionType::INCOME->value => $get('loan_link_kind') === LoanType::RECEIVABLE->value
+                            ? 'Conta a receber'
+                            : 'Dívida',
+                        TransactionType::EXPENSE->value => 'Empréstimo concedido',
+                        default => 'Vínculo',
                     })
                     ->options(function (callable $get): array {
-                        $loanType = match ($get('type')) {
-                            TransactionType::INCOME->value => LoanType::BORROWED->value,
-                            TransactionType::EXPENSE->value => LoanType::LENT->value,
-                            default => null,
-                        };
-                
-                        if (!$loanType) {
+                        $loanType = self::resolveLoanTypeForTransactionForm($get);
+
+                        if (! $loanType) {
                             return [];
                         }
 
                         return Loan::query()
                             ->where('user_id', Auth::id())
                             ->where('status', LoanStatus::OPEN->value)
-                            ->where('type', $loanType)
+                            ->where('type', $loanType->value)
                             ->orderBy('description')
                             ->pluck('description', 'id')
                             ->all();
@@ -379,7 +395,7 @@ class TransactionResource extends Resource
                     ->preload()
                     ->nullable()
                     ->visible(fn (callable $get): bool =>
-                        (bool) Auth::user()?->is_advanced
+                        (bool) Auth::user()?->hasAdvancedMode()
                         && filled($get('type'))
                         && (bool) $get('has_loan')
                     ),
@@ -412,7 +428,7 @@ class TransactionResource extends Resource
                         );
                     })
                     ->visible(fn (callable $get): bool =>
-                        (bool) Auth::user()?->is_tither
+                        (bool) Auth::user()?->isTither()
                         && filled($get('type'))
                     ),
 
@@ -732,7 +748,7 @@ class TransactionResource extends Resource
 
                         $query->where('city_id', $data['value']);
                     }),
-            ], layout: FiltersLayout::AboveContentCollapsible)
+            ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns([
                 'default' => 1,
                 'md' => 2,
@@ -805,6 +821,18 @@ class TransactionResource extends Resource
             $data['child_category_id'] = null;
         }
 
+        if (filled($data['loan_id'] ?? null)) {
+            $data['has_loan'] = true;
+
+            $loan = Loan::query()
+                ->where('user_id', Auth::id())
+                ->find($data['loan_id']);
+
+            $data['loan_link_kind'] = $loan?->type === LoanType::RECEIVABLE
+                ? LoanType::RECEIVABLE->value
+                : LoanType::BORROWED->value;
+        }
+
         return $data;
     }
 
@@ -826,6 +854,15 @@ class TransactionResource extends Resource
         unset($data['parent_category_id'], $data['child_category_id']);
 
         return $data;
+    }
+
+    public static function makeViewAction(string $name = 'view'): ViewAction
+    {
+        return ViewAction::make($name)
+            ->schema(fn (Schema $schema): Schema => static::infolist($schema))
+            ->model(static::getModel())
+            ->recordTitleAttribute(static::$recordTitleAttribute)
+            ->modalCancelActionLabel('Fechar');
     }
 
     public static function getPages(): array
@@ -1032,6 +1069,7 @@ class TransactionResource extends Resource
         return match ($purpose) {
             Purpose::TITHE->value => Purpose::TITHE->getLabel(),
             Purpose::OFFERING->value => Purpose::OFFERING->getLabel(),
+            Purpose::FIRSTFRUITS->value => Purpose::FIRSTFRUITS->getLabel(),
             default => null,
         };
     }
@@ -1048,5 +1086,29 @@ class TransactionResource extends Resource
             ->find($categoryId);
 
         $set('purpose', $category?->purpose?->value ?? null);
+    }
+
+    private static function userUsesAccountsReceivable(): bool
+    {
+        $user = Auth::user();
+
+        return (bool) $user?->usesAccountsReceivable();
+    }
+
+    private static function resolveLoanTypeForTransactionForm(callable $get): ?LoanType
+    {
+        $transactionType = $get('type');
+
+        if ($transactionType instanceof TransactionType) {
+            $transactionType = $transactionType->value;
+        }
+
+        return match ($transactionType) {
+            TransactionType::EXPENSE->value => LoanType::LENT,
+            TransactionType::INCOME->value => $get('loan_link_kind') === LoanType::RECEIVABLE->value
+                ? LoanType::RECEIVABLE
+                : LoanType::BORROWED,
+            default => null,
+        };
     }
 }

@@ -42,7 +42,7 @@ class PersonResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return (bool) auth()->user()?->is_advanced;
+        return (bool) auth()->user()?->hasAdvancedMode();
     }
 
     public static function getEloquentQuery(): Builder
@@ -94,7 +94,7 @@ class PersonResource extends Resource
                     ->preload()
                     ->columnSpanFull()
                     ->disabled(fn (callable $get): bool => blank($get('types')))
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
+                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode()),
 
                 Select::make('cities')
                     ->label('Cidades vinculadas')
@@ -111,7 +111,7 @@ class PersonResource extends Resource
                     ->preload()
                     ->native(false)
                     ->columnSpanFull()
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
+                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode()),
             ]);
     }
 
@@ -131,7 +131,7 @@ class PersonResource extends Resource
                     ->label('Cidades vinculadas')
                     ->badge()
                     ->placeholder('-')
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
+                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode()),
 
                 TextEntry::make('created_at')
                     ->label('Criado em')
@@ -167,7 +167,7 @@ class PersonResource extends Resource
                     ->badge()
                     ->limitList(3)
                     ->placeholder('-')
-                    ->visible(fn (): bool => (bool) Auth::user()?->is_advanced),
+                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode()),
 
                 TextColumn::make('created_at')
                     ->label('Criado em')

@@ -40,7 +40,7 @@ class Register extends BaseRegister
             'password' => $data['password']
         ]);
 
-        $user->sendEmailVerificationNotification();
+        // $user->sendEmailVerificationNotification();
 
         return $user;
     }

@@ -34,8 +34,9 @@ class Profile extends Page
             'name' => $user->name,
             'username' => $user->username,
             'email' => $user->email,
-            'is_advanced' => $user->is_advanced,
-            'is_tither' => $user->is_tither,
+            'advanced' => $user->hasAdvancedMode(),
+            'tither' => $user->isTither(),
+            'accounts_receivable' => $user->hasSetting('accounts_receivable'),
         ]);
     }
 
@@ -50,12 +51,12 @@ class Profile extends Page
                     ->required()
                     ->maxLength(255)
                     ->columnSpanFull(),
-    
+
                 TextInput::make('username')
                     ->label('Nome de usuário')
                     ->maxLength(255)
                     ->rule(fn () => Rule::unique('users', 'username')->ignore(auth()->id())),
-    
+
                 TextInput::make('email')
                     ->label('E-mail')
                     ->email()
@@ -66,12 +67,24 @@ class Profile extends Page
                         'class' => 'finba-mobile-email-spacing',
                     ]),
 
-                Toggle::make('is_advanced')
+                Toggle::make('advanced')
                     ->label('Modo avançado')
                     ->helperText('Desbloqueia recursos avançados como empréstimos, dívidas, subcategorias, pessoas e vínculos entre categorias. Ideal para quem deseja um controle financeiro mais detalhado.')
+                    ->live()
+                    ->afterStateUpdated(function (bool $state, callable $set): void {
+                        if (! $state) {
+                            $set('accounts_receivable', false);
+                        }
+                    })
                     ->columnSpanFull(),
-    
-                Toggle::make('is_tither')
+
+                Toggle::make('accounts_receivable')
+                    ->label('Recebo pagamentos depois')
+                    ->helperText('Ative para controlar vendas a prazo, fiado e contas a receber.')
+                    ->visible(fn (callable $get): bool => (bool) $get('advanced'))
+                    ->columnSpanFull(),
+
+                Toggle::make('tither')
                     ->label('Calcular dízimos, ofertas e primícias')
                     ->helperText('Habilita ferramentas para cálculo automático de dízimos, ofertas e primícias com base nas movimentações financeiras.')
                     ->columnSpanFull(),
@@ -80,7 +93,19 @@ class Profile extends Page
 
     public function save(): void
     {
-        auth()->user()->update($this->form->getState());
+        $state = $this->form->getState();
+        $advanced = (bool) ($state['advanced'] ?? false);
+
+        auth()->user()->update([
+            'name' => $state['name'],
+            'username' => $state['username'],
+            'email' => $state['email'],
+            'settings' => [
+                'advanced' => $advanced,
+                'tither' => (bool) ($state['tither'] ?? false),
+                'accounts_receivable' => $advanced ? (bool) ($state['accounts_receivable'] ?? false) : false,
+            ],
+        ]);
 
         Notification::make()
             ->title('Perfil atualizado')

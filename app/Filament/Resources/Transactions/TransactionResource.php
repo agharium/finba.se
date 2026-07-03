@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Transactions;
 
+use App\Enums\IncomePaymentMode;
 use App\Enums\LoanStatus;
 use App\Enums\LoanType;
 use App\Enums\Purpose;
@@ -43,6 +44,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -107,6 +109,18 @@ class TransactionResource extends Resource
                         }
                     }),
     
+                ToggleButtons::make('payment_mode')
+                    ->label('Forma de recebimento')
+                    ->options(IncomePaymentMode::options())
+                    ->default(IncomePaymentMode::NOW->value)
+                    ->inline()
+                    ->grouped()
+                    ->live()
+                    ->visible(fn (callable $get, string $operation): bool => $operation === 'create'
+                        && self::userUsesAccountsReceivable()
+                        && $get('type') === TransactionType::INCOME->value)
+                    ->dehydrated(),
+
                 MoneyInput::make('amount')
                     ->label('Valor')
                     ->required()
@@ -135,6 +149,7 @@ class TransactionResource extends Resource
                     ->preload()
                     ->nullable()
                     ->live()
+                    ->required(fn (callable $get): bool => self::isReceivableLaterForm($get))
                     ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode())
                     ->disabled(fn (callable $get): bool => blank($get('type')))
                     ->helperText(fn (callable $get): ?string => blank($get('type'))
@@ -351,6 +366,7 @@ class TransactionResource extends Resource
                     ->visible(fn (callable $get): bool =>
                         (bool) Auth::user()?->hasAdvancedMode()
                         && filled($get('type'))
+                        && ! self::isReceivableLaterForm($get)
                     ),
 
                 Select::make('loan_link_kind')
@@ -366,6 +382,7 @@ class TransactionResource extends Resource
                         self::userUsesAccountsReceivable()
                         && $get('type') === TransactionType::INCOME->value
                         && (bool) $get('has_loan')
+                        && ! self::isReceivableLaterForm($get)
                     ),
 
                 Select::make('loan_id')
@@ -398,6 +415,7 @@ class TransactionResource extends Resource
                         (bool) Auth::user()?->hasAdvancedMode()
                         && filled($get('type'))
                         && (bool) $get('has_loan')
+                        && ! self::isReceivableLaterForm($get)
                     ),
 
                 Toggle::make('contribution_toggle')
@@ -430,6 +448,7 @@ class TransactionResource extends Resource
                     ->visible(fn (callable $get): bool =>
                         (bool) Auth::user()?->isTither()
                         && filled($get('type'))
+                        && ! self::isReceivableLaterForm($get)
                     ),
 
                 Hidden::make('purpose')
@@ -851,9 +870,59 @@ class TransactionResource extends Resource
             ? $data['category_id']
             : null;
 
-        unset($data['parent_category_id'], $data['child_category_id']);
+        unset($data['parent_category_id'], $data['child_category_id'], $data['payment_mode']);
 
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function prepareTransactionAttributes(array $data): array
+    {
+        $data = self::mutateTransactionFormDataForSave($data);
+
+        return Arr::only($data, [
+            'status',
+            'type',
+            'purpose',
+            'amount',
+            'description',
+            'date',
+            'user_id',
+            'category_id',
+            'person_id',
+            'city_id',
+            'loan_id',
+            'installment_group_id',
+            'installment_number',
+            'recurring_transaction_id',
+            'tithe_calculation_id',
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public static function shouldCreateReceivable(array $data): bool
+    {
+        if (! Auth::user()?->usesAccountsReceivable()) {
+            return false;
+        }
+
+        return ($data['type'] ?? null) === TransactionType::INCOME->value
+            && ($data['payment_mode'] ?? IncomePaymentMode::NOW->value) === IncomePaymentMode::LATER->value;
+    }
+
+    public static function isReceivableLaterForm(callable $get): bool
+    {
+        if (! self::userUsesAccountsReceivable()) {
+            return false;
+        }
+
+        return $get('type') === TransactionType::INCOME->value
+            && ($get('payment_mode') ?? IncomePaymentMode::NOW->value) === IncomePaymentMode::LATER->value;
     }
 
     public static function makeViewAction(string $name = 'view'): ViewAction

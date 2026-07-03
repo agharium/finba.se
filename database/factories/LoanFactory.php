@@ -19,10 +19,11 @@ class LoanFactory extends Factory
     {
         return [
             'description' => fake()->sentence(3),
-            'total_amount' => fake()->randomFloat(2, 100, 50_000),
+            'original_amount' => fake()->randomFloat(2, 100, 50_000),
             'status' => fake()->randomElement(LoanStatus::cases())->value,
             'type' => fake()->randomElement(LoanType::cases())->value,
             'user_id' => User::factory(),
+            'person_id' => null,
         ];
     }
 }

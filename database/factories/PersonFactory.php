@@ -17,7 +17,7 @@ class PersonFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'type' => 'CONTACT',
+            'types' => ['CONTACT'],
             'user_id' => User::factory(),
         ];
     }

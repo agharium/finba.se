@@ -2,13 +2,19 @@
 
 namespace App\Filament\Resources\Transactions\Pages;
 
+use App\Enums\IncomePaymentMode;
 use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\TransactionResource;
+use App\Models\Transaction;
+use App\Services\ReceivableSaleService;
 use Filament\Actions\CreateAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
-use Illuminate\Support\Facades\Auth;
+use Filament\Support\Exceptions\Halt;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class ManageTransactions extends ManageRecords
 {
@@ -30,16 +36,30 @@ class ManageTransactions extends ManageRecords
                     'type' => $this->currentType(),
                     'status' => 'PAID',
                     'date' => now(),
+                    'payment_mode' => IncomePaymentMode::NOW->value,
                 ])
-                ->mutateDataUsing(function (array $data): array {
+                ->using(function (array $data): Model {
                     $data['user_id'] = Auth::id();
                     $data['status'] ??= 'PAID';
 
-                    return TransactionResource::mutateTransactionFormDataForSave($data);
+                    if (TransactionResource::shouldCreateReceivable($data)) {
+                        app(ReceivableSaleService::class)->create(auth()->user(), $data);
+
+                        Notification::make()
+                            ->title('Conta a receber criada com sucesso.')
+                            ->success()
+                            ->send();
+
+                        throw new Halt();
+                    }
+
+                    return Transaction::query()->create(
+                        TransactionResource::prepareTransactionAttributes($data),
+                    );
                 })
                 ->extraAttributes([
                     'class' => 'finba-mobile-fab',
-                ])
+                ]),
         ];
     }
 
@@ -49,7 +69,7 @@ class ManageTransactions extends ManageRecords
             'incomes' => Tab::make('Receitas')
                 ->icon(TransactionType::INCOME->getIcon())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('type', TransactionType::INCOME->value)),
-    
+
             'expenses' => Tab::make('Despesas')
                 ->icon(TransactionType::EXPENSE->getIcon())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('type', TransactionType::EXPENSE->value)),

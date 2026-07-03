@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[Fillable(['name', 'types', 'user_id'])]
 class Person extends Model
 {
+    use HasFactory;
     use HasUuids;
 
     protected $table = 'people';
@@ -48,5 +49,10 @@ class Person extends Model
         return $this->belongsToMany(City::class, 'person_city')
             ->using(PersonCity::class)
             ->withPivot('user_id');
+    }
+
+    public function loans(): HasMany
+    {
+        return $this->hasMany(Loan::class, 'person_id');
     }
 }

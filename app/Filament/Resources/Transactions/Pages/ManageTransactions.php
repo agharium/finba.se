@@ -5,8 +5,7 @@ namespace App\Filament\Resources\Transactions\Pages;
 use App\Enums\IncomePaymentMode;
 use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\TransactionResource;
-use App\Models\Transaction;
-use App\Services\ReceivableSaleService;
+use App\Services\TransactionService;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -14,7 +13,6 @@ use Filament\Support\Exceptions\Halt;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 
 class ManageTransactions extends ManageRecords
 {
@@ -39,12 +37,9 @@ class ManageTransactions extends ManageRecords
                     'payment_mode' => IncomePaymentMode::NOW->value,
                 ])
                 ->using(function (array $data): Model {
-                    $data['user_id'] = Auth::id();
-                    $data['status'] ??= 'PAID';
+                    $result = app(TransactionService::class)->create(auth()->user(), $data);
 
-                    if (TransactionResource::shouldCreateReceivable($data)) {
-                        app(ReceivableSaleService::class)->create(auth()->user(), $data);
-
+                    if ($result->isReceivableSale) {
                         Notification::make()
                             ->title('Conta a receber criada com sucesso.')
                             ->success()
@@ -53,9 +48,7 @@ class ManageTransactions extends ManageRecords
                         throw new Halt();
                     }
 
-                    return Transaction::query()->create(
-                        TransactionResource::prepareTransactionAttributes($data),
-                    );
+                    return $result->record;
                 })
                 ->extraAttributes([
                     'class' => 'finba-mobile-fab',

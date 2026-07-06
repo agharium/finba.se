@@ -1,0 +1,140 @@
+@media (max-width: 767px) {
+    .finba-loans-page .finba-receivable-card {
+        position: relative;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        border: 1px solid rgba(15, 23, 42, 0.075);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.94));
+        padding: 1.5rem;
+        text-align: left;
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    .dark.finba-loans-page .finba-receivable-card,
+    .dark .finba-loans-page .finba-receivable-card {
+        border-color: rgba(255, 255, 255, 0.09);
+        background: linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(24, 24, 27, 0.94));
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    .finba-receivable-card__title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .finba-receivable-card__title {
+        overflow: hidden;
+        color: rgb(17, 24, 39);
+        font-size: 1.08rem;
+        font-weight: 700;
+        line-height: 1.45;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .dark.finba-loans-page .finba-receivable-card__title,
+    .dark .finba-loans-page .finba-receivable-card__title {
+        color: rgb(244, 244, 245);
+    }
+
+    .finba-receivable-card__badge {
+        flex-shrink: 0;
+        border-radius: 9999px;
+        padding: 0.2rem 0.65rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+
+    .finba-receivable-card__badge--open {
+        background: rgba(245, 158, 11, 0.14);
+        color: rgb(180, 83, 9);
+    }
+
+    .finba-receivable-card__badge--closed {
+        background: rgba(34, 197, 94, 0.14);
+        color: rgb(21, 128, 61);
+    }
+
+    .finba-receivable-card__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.75rem;
+        margin-top: 0.35rem;
+        color: rgb(107, 114, 128);
+        font-size: 0.875rem;
+    }
+
+    .dark.finba-loans-page .finba-receivable-card__meta,
+    .dark .finba-loans-page .finba-receivable-card__meta {
+        color: rgb(161, 161, 170);
+    }
+
+    .finba-receivable-card__amounts {
+        display: grid;
+        gap: 0.55rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .dark.finba-loans-page .finba-receivable-card__amounts,
+    .dark .finba-loans-page .finba-receivable-card__amounts {
+        border-top-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .finba-receivable-card__amount-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.92rem;
+    }
+
+    .finba-receivable-card__amount-row span {
+        color: rgb(107, 114, 128);
+    }
+
+    .finba-receivable-card__amount-row strong {
+        color: rgb(17, 24, 39);
+        font-size: 0.98rem;
+        font-weight: 700;
+    }
+
+    .finba-receivable-card__amount-row--remaining span,
+    .finba-receivable-card__amount-row--remaining strong {
+        color: rgb(180, 83, 9);
+    }
+
+    .finba-receivable-card__amount-row--remaining strong {
+        font-size: 1.18rem;
+    }
+
+    .dark.finba-loans-page .finba-receivable-card__amount-row span,
+    .dark .finba-loans-page .finba-receivable-card__amount-row span {
+        color: rgb(161, 161, 170);
+    }
+
+    .dark.finba-loans-page .finba-receivable-card__amount-row strong,
+    .dark .finba-loans-page .finba-receivable-card__amount-row strong {
+        color: rgb(244, 244, 245);
+    }
+
+    .dark.finba-loans-page .finba-receivable-card__amount-row--remaining span,
+    .dark.finba-loans-page .finba-receivable-card__amount-row--remaining span,
+    .dark.finba-loans-page .finba-receivable-card__amount-row--remaining strong,
+    .dark .finba-loans-page .finba-receivable-card__amount-row--remaining strong {
+        color: rgb(251, 191, 36);
+    }
+
+    .finba-loans-page .fi-ta-row > td:has(.fi-ta-actions) .fi-btn {
+        min-height: 2.5rem;
+        font-weight: 700;
+    }
+}

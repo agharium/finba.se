@@ -14,6 +14,7 @@ use App\Models\City;
 use App\Models\Loan;
 use App\Models\Person;
 use App\Models\Transaction;
+use App\Services\TransactionService;
 use App\Support\Helpers;
 use BackedEnum;
 use Filament\Actions\ActionGroup;
@@ -44,7 +45,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -857,62 +857,7 @@ class TransactionResource extends Resource
 
     public static function mutateTransactionFormDataForSave(array $data): array
     {
-        if (($data['type'] ?? null) instanceof TransactionType) {
-            $data['type'] = $data['type']->value;
-        }
-
-        $data['category_id'] = $data['child_category_id']
-            ?? $data['parent_category_id']
-            ?? $data['category_id']
-            ?? null;
-
-        $data['category_id'] = filled($data['category_id'])
-            ? $data['category_id']
-            : null;
-
-        unset($data['parent_category_id'], $data['child_category_id'], $data['payment_mode']);
-
-        return $data;
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    public static function prepareTransactionAttributes(array $data): array
-    {
-        $data = self::mutateTransactionFormDataForSave($data);
-
-        return Arr::only($data, [
-            'status',
-            'type',
-            'purpose',
-            'amount',
-            'description',
-            'date',
-            'user_id',
-            'category_id',
-            'person_id',
-            'city_id',
-            'loan_id',
-            'installment_group_id',
-            'installment_number',
-            'recurring_transaction_id',
-            'tithe_calculation_id',
-        ]);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public static function shouldCreateReceivable(array $data): bool
-    {
-        if (! Auth::user()?->usesAccountsReceivable()) {
-            return false;
-        }
-
-        return ($data['type'] ?? null) === TransactionType::INCOME->value
-            && ($data['payment_mode'] ?? IncomePaymentMode::NOW->value) === IncomePaymentMode::LATER->value;
+        return app(TransactionService::class)->normalizeFormData($data);
     }
 
     public static function isReceivableLaterForm(callable $get): bool

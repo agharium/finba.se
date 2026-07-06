@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
             fn () => new HtmlString('
                 <meta name="referrer" content="no-referrer">   
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/transactions.css') . '">
+                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/loans.css') . '">
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/dashboard.css') . '">
             ')
         );

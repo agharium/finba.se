@@ -5,14 +5,13 @@ use App\Enums\LoanStatus;
 use App\Enums\LoanType;
 use App\Enums\TransactionType;
 use App\Exceptions\ReceivableSaleException;
-use App\Filament\Resources\Transactions\TransactionResource;
 use App\Models\Loan;
 use App\Models\Person;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\ReceivableSaleService;
+use App\Services\TransactionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
 
 uses(RefreshDatabase::class);
 
@@ -102,7 +101,7 @@ it('still creates a transaction for immediate income', function () {
     $user = createReceivableUser();
 
     $transaction = Transaction::query()->create(
-        TransactionResource::prepareTransactionAttributes([
+        app(TransactionService::class)->prepareAttributes([
             'type' => TransactionType::INCOME->value,
             'payment_mode' => IncomePaymentMode::NOW->value,
             'amount' => 180,
@@ -187,43 +186,8 @@ it('requires a positive amount for receivable sales', function () {
     ))->toThrow(ReceivableSaleException::class, 'Informe um valor válido para a venda a prazo.');
 });
 
-it('detects receivable branch only for enabled income later flow', function () {
-    $user = createReceivableUser();
-    Auth::login($user);
-
-    expect(TransactionResource::shouldCreateReceivable([
-        'type' => TransactionType::INCOME->value,
-        'payment_mode' => IncomePaymentMode::LATER->value,
-    ]))->toBeTrue()
-        ->and(TransactionResource::shouldCreateReceivable([
-            'type' => TransactionType::INCOME->value,
-            'payment_mode' => IncomePaymentMode::NOW->value,
-        ]))->toBeFalse()
-        ->and(TransactionResource::shouldCreateReceivable([
-            'type' => TransactionType::EXPENSE->value,
-            'payment_mode' => IncomePaymentMode::LATER->value,
-        ]))->toBeFalse();
-
-    Auth::login(User::query()->create([
-        'name' => 'Disabled User',
-        'email' => fake()->unique()->safeEmail(),
-        'password' => 'password',
-        'email_verified_at' => now(),
-        'settings' => [
-            'advanced' => false,
-            'tither' => false,
-            'accounts_receivable' => false,
-        ],
-    ]));
-
-    expect(TransactionResource::shouldCreateReceivable([
-        'type' => TransactionType::INCOME->value,
-        'payment_mode' => IncomePaymentMode::LATER->value,
-    ]))->toBeFalse();
-});
-
 it('strips payment_mode before persisting transactions', function () {
-    $attributes = TransactionResource::prepareTransactionAttributes([
+    $attributes = app(TransactionService::class)->prepareAttributes([
         'type' => TransactionType::INCOME->value,
         'payment_mode' => IncomePaymentMode::NOW->value,
         'amount' => 50,

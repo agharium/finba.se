@@ -9,6 +9,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/css/filament/transactions.css',
+                'resources/css/filament/loans.css',
                 'resources/css/filament/dashboard.css',
             ],
             refresh: true,

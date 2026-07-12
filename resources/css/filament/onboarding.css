@@ -1,0 +1,45 @@
+.finba-onboarding-advanced-nested {
+    margin-left: 0.75rem;
+    padding-left: 1rem;
+    border-left: 2px solid rgb(229 231 235);
+}
+
+.dark .finba-onboarding-advanced-nested {
+    border-left-color: rgb(55 65 81);
+}
+
+.finba-onboarding-summary {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.finba-onboarding-summary__item {
+    display: grid;
+    gap: 0.125rem;
+}
+
+.finba-onboarding-summary__item dt {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgb(107 114 128);
+}
+
+.dark .finba-onboarding-summary__item dt {
+    color: rgb(156 163 175);
+}
+
+.finba-onboarding-summary__item dd {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: rgb(17 24 39);
+}
+
+.dark .finba-onboarding-summary__item dd {
+    color: rgb(243 244 246);
+}
+
+@media (max-width: 640px) {
+    .finba-onboarding-action .fi-modal-window {
+        margin-inline: 0.75rem;
+    }
+}

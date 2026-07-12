@@ -11,6 +11,8 @@ export default defineConfig({
                 'resources/css/filament/transactions.css',
                 'resources/css/filament/loans.css',
                 'resources/css/filament/dashboard.css',
+                'resources/css/filament/profile.css',
+                'resources/css/filament/onboarding.css',
             ],
             refresh: true,
         }),

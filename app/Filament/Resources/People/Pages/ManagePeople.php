@@ -17,9 +17,12 @@ class ManagePeople extends ManageRecords
             CreateAction::make()
                 ->mutateDataUsing(function (array $data): array {
                     $data['user_id'] = Auth::id();
-            
+
                     return $data;
                 })
+                ->using(fn (array $data) => PersonResource::savePerson(new \App\Models\Person([
+                    'user_id' => Auth::id(),
+                ]), $data)),
         ];
     }
 }

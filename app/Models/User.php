@@ -9,11 +9,12 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'username', 'password', 'avatar', 'settings', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'username', 'password', 'avatar', 'settings', 'email_verified_at', 'default_country_code', 'default_region_code', 'default_city_id', 'onboarding_completed_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasAvatar
 {
@@ -32,6 +33,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     {
         return [
             'email_verified_at' => 'datetime',
+            'onboarding_completed_at' => 'datetime',
             'password' => 'hashed',
             'settings' => 'array',
         ];
@@ -40,6 +42,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     public function hasSetting(string $key): bool
     {
         return (bool) ($this->settings[$key] ?? false);
+    }
+
+    public function hasCompletedOnboarding(): bool
+    {
+        return $this->onboarding_completed_at !== null;
     }
 
     public function hasAdvancedMode(): bool
@@ -94,6 +101,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function defaultCity(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'default_city_id');
+    }
+
+    public function cities(): HasMany
+    {
+        return $this->hasMany(City::class);
     }
 
     public function providers(): HasMany

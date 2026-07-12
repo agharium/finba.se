@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Transaction;
+use App\Observers\TransactionObserver;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -29,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/transactions.css') . '">
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/loans.css') . '">
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/dashboard.css') . '">
+                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/profile.css') . '">
+                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/onboarding.css') . '">
             ')
         );
     }
@@ -38,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Transaction::observe(TransactionObserver::class);
+
         if (app()->environment('production')) {
             URL::forceScheme('https');
         }

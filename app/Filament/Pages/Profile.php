@@ -2,10 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Forms\LocationFormFields;
+use App\Filament\Forms\UserPreferenceFormFields;
+use App\Services\UserPreferencesService;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Validation\Rule;
@@ -26,7 +29,7 @@ class Profile extends Page
 
     public ?array $data = [];
 
-    public function mount(): void
+    public function mount(UserPreferencesService $preferences): void
     {
         $user = auth()->user();
 
@@ -34,9 +37,7 @@ class Profile extends Page
             'name' => $user->name,
             'username' => $user->username,
             'email' => $user->email,
-            'advanced' => $user->hasAdvancedMode(),
-            'tither' => $user->isTither(),
-            'accounts_receivable' => $user->hasSetting('accounts_receivable'),
+            ...$preferences->defaultFormState($user),
         ]);
     }
 
@@ -67,49 +68,42 @@ class Profile extends Page
                         'class' => 'finba-mobile-email-spacing',
                     ]),
 
-                Toggle::make('advanced')
-                    ->label('Modo avançado')
-                    ->helperText('Desbloqueia recursos avançados como empréstimos, dívidas, subcategorias, pessoas e vínculos entre categorias. Ideal para quem deseja um controle financeiro mais detalhado.')
-                    ->live()
-                    ->afterStateUpdated(function (bool $state, callable $set): void {
-                        if (! $state) {
-                            $set('accounts_receivable', false);
-                        }
-                    })
+                Section::make('Localização e idioma')
+                    ->schema([
+                        LocationFormFields::profileLocaleSelect(),
+                        LocationFormFields::profileHiddenCountryField(),
+                        LocationFormFields::profileRegionSelect(),
+                        LocationFormFields::profileDefaultCitySelect(),
+                    ])
+                    ->columns(2)
                     ->columnSpanFull(),
 
-                Toggle::make('accounts_receivable')
-                    ->label('Recebo pagamentos depois')
-                    ->helperText('Ative para controlar vendas a prazo, fiado e contas a receber.')
-                    ->visible(fn (callable $get): bool => (bool) $get('advanced'))
-                    ->columnSpanFull(),
-
-                Toggle::make('tither')
-                    ->label('Calcular dízimos, ofertas e primícias')
-                    ->helperText('Habilita ferramentas para cálculo automático de dízimos, ofertas e primícias com base nas movimentações financeiras.')
-                    ->columnSpanFull(),
+                ...collect(UserPreferenceFormFields::featureToggles())
+                    ->map(fn ($component) => $component->columnSpanFull())
+                    ->all(),
             ]);
     }
 
-    public function save(): void
+    public function save(UserPreferencesService $preferences): void
     {
         $state = $this->form->getState();
-        $advanced = (bool) ($state['advanced'] ?? false);
+        $user = auth()->user();
 
-        auth()->user()->update([
+        $preferences->persistPreferences($user, $state);
+
+        $user->update([
             'name' => $state['name'],
             'username' => $state['username'],
             'email' => $state['email'],
-            'settings' => [
-                'advanced' => $advanced,
-                'tither' => (bool) ($state['tither'] ?? false),
-                'accounts_receivable' => $advanced ? (bool) ($state['accounts_receivable'] ?? false) : false,
-            ],
         ]);
+
+        auth()->setUser(auth()->user()->fresh());
 
         Notification::make()
             ->title('Perfil atualizado')
             ->success()
             ->send();
+
+        $this->redirect(static::getUrl(), navigate: false);
     }
 }

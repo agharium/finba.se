@@ -35,6 +35,7 @@ class ManageTransactions extends ManageRecords
                     'status' => 'PAID',
                     'date' => now(),
                     'payment_mode' => IncomePaymentMode::NOW->value,
+                    'city_id' => \App\Filament\Forms\LocationFormFields::userDefaultCityId(),
                 ])
                 ->using(function (array $data): Model {
                     $result = app(TransactionService::class)->create(auth()->user(), $data);

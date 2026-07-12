@@ -15,11 +15,28 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'name',
     'region_code',
     'country_code',
+    'usage_count',
+    'last_used_at',
 ])]
 class City extends Model
 {
     use HasUuids;
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::saving(function (City $city): void {
+            $city->name = \App\Support\LocationNameNormalizer::normalize($city->name) ?? $city->name;
+        });
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'last_used_at' => 'datetime',
+            'usage_count' => 'integer',
+        ];
+    }
 
     public function user(): BelongsTo
     {

@@ -1,0 +1,20 @@
+.finba-profile-advanced-nested {
+    margin-left: 0.75rem;
+    padding-left: 1rem;
+    border-left: 2px solid rgb(229 231 235);
+}
+
+.dark .finba-profile-advanced-nested {
+    border-left-color: rgb(55 65 81);
+}
+
+.finba-profile-advanced-nested-label {
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(107 114 128);
+}
+
+.dark .finba-profile-advanced-nested-label {
+    color: rgb(156 163 175);
+}

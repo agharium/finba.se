@@ -2,16 +2,24 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Forms\UserPreferenceFormFields;
 use App\Filament\Widgets\MonthlyKpiWidget;
 use App\Filament\Widgets\RecentTransactionsWidget;
 use App\Filament\Widgets\TitheSummaryWidget;
 use App\Filament\Widgets\TopExpenseCategoriesWidget;
+use App\Services\UserPreferencesService;
 use App\Support\DashboardMetrics;
 use App\Support\Helpers;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\ViewField;
+use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 
 class Dashboard extends BaseDashboard
@@ -24,6 +32,8 @@ class Dashboard extends BaseDashboard
 
     protected static ?int $navigationSort = -2;
 
+    public bool $onboardingSkippedThisVisit = false;
+
     public function mount(): void
     {
         if (blank($this->filters['year'] ?? null) || blank($this->filters['month'] ?? null)) {
@@ -32,6 +42,75 @@ class Dashboard extends BaseDashboard
                 'month' => now()->month,
             ];
         }
+
+        if ($this->shouldShowOnboarding()) {
+            $this->mountAction('onboarding');
+        }
+    }
+
+    public function onboardingAction(): Action
+    {
+        return Action::make('onboarding')
+            ->modalHeading('Bem-vindo ao Finba')
+            ->modalDescription('Vamos configurar o básico para deixar o aplicativo do seu jeito.')
+            ->modalWidth(Width::Large)
+            ->closeModalByClickingAway(false)
+            ->modalSubmitActionLabel('Começar a usar o Finba')
+            ->modalCancelActionLabel('Pular por agora')
+            ->modalCancelAction(fn (Action $action) => $action
+                ->color('gray')
+                ->action(function (): void {
+                    $this->onboardingSkippedThisVisit = true;
+                }))
+            ->fillForm(fn (UserPreferencesService $preferences): array => $preferences->defaultFormState(auth()->user()))
+            ->steps([
+                Step::make('Localização e idioma')
+                    ->description('Defina idioma, estado e cidade para personalizar o app.')
+                    ->schema(UserPreferenceFormFields::locationFields(requireRegion: true, requireCity: true))
+                    ->columns(1),
+
+                Step::make('Recursos')
+                    ->description('Ative apenas o que fizer sentido para você.')
+                    ->schema(UserPreferenceFormFields::featureToggles('finba-onboarding-advanced-nested'))
+                    ->columns(1),
+
+                Step::make('Resumo')
+                    ->description('Confira suas escolhas antes de começar.')
+                    ->schema([
+                        ViewField::make('onboarding_summary')
+                            ->dehydrated(false)
+                            ->view('filament.forms.onboarding-summary')
+                            ->viewData(fn (Get $get, UserPreferencesService $preferences): array => [
+                                'summary' => $preferences->buildSummary(auth()->user(), [
+                                    'locale' => $get('locale'),
+                                    'default_country_code' => $get('default_country_code'),
+                                    'default_region_code' => $get('default_region_code'),
+                                    'default_city_id' => $get('default_city_id'),
+                                    'advanced' => $get('advanced'),
+                                    'accounts_receivable' => $get('accounts_receivable'),
+                                    'tither' => $get('tither'),
+                                ]),
+                            ]),
+                    ]),
+            ])
+            ->action(function (Action $action, UserPreferencesService $preferences): void {
+                $user = auth()->user();
+
+                $preferences->completeOnboarding($user, $action->getData());
+
+                auth()->setUser($user->fresh());
+
+                Notification::make()
+                    ->title('Tudo pronto!')
+                    ->body('Suas preferências foram salvas. Bom uso do Finba!')
+                    ->success()
+                    ->send();
+
+                $this->redirect(static::getUrl(), navigate: false);
+            })
+            ->extraAttributes([
+                'class' => 'finba-onboarding-action',
+            ]);
     }
 
     public function getSubheading(): string | Htmlable | null
@@ -114,5 +193,14 @@ class Dashboard extends BaseDashboard
         return [
             'class' => 'finba-dashboard-page',
         ];
+    }
+
+    protected function shouldShowOnboarding(): bool
+    {
+        $user = auth()->user();
+
+        return $user !== null
+            && ! $user->hasCompletedOnboarding()
+            && ! $this->onboardingSkippedThisVisit;
     }
 }

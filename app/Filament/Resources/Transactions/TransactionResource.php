@@ -9,6 +9,7 @@ use App\Enums\Purpose;
 use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\Pages\ManageTransactions;
 use App\Filament\Components\MoneyInput;
+use App\Filament\Forms\LocationFormFields;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Loan;
@@ -176,29 +177,10 @@ class TransactionResource extends Resource
                         }
                     }),
 
-                Select::make('city_id')
-                    ->label('Cidade')
-                    ->relationship(
-                        name: 'city',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: function (Builder $query, callable $get) {
-                            $query->where('cities.user_id', Auth::id());
-                
-                            $personId = $get('person_id');
-                
-                            if ($personId) {
-                                $query->whereHas('people', fn (Builder $query) => $query->whereKey($personId));
-                            }
-                
-                            return $query->orderBy('cities.name');
-                        },
-                    )
-                    ->searchable()
-                    ->preload()
-                    ->native(false)
-                    ->live()
-                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode())
-                    ->nullable(),
+                ...LocationFormFields::compactLocationPicker(
+                    cityField: 'city_id',
+                    visible: fn (): bool => (bool) Auth::user()?->hasAdvancedMode(),
+                ),
     
                 Select::make('parent_category_id')
                     ->label('Categoria')
@@ -857,6 +839,8 @@ class TransactionResource extends Resource
 
     public static function mutateTransactionFormDataForSave(array $data): array
     {
+        $data = LocationFormFields::stripEphemeralFields($data);
+
         return app(TransactionService::class)->normalizeFormData($data);
     }
 

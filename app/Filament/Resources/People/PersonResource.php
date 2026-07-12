@@ -3,9 +3,12 @@
 namespace App\Filament\Resources\People;
 
 use App\Enums\TransactionType;
+use App\Filament\Forms\LocationFormFields;
 use App\Filament\Resources\People\Pages\ManagePeople;
 use App\Models\Category;
 use App\Models\Person;
+use App\Services\LocationDefaultsService;
+use App\Services\UserCityService;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -96,22 +99,13 @@ class PersonResource extends Resource
                     ->disabled(fn (callable $get): bool => blank($get('types')))
                     ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode()),
 
-                Select::make('cities')
-                    ->label('Cidades vinculadas')
-                    ->helperText('Quando esta pessoa for selecionada em uma transação, estas cidades poderão ser escolhidas.')
-                    ->relationship(
-                        name: 'cities',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query) => $query
-                            ->where('cities.user_id', Auth::id())
-                            ->orderBy('cities.name'),
-                    )
-                    ->multiple()
-                    ->searchable()
-                    ->preload()
-                    ->native(false)
-                    ->columnSpanFull()
-                    ->visible(fn (): bool => (bool) Auth::user()?->hasAdvancedMode()),
+                ...LocationFormFields::compactLocationPicker(
+                    cityField: 'cities',
+                    multiple: true,
+                    visible: fn (): bool => (bool) Auth::user()?->hasAdvancedMode(),
+                    cityHelperText: 'Quando esta pessoa for selecionada em uma transação, estas cidades poderão ser escolhidas.',
+                ),
+
             ]);
     }
 
@@ -186,7 +180,14 @@ class PersonResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->fillForm(fn (Person $record): array => [
+                        'name' => $record->name,
+                        'types' => $record->types,
+                        'categories' => $record->categories()->pluck('categories.id')->all(),
+                        'cities' => $record->cities()->pluck('cities.id')->all(),
+                    ])
+                    ->using(fn (Person $record, array $data): Person => self::savePerson($record, $data)),
                 DeleteAction::make()
                     ->requiresConfirmation()
                     ->modalHeading('Excluir pessoa')
@@ -198,6 +199,58 @@ class PersonResource extends Resource
                         ->requiresConfirmation(),
                 ]),
             ]);
+    }
+
+    public static function savePerson(Person $record, array $data): Person
+    {
+        $previousCityIds = $record->exists
+            ? $record->cities()->pluck('cities.id')->all()
+            : [];
+
+        $cityIds = self::resolveCityIds($data);
+        $categoryIds = $data['categories'] ?? [];
+        $data = LocationFormFields::stripEphemeralFields($data);
+        unset($data['cities'], $data['categories']);
+
+        $record->fill($data);
+        $record->save();
+
+        $record->categories()->sync($categoryIds);
+        $record->cities()->sync($cityIds);
+
+        app(\App\Services\CityUsageService::class)->recordNewlyAttached($cityIds, $previousCityIds);
+
+        return $record;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return list<string>
+     */
+    public static function resolveCityIds(array $data): array
+    {
+        $user = Auth::user();
+        $defaults = app(LocationDefaultsService::class);
+
+        if ((bool) ($data['search_other_region'] ?? false)) {
+            $countryCode = $user?->default_country_code;
+            $regionCode = $data['temporary_region_code'] ?? null;
+        } else {
+            $countryCode = $user?->default_country_code;
+            $regionCode = $user?->default_region_code;
+        }
+
+        return collect($data['cities'] ?? [])
+            ->map(fn (string $value): ?string => app(UserCityService::class)->resolveCatalogSelection(
+                $user,
+                $countryCode,
+                $regionCode,
+                $value,
+            ))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private static function formatTypes(array|string|null $state): string

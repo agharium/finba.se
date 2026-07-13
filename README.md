@@ -54,29 +54,24 @@ finba.se is built around a few ideas:
 
 ---
 
-## Planned features
+## Roadmap
 
-### Financial organization
-- [x] Categories
-- [x] Subcategories
-- [x] People tracking
-- [x] Transaction management
-- [ ] Recurring transactions
-- [ ] Installment transactions
-- [ ] Transfers between accounts
-- [ ] Attachments / receipts
+Finba.se is currently in **alpha**, preparing the first beta release.
 
-### Authentication
-- [x] Email/password
-- [x] Google OAuth
-- [ ] Multi-user collaboration
+**Completed highlights**
+- Core financial organization: categories, people, transactions, monthly dashboard, and accounts receivable
+- Personal features: tithes and first fruits, onboarding, and locale/location preferences
+- Product foundations: responsive UI, public changelog, and email/Google login
 
-### Product
-- [ ] Shared household mode
-- [ ] Dashboard / analytics
-- [ ] Budgeting
-- [ ] Notifications
-- [ ] Mobile app experience
+**In progress**
+- Loans and debts, installments, and recurring transactions
+- First beta release and production environment setup
+
+**Planned next**
+- Transfers, budgeting, reminders and notifications, and a public landing page
+- Shared finances for organizing money with other people
+
+The detailed and continuously updated roadmap is available inside the Finba.se application.
 
 ---
 
@@ -112,4 +107,4 @@ https://www.linkedin.com/in/jose-paulo-oliveira-filho/
 
 ## Status
 
-🚧 Active development
+Alpha — preparing the first beta release.

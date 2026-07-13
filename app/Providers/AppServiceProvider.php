@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Filament\Pages\Changelog;
 use App\Models\Transaction;
 use App\Observers\TransactionObserver;
 use Filament\Support\Facades\FilamentView;
@@ -25,6 +26,15 @@ class AppServiceProvider extends ServiceProvider
         );
 
         FilamentView::registerRenderHook(
+            PanelsRenderHook::TOPBAR_BEFORE,
+            fn (): ?\Illuminate\Contracts\View\View => auth()->check()
+                ? view('filament.components.alpha-banner', [
+                    'changelogUrl' => Changelog::getUrl(),
+                ])
+                : null,
+        );
+
+        FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_END,
             fn () => new HtmlString('
                 <meta name="referrer" content="no-referrer">   
@@ -33,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/dashboard.css') . '">
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/profile.css') . '">
                 <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/onboarding.css') . '">
+                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/alpha-banner.css') . '">
+                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/changelog.css') . '">
+                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/roadmap.css') . '">
             ')
         );
     }

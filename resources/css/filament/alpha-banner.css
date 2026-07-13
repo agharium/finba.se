@@ -1,0 +1,142 @@
+.finba-alpha-banner {
+    width: 100%;
+    border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+    background: linear-gradient(90deg, rgba(255, 251, 235, 0.98), rgba(254, 243, 199, 0.92));
+}
+
+.dark .finba-alpha-banner {
+    border-bottom-color: rgba(251, 191, 36, 0.18);
+    background: linear-gradient(90deg, rgba(69, 26, 3, 0.55), rgba(24, 24, 27, 0.96));
+}
+
+.finba-alpha-banner__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0.55rem 1rem;
+    box-sizing: border-box;
+}
+
+.finba-alpha-banner__content {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.finba-alpha-banner__badge {
+    flex-shrink: 0;
+    border-radius: 9999px;
+    padding: 0.15rem 0.55rem;
+    background: rgba(217, 119, 6, 0.16);
+    color: rgb(180, 83, 9);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dark .finba-alpha-banner__badge {
+    background: rgba(251, 191, 36, 0.16);
+    color: rgb(252, 211, 77);
+}
+
+.finba-alpha-banner__text {
+    margin: 0;
+    color: rgb(146, 64, 14);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.dark .finba-alpha-banner__text {
+    color: rgb(253, 230, 138);
+}
+
+.finba-alpha-banner__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.finba-alpha-banner__link {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.35rem 0.8rem;
+    background: rgb(217, 119, 6);
+    color: white;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 150ms ease;
+}
+
+.finba-alpha-banner__link:hover {
+    background: rgb(180, 83, 9);
+    color: white;
+}
+
+.dark .finba-alpha-banner__link {
+    background: rgb(245, 158, 11);
+    color: rgb(69, 26, 3);
+}
+
+.dark .finba-alpha-banner__link:hover {
+    background: rgb(251, 191, 36);
+    color: rgb(69, 26, 3);
+}
+
+.finba-alpha-banner__dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: none;
+    border-radius: 9999px;
+    background: transparent;
+    color: rgb(146, 64, 14);
+    cursor: pointer;
+}
+
+.finba-alpha-banner__dismiss:hover {
+    background: rgba(217, 119, 6, 0.12);
+}
+
+.dark .finba-alpha-banner__dismiss {
+    color: rgb(253, 230, 138);
+}
+
+.dark .finba-alpha-banner__dismiss:hover {
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.finba-alpha-banner__dismiss-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+@media (max-width: 640px) {
+    .finba-alpha-banner__inner {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 0.65rem 0.85rem;
+    }
+
+    .finba-alpha-banner__content {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .finba-alpha-banner__actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

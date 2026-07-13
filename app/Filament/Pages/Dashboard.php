@@ -51,11 +51,11 @@ class Dashboard extends BaseDashboard
     public function onboardingAction(): Action
     {
         return Action::make('onboarding')
-            ->modalHeading('Bem-vindo ao Finba')
+            ->modalHeading('Bem-vindo ao Finba.se')
             ->modalDescription('Vamos configurar o básico para deixar o aplicativo do seu jeito.')
             ->modalWidth(Width::Large)
             ->closeModalByClickingAway(false)
-            ->modalSubmitActionLabel('Começar a usar o Finba')
+            ->modalSubmitActionLabel('Começar a usar o Finba.se')
             ->modalCancelActionLabel('Pular por agora')
             ->modalCancelAction(fn (Action $action) => $action
                 ->color('gray')
@@ -102,7 +102,7 @@ class Dashboard extends BaseDashboard
 
                 Notification::make()
                     ->title('Tudo pronto!')
-                    ->body('Suas preferências foram salvas. Bom uso do Finba!')
+                    ->body('Suas preferências foram salvas. Bom uso do Finba.se!')
                     ->success()
                     ->send();
 

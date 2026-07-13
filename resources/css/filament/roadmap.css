@@ -1,0 +1,279 @@
+.finba-roadmap-page .fi-page-header-main-ctn {
+    row-gap: calc(var(--spacing) * 3);
+}
+
+.finba-roadmap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.finba-roadmap-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.finba-roadmap-summary__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0.9rem;
+    padding: 0.9rem 1rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.94));
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    min-width: 0;
+}
+
+.dark .finba-roadmap-summary__card {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(24, 24, 27, 0.94));
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+.finba-roadmap-summary__value {
+    color: rgb(17, 24, 39);
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.dark .finba-roadmap-summary__value {
+    color: rgb(244, 244, 245);
+}
+
+.finba-roadmap-summary__label {
+    color: rgb(107, 114, 128);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.dark .finba-roadmap-summary__label {
+    color: rgb(161, 161, 170);
+}
+
+.finba-roadmap-summary__card--completed {
+    border-color: rgba(22, 163, 74, 0.18);
+}
+
+.finba-roadmap-summary__card--in-progress {
+    border-color: rgba(217, 119, 6, 0.18);
+}
+
+.finba-roadmap-summary__card--planned {
+    border-color: rgba(37, 99, 235, 0.16);
+}
+
+.finba-roadmap-category {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.94));
+    padding: 1.15rem;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+    min-width: 0;
+}
+
+.dark .finba-roadmap-category {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(24, 24, 27, 0.94));
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.finba-roadmap-category__header {
+    margin-bottom: 0.85rem;
+}
+
+.finba-roadmap-category__title {
+    margin: 0;
+    color: rgb(17, 24, 39);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.dark .finba-roadmap-category__title {
+    color: rgb(244, 244, 245);
+}
+
+.finba-roadmap-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.finba-roadmap-item {
+    display: grid;
+    grid-template-columns: 1.35rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.55rem;
+    min-width: 0;
+}
+
+.finba-roadmap-item + .finba-roadmap-item {
+    border-top: 1px solid rgba(15, 23, 42, 0.05);
+    padding-top: 0.85rem;
+}
+
+.dark .finba-roadmap-item + .finba-roadmap-item {
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.finba-roadmap-item__icon {
+    display: inline-flex;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+}
+
+.finba-roadmap-item__icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.finba-roadmap-item--completed .finba-roadmap-item__icon {
+    color: rgb(22, 163, 74);
+}
+
+.finba-roadmap-item--in_progress .finba-roadmap-item__icon {
+    color: rgb(217, 119, 6);
+}
+
+.finba-roadmap-item--planned .finba-roadmap-item__icon {
+    color: rgb(148, 163, 184);
+}
+
+.dark .finba-roadmap-item--completed .finba-roadmap-item__icon {
+    color: rgb(74, 222, 128);
+}
+
+.dark .finba-roadmap-item--in_progress .finba-roadmap-item__icon {
+    color: rgb(251, 191, 36);
+}
+
+.dark .finba-roadmap-item--planned .finba-roadmap-item__icon {
+    color: rgb(161, 161, 170);
+}
+
+.finba-roadmap-item__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.finba-roadmap-item__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+}
+
+.finba-roadmap-item__title {
+    margin: 0;
+    color: rgb(31, 41, 55);
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.dark .finba-roadmap-item__title {
+    color: rgb(228, 228, 231);
+}
+
+.finba-roadmap-item--completed .finba-roadmap-item__title {
+    color: rgb(55, 65, 81);
+}
+
+.dark .finba-roadmap-item--completed .finba-roadmap-item__title {
+    color: rgb(212, 212, 216);
+}
+
+.finba-roadmap-item__description {
+    margin: 0;
+    color: rgb(107, 114, 128);
+    font-size: 0.84rem;
+    line-height: 1.55;
+}
+
+.dark .finba-roadmap-item__description {
+    color: rgb(161, 161, 170);
+}
+
+.finba-roadmap-item__badge {
+    border-radius: 9999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.finba-roadmap-item__badge--completed {
+    background: rgba(22, 163, 74, 0.14);
+    color: rgb(21, 128, 61);
+}
+
+.finba-roadmap-item__badge--in_progress {
+    background: rgba(217, 119, 6, 0.14);
+    color: rgb(180, 83, 9);
+}
+
+.finba-roadmap-item__badge--planned {
+    background: rgba(37, 99, 235, 0.12);
+    color: rgb(29, 78, 216);
+}
+
+.dark .finba-roadmap-item__badge--completed {
+    background: rgba(74, 222, 128, 0.16);
+    color: rgb(134, 239, 172);
+}
+
+.dark .finba-roadmap-item__badge--in_progress {
+    background: rgba(251, 191, 36, 0.16);
+    color: rgb(252, 211, 77);
+}
+
+.dark .finba-roadmap-item__badge--planned {
+    background: rgba(147, 197, 253, 0.16);
+    color: rgb(147, 197, 253);
+}
+
+.finba-roadmap-empty {
+    border: 1px dashed rgba(15, 23, 42, 0.12);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    color: rgb(107, 114, 128);
+    text-align: center;
+}
+
+.dark .finba-roadmap-empty {
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgb(161, 161, 170);
+}
+
+@media (max-width: 640px) {
+    .finba-roadmap-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .finba-roadmap-category {
+        padding: 1rem;
+    }
+
+    .finba-roadmap-item__heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

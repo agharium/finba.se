@@ -2,7 +2,7 @@
 
 ## Visão
 
-Finba é um sistema de controle financeiro pessoal desenvolvido em Laravel 13 + Filament 5.
+Finba.se é um sistema de controle financeiro pessoal desenvolvido em Laravel 13 + Filament 5.
 
 Objetivo principal:
 

@@ -1,0 +1,302 @@
+.finba-changelog-page .fi-page-header-main-ctn {
+    row-gap: calc(var(--spacing) * 3);
+}
+
+.finba-changelog {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+}
+
+.finba-changelog-day {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.finba-changelog-day + .finba-changelog-day {
+    margin-top: 0.25rem;
+}
+
+.finba-changelog-day__marker {
+    position: relative;
+    margin-top: 0.35rem;
+}
+
+.finba-changelog-day__marker::before {
+    content: '';
+    display: block;
+    width: 0.7rem;
+    height: 0.7rem;
+    margin: 0.15rem auto 0;
+    border: 2px solid rgb(22, 163, 74);
+    border-radius: 9999px;
+    background: white;
+}
+
+.finba-changelog-day__marker::after {
+    content: '';
+    position: absolute;
+    top: 1rem;
+    bottom: -1.5rem;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.08);
+}
+
+.dark .finba-changelog-day__marker::before {
+    background: rgb(24, 24, 27);
+    border-color: rgb(74, 222, 128);
+}
+
+.dark .finba-changelog-day__marker::after {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.finba-changelog-day:last-child .finba-changelog-day__marker::after {
+    display: none;
+}
+
+.finba-changelog-day__content {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.94));
+    padding: 1.25rem;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+    min-width: 0;
+}
+
+.dark .finba-changelog-day__content {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(24, 24, 27, 0.94));
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.finba-changelog-day__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+}
+
+.finba-changelog-day__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.finba-changelog-day__date {
+    color: rgb(107, 114, 128);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.dark .finba-changelog-day__date {
+    color: rgb(161, 161, 170);
+}
+
+.finba-changelog-day__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.finba-changelog-day__badge {
+    border-radius: 9999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.finba-changelog-day__badge--version {
+    background: rgba(15, 23, 42, 0.06);
+    color: rgb(55, 65, 81);
+}
+
+.dark .finba-changelog-day__badge--version {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgb(228, 228, 231);
+}
+
+.finba-changelog-day__badge--status {
+    background: rgba(217, 119, 6, 0.14);
+    color: rgb(180, 83, 9);
+    text-transform: uppercase;
+}
+
+.dark .finba-changelog-day__badge--status {
+    background: rgba(251, 191, 36, 0.16);
+    color: rgb(252, 211, 77);
+}
+
+.finba-changelog-day__title {
+    margin: 0;
+    color: rgb(17, 24, 39);
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.dark .finba-changelog-day__title {
+    color: rgb(244, 244, 245);
+}
+
+.finba-changelog-group + .finba-changelog-group {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.dark .finba-changelog-group + .finba-changelog-group {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.finba-changelog-group__title {
+    margin: 0 0 0.75rem;
+    color: rgb(55, 65, 81);
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.dark .finba-changelog-group__title {
+    color: rgb(212, 212, 216);
+}
+
+.finba-changelog-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.finba-changelog-entry {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.finba-changelog-entry__badge {
+    justify-self: start;
+    border-radius: 9999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.finba-changelog-entry--added .finba-changelog-entry__badge {
+    background: rgba(22, 163, 74, 0.14);
+    color: rgb(21, 128, 61);
+}
+
+.finba-changelog-entry--changed .finba-changelog-entry__badge {
+    background: rgba(37, 99, 235, 0.14);
+    color: rgb(29, 78, 216);
+}
+
+.finba-changelog-entry--fixed .finba-changelog-entry__badge {
+    background: rgba(217, 119, 6, 0.14);
+    color: rgb(180, 83, 9);
+}
+
+.finba-changelog-entry--removed .finba-changelog-entry__badge {
+    background: rgba(220, 38, 38, 0.12);
+    color: rgb(185, 28, 28);
+}
+
+.finba-changelog-entry--decision .finba-changelog-entry__badge {
+    background: rgba(109, 40, 217, 0.12);
+    color: rgb(91, 33, 182);
+}
+
+.finba-changelog-entry--internal .finba-changelog-entry__badge {
+    background: rgba(107, 114, 128, 0.12);
+    color: rgb(107, 114, 128);
+}
+
+.dark .finba-changelog-entry--added .finba-changelog-entry__badge {
+    background: rgba(74, 222, 128, 0.16);
+    color: rgb(134, 239, 172);
+}
+
+.dark .finba-changelog-entry--changed .finba-changelog-entry__badge {
+    background: rgba(147, 197, 253, 0.16);
+    color: rgb(147, 197, 253);
+}
+
+.dark .finba-changelog-entry--fixed .finba-changelog-entry__badge {
+    background: rgba(251, 191, 36, 0.16);
+    color: rgb(252, 211, 77);
+}
+
+.dark .finba-changelog-entry--removed .finba-changelog-entry__badge {
+    background: rgba(248, 113, 113, 0.16);
+    color: rgb(252, 165, 165);
+}
+
+.dark .finba-changelog-entry--decision .finba-changelog-entry__badge {
+    background: rgba(196, 181, 253, 0.16);
+    color: rgb(196, 181, 253);
+}
+
+.dark .finba-changelog-entry--internal .finba-changelog-entry__badge {
+    background: rgba(161, 161, 170, 0.12);
+    color: rgb(161, 161, 170);
+}
+
+.finba-changelog-entry__text {
+    margin: 0;
+    color: rgb(55, 65, 81);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.dark .finba-changelog-entry__text {
+    color: rgb(212, 212, 216);
+}
+
+.finba-changelog-entry--internal .finba-changelog-entry__text {
+    color: rgb(107, 114, 128);
+    font-size: 0.86rem;
+}
+
+.dark .finba-changelog-entry--internal .finba-changelog-entry__text {
+    color: rgb(161, 161, 170);
+}
+
+.finba-changelog-empty {
+    border: 1px dashed rgba(15, 23, 42, 0.12);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    color: rgb(107, 114, 128);
+    text-align: center;
+}
+
+.dark .finba-changelog-empty {
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgb(161, 161, 170);
+}
+
+@media (max-width: 640px) {
+    .finba-changelog-day {
+        grid-template-columns: 0.85rem minmax(0, 1fr);
+        gap: 0.65rem;
+    }
+
+    .finba-changelog-day__content {
+        padding: 1rem;
+    }
+
+    .finba-changelog-day__title {
+        font-size: 1.05rem;
+    }
+}

@@ -37,8 +37,8 @@ Database:
 - PostgreSQL (Supabase)
 
 Mobile strategy:
-- Web-first
-- PWA and/or Capacitor (TBD)
+- Web-first installable PWA
+- Native packaging remains a future possibility
 
 ---
 
@@ -59,12 +59,12 @@ finba.se is built around a few ideas:
 Finba.se is currently in **alpha**, preparing the first beta release.
 
 **Completed highlights**
-- Core financial organization: categories, people, transactions, monthly dashboard, and accounts receivable
+- Core financial organization: categories, people, transactions, monthly dashboard, accounts receivable, and installment purchases
 - Personal features: tithes and first fruits, onboarding, and locale/location preferences
-- Product foundations: responsive UI, public changelog, and email/Google login
+- Product foundations: responsive UI, installable PWA, public changelog, and email/Google login
 
 **In progress**
-- Loans and debts, installments, and recurring transactions
+- Loans and debts, and recurring transactions
 - First beta release and production environment setup
 
 **Planned next**

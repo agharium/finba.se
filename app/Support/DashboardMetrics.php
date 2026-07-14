@@ -53,11 +53,11 @@ class DashboardMetrics
             ->where('user_id', $this->userId)
             ->whereYear('date', $this->month->year)
             ->whereMonth('date', $this->month->month)
-            ->with(['category.parent'])
+            ->with(['category.parent', 'installmentGroup'])
             ->orderByDesc('date')
             ->orderByDesc('created_at')
             ->limit($limit)
-            ->get(['id', 'description', 'amount', 'type', 'date', 'category_id']);
+            ->get(['id', 'description', 'amount', 'type', 'date', 'category_id', 'installment_group_id', 'installment_number']);
     }
 
     /**

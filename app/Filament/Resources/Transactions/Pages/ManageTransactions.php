@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Transactions\Pages;
 
 use App\Enums\IncomePaymentMode;
+use App\Enums\TransactionEntryMode;
 use App\Enums\TransactionType;
+use App\Filament\Forms\LocationFormFields;
 use App\Filament\Resources\Transactions\TransactionResource;
 use App\Services\TransactionService;
 use Filament\Actions\CreateAction;
@@ -35,8 +37,10 @@ class ManageTransactions extends ManageRecords
                     'status' => 'PAID',
                     'date' => now(),
                     'payment_mode' => IncomePaymentMode::NOW->value,
-                    'city_id' => \App\Filament\Forms\LocationFormFields::userDefaultCityId(),
+                    'entry_mode' => TransactionEntryMode::IMMEDIATE->value,
+                    'city_id' => LocationFormFields::userDefaultCityId(),
                 ])
+                ->mutateFormDataUsing(fn (array $data): array => LocationFormFields::stripEphemeralFields($data))
                 ->using(function (array $data): Model {
                     $result = app(TransactionService::class)->create(auth()->user(), $data);
 

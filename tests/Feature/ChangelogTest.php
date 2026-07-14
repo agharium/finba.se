@@ -26,7 +26,9 @@ it('allows authenticated users to access changelog', function () {
         ->assertSuccessful()
         ->assertSee('Changelog')
         ->assertSee('Fundação do projeto Finba.se')
-        ->assertSee('Onboarding, localização e changelog alfa');
+        ->assertSee('Onboarding, localização e changelog alfa')
+        ->assertSee('Parcelamentos e experiência como aplicativo')
+        ->assertSee('Experiência como aplicativo');
 });
 
 it('denies guests access to changelog', function () {

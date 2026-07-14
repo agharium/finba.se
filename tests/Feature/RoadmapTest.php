@@ -58,14 +58,14 @@ it('shows correct summary counts from roadmap data', function () {
     $counts = app(RoadmapService::class)->statusCounts();
 
     expect($counts)->toBe([
-        'completed' => 13,
-        'in_progress' => 5,
+        'completed' => 15,
+        'in_progress' => 4,
         'planned' => 5,
     ]);
 
     Livewire::actingAs(roadmapUser())
         ->test(Roadmap::class)
-        ->assertSee('13')
+        ->assertSee('15')
         ->assertSee('Concluídos')
         ->assertSee('Em desenvolvimento')
         ->assertSee('Planejados');

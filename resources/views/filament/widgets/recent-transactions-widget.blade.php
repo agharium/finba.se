@@ -20,6 +20,7 @@
             @foreach ($transactions as $transaction)
                 @php
                     $categoryName = DashboardMetrics::categoryDisplayName($transaction);
+                    $installmentLabel = \App\Filament\Resources\Transactions\TransactionResource::installmentLabel($transaction);
                 @endphp
 
                 <article
@@ -41,7 +42,9 @@
                             </p>
                         @endif
 
-                        @if (filled($categoryName))
+                        @if (filled($installmentLabel))
+                            <span class="finba-dashboard-transaction__category">{{ $installmentLabel }}</span>
+                        @elseif (filled($categoryName))
                             <span class="finba-dashboard-transaction__category">{{ $categoryName }}</span>
                         @endif
                     </div>

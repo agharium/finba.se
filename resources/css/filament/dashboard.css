@@ -685,13 +685,14 @@ DASHBOARD PAGE
     transform: none;
 }
 
+.dark .finba-dashboard-page .finba-dashboard-tithe__cta:not(.finba-dashboard-tithe__cta--disabled) {
+    background: rgb(22, 163, 74);
+    color: #ffffff;
+}
+
 .dark .finba-dashboard-page .finba-dashboard-tithe__cta--disabled {
     background: rgb(63, 63, 70);
     color: rgb(161, 161, 170);
-}
-
-.dark .finba-dashboard-page .finba-dashboard-tithe__cta {
-    background: rgb(22, 163, 74);
 }
 
 /* Tithe confirmation modal */

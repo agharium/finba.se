@@ -9,7 +9,7 @@ Objetivo principal:
 * Controle financeiro simples para usuários comuns.
 * Recursos avançados opcionais.
 * Forte foco em UX.
-* Mobile-first no futuro (PWA e NativePHP Mobile estão sendo avaliados).
+* Mobile-first via installable PWA (online-first; native packaging still deferred).
 * Multi-idioma desde o início (pt-BR e en-US).
 
 ---
@@ -121,6 +121,8 @@ Campos principais:
 * category
 * person
 * loan
+* installment_group
+* installment_number
 * recurring_transaction
 
 Tipos:
@@ -151,6 +153,25 @@ Despesa:
 * purpose = TITHE
 
 Isto significa que o usuário entregou R$ 15,00 de dízimo.
+
+---
+
+## Installment Groups
+
+Representam um plano de parcelamento.
+
+Regra atual:
+
+* InstallmentGroup é o registro pai do plano.
+* Cada parcela é uma Transaction real vinculada por `installment_group_id`.
+* O fluxo básico de criação, numeração (ex.: 3/12), datas mensais e distribuição de centavos está concluído e utilizável ponta a ponta.
+
+Adiado (fora do MVP):
+
+* editar todas as parcelas de uma vez
+* cancelar parcelas futuras
+* quitação antecipada
+* juros e faturas de cartão
 
 ---
 
@@ -340,18 +361,54 @@ Desktop continua usando tabela.
 
 ---
 
+# PWA
+
+Finba.se é online-first e instalável como Progressive Web App.
+
+Comportamento atual:
+
+* Manifesto em `/manifest.webmanifest`
+* Service worker conservador em `/service-worker.js`
+* Precache apenas de ativos públicos estáticos
+* Navegação authenticated/HTML financeira NÃO é cacheada
+* Sem mutações financeiras offline
+* Offline fallback em `/offline.html`
+* Botão permanente de instalação no topo (perto do avatar)
+* Modal explicativo antes do prompt nativo do navegador
+* Sugestão proativa no máximo uma vez por sessão
+* iOS Safari recebe instruções manuais de “Adicionar à Tela de Início”
+* Atualizações do service worker exigem confirmação do usuário
+
+Storage permitido no navegador:
+
+* flags de UI em `sessionStorage` (banner alfa, instalação sugerida, update adiado)
+
+Proibido:
+
+* armazenar lançamentos financeiros em Cache Storage, IndexedDB ou Background Sync
+
+Adiado:
+
+* empacotamento nativo (Capacitor/NativePHP/lojas)
+* push notifications
+* sync offline
+
+---
+
 # Situação Atual
 
-Banco estruturado.
+Fluxos principais já utilizáveis:
 
-Migrations funcionando.
+* Transações à vista
+* Contas a receber
+* Parcelamentos básicos
+* Dashboard mensal
+* Onboarding e preferências
+* PWA instalável (online-first)
 
 Próximo foco:
 
-1. Transaction Resource
-2. Dashboard
-3. Tithe Calculations
-4. Recurring Transactions
-5. Reminders
-6. Notifications
-7. NativePHP Mobile
+1. Empréstimos e dívidas
+2. Transações recorrentes
+3. Lembretes e notificações
+4. Preparação da primeira versão beta

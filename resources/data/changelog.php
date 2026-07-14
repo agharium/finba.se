@@ -2,9 +2,54 @@
 
 return [
     [
-        'date' => '2026-07-12',
+        'date' => '2026-07-14',
         'version' => null,
         'badge' => 'Em desenvolvimento',
+        'title' => 'Parcelamentos e experiência como aplicativo',
+        'groups' => [
+            [
+                'title' => 'Parcelamentos',
+                'items' => [
+                    [
+                        'type' => 'added',
+                        'text' => 'Foi concluído o fluxo de transações parceladas.',
+                    ],
+                    [
+                        'type' => 'added',
+                        'text' => 'Um lançamento parcelado agora gera automaticamente todas as parcelas mensais vinculadas ao mesmo grupo.',
+                    ],
+                    [
+                        'type' => 'changed',
+                        'text' => 'Os valores são distribuídos com precisão de centavos e as datas permanecem válidas mesmo em vencimentos no fim do mês.',
+                    ],
+                    [
+                        'type' => 'changed',
+                        'text' => 'As transações passaram a exibir a identificação da parcela, como "3/12".',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Experiência como aplicativo',
+                'items' => [
+                    [
+                        'type' => 'added',
+                        'text' => 'O Finba.se passou a poder ser instalado como aplicativo no dispositivo.',
+                    ],
+                    [
+                        'type' => 'added',
+                        'text' => 'Foi adicionado um fluxo guiado de instalação com acesso permanente pelo topo da aplicação.',
+                    ],
+                    [
+                        'type' => 'added',
+                        'text' => 'Também foram incluídos suporte a atualizações e uma tela segura para momentos sem conexão.',
+                    ],
+                ],
+            ],
+        ],
+    ],
+    [
+        'date' => '2026-07-12',
+        'version' => null,
         'title' => 'Onboarding, localização e changelog alfa',
         'groups' => [
             [

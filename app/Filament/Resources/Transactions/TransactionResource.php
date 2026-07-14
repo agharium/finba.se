@@ -6,6 +6,7 @@ use App\Enums\IncomePaymentMode;
 use App\Enums\LoanStatus;
 use App\Enums\LoanType;
 use App\Enums\Purpose;
+use App\Enums\TransactionEntryMode;
 use App\Enums\TransactionType;
 use App\Filament\Resources\Transactions\Pages\ManageTransactions;
 use App\Filament\Components\MoneyInput;
@@ -17,6 +18,7 @@ use App\Models\Person;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 use App\Support\Helpers;
+use App\Support\InstallmentDistributor;
 use BackedEnum;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -32,6 +34,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -39,10 +42,12 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Support\Enums\TextSize;
+use Filament\Support\Exceptions\Halt;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -71,7 +76,7 @@ class TransactionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['category.parent', 'person', 'city', 'loan'])
+            ->with(['category.parent', 'person', 'city', 'loan', 'installmentGroup'])
             ->where('user_id', Auth::id());
     }
 
@@ -119,22 +124,64 @@ class TransactionResource extends Resource
                     ->live()
                     ->visible(fn (callable $get, string $operation): bool => $operation === 'create'
                         && self::userUsesAccountsReceivable()
-                        && $get('type') === TransactionType::INCOME->value)
+                        && $get('type') === TransactionType::INCOME->value
+                        && ($get('entry_mode') ?? TransactionEntryMode::IMMEDIATE->value) !== TransactionEntryMode::INSTALLMENT->value)
                     ->dehydrated(),
 
+                ToggleButtons::make('entry_mode')
+                    ->label('Forma de lançamento')
+                    ->options(TransactionEntryMode::options())
+                    ->default(TransactionEntryMode::IMMEDIATE->value)
+                    ->inline()
+                    ->grouped()
+                    ->live()
+                    ->dehydrated()
+                    ->visible(fn (callable $get, string $operation): bool => $operation === 'create'
+                        && filled($get('type'))
+                        && ! self::isReceivableLaterForm($get)
+                        && ! self::isReceivablePaymentForm($get))
+                    ->afterStateUpdated(function (callable $set, ?string $state): void {
+                        if ($state === TransactionEntryMode::INSTALLMENT->value) {
+                            $set('payment_mode', IncomePaymentMode::NOW->value);
+                            $set('has_loan', false);
+                            $set('loan_id', null);
+                        }
+                    }),
+
                 MoneyInput::make('amount')
-                    ->label('Valor')
+                    ->label(fn (callable $get, string $operation): string => $operation === 'create'
+                        && ($get('entry_mode') ?? TransactionEntryMode::IMMEDIATE->value) === TransactionEntryMode::INSTALLMENT->value
+                        ? 'Valor total'
+                        : 'Valor')
                     ->required()
-                    ->minValue(0.01),
-    
+                    ->minValue(0.01)
+                    ->disabled(fn (?Transaction $record): bool => filled($record?->installment_group_id))
+                    ->dehydrated(),
+
                 TextInput::make('description')
                     ->label('Descrição'),
-    
+
+                TextInput::make('installments_count')
+                    ->label('Número de parcelas')
+                    ->numeric()
+                    ->integer()
+                    ->minValue(InstallmentDistributor::MIN_INSTALLMENTS)
+                    ->maxValue(InstallmentDistributor::MAX_INSTALLMENTS)
+                    ->required(fn (callable $get): bool => ($get('entry_mode') ?? TransactionEntryMode::IMMEDIATE->value) === TransactionEntryMode::INSTALLMENT->value)
+                    ->visible(fn (callable $get, string $operation): bool => $operation === 'create'
+                        && ($get('entry_mode') ?? TransactionEntryMode::IMMEDIATE->value) === TransactionEntryMode::INSTALLMENT->value)
+                    ->dehydrated(fn (callable $get, string $operation): bool => $operation === 'create'
+                        && ($get('entry_mode') ?? TransactionEntryMode::IMMEDIATE->value) === TransactionEntryMode::INSTALLMENT->value),
+
                 DatePicker::make('date')
-                    ->label('Data')
+                    ->label(fn (callable $get, string $operation): string => $operation === 'create'
+                        && ($get('entry_mode') ?? TransactionEntryMode::IMMEDIATE->value) === TransactionEntryMode::INSTALLMENT->value
+                        ? 'Data da primeira parcela'
+                        : 'Data')
                     ->required()
-                    ->default(now()),
-    
+                    ->default(now())
+                    ->disabled(fn (?Transaction $record): bool => filled($record?->installment_group_id))
+                    ->dehydrated(),
                 Select::make('person_id')
                     ->label('Pessoa')
                     ->options(fn (callable $get): array => Person::query()
@@ -349,6 +396,7 @@ class TransactionResource extends Resource
                         (bool) Auth::user()?->hasAdvancedMode()
                         && filled($get('type'))
                         && ! self::isReceivableLaterForm($get)
+                        && ! self::isInstallmentForm($get)
                     ),
 
                 Select::make('loan_link_kind')
@@ -550,12 +598,23 @@ class TransactionResource extends Resource
                                     ->extraAttributes([
                                         'class' => 'finba-transaction-view__detail',
                                     ]),
+
+                                TextEntry::make('installment_label')
+                                    ->label('Parcela')
+                                    ->state(fn (Transaction $record): ?string => self::installmentLabel($record))
+                                    ->visible(fn (Transaction $record): bool => filled(self::installmentLabel($record)))
+                                    ->badge()
+                                    ->color('info')
+                                    ->extraAttributes([
+                                        'class' => 'finba-transaction-view__detail',
+                                    ]),
                             ]),
                     ])
                     ->visible(fn (Transaction $record): bool => filled($record->person?->name)
                         || filled(self::formatCategoryPath($record))
                         || filled($record->city?->name)
-                        || filled($record->category?->parent))
+                        || filled($record->category?->parent)
+                        || filled(self::installmentLabel($record)))
                     ->extraAttributes([
                         'class' => 'finba-transaction-view finba-transaction-view__details',
                     ])
@@ -590,7 +649,15 @@ class TransactionResource extends Resource
                         'transactions.description',
                         $search,
                     ))
-                    ->limit(40)
+                    ->formatStateUsing(function (?string $state, Transaction $record): string {
+                        $label = self::installmentLabel($record);
+                        $description = filled($state) ? $state : '-';
+
+                        return filled($label)
+                            ? "{$description} · {$label}"
+                            : $description;
+                    })
+                    ->limit(48)
                     ->visibleFrom('md'),
 
                 // TextColumn::make('type')
@@ -749,11 +816,22 @@ class TransactionResource extends Resource
 
                         $query->where('city_id', $data['value']);
                     }),
+
+                TernaryFilter::make('installment_group_id')
+                    ->label('Parceladas')
+                    ->placeholder('Todas')
+                    ->trueLabel('Parceladas')
+                    ->falseLabel('Não parceladas')
+                    ->queries(
+                        true: fn (Builder $query): Builder => $query->whereNotNull('installment_group_id'),
+                        false: fn (Builder $query): Builder => $query->whereNull('installment_group_id'),
+                        blank: fn (Builder $query): Builder => $query,
+                    ),
             ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns([
                 'default' => 1,
                 'md' => 2,
-                'xl' => 5,
+                'xl' => 6,
             ])
             ->deferFilters(false)
             ->recordActions([
@@ -768,7 +846,12 @@ class TransactionResource extends Resource
                         ->label('Excluir')
                         ->requiresConfirmation()
                         ->modalHeading('Excluir transação')
-                        ->modalDescription('Tem certeza que deseja excluir esta transação?'),
+                        ->modalDescription(fn (Transaction $record): string => filled($record->installment_group_id)
+                            ? 'Esta parcela faz parte de um grupo. A exclusão de parcelas individuais ainda não é permitida para preservar a consistência do plano.'
+                            : 'Tem certeza que deseja excluir esta transação?')
+                        ->before(function (Transaction $record): void {
+                            self::guardGroupedInstallmentDeletion($record);
+                        }),
                 ])
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->label('Ações')
@@ -793,7 +876,12 @@ class TransactionResource extends Resource
                     ])
                     ->requiresConfirmation()
                     ->modalHeading('Excluir transação')
-                    ->modalDescription('Tem certeza que deseja excluir esta transação?'),
+                    ->modalDescription(fn (Transaction $record): string => filled($record->installment_group_id)
+                        ? 'Esta parcela faz parte de um grupo. A exclusão de parcelas individuais ainda não é permitida para preservar a consistência do plano.'
+                        : 'Tem certeza que deseja excluir esta transação?')
+                    ->before(function (Transaction $record): void {
+                        self::guardGroupedInstallmentDeletion($record);
+                    }),
             ]);
 
             // ->toolbarActions([
@@ -852,6 +940,52 @@ class TransactionResource extends Resource
 
         return $get('type') === TransactionType::INCOME->value
             && ($get('payment_mode') ?? IncomePaymentMode::NOW->value) === IncomePaymentMode::LATER->value;
+    }
+
+    public static function isInstallmentForm(callable $get): bool
+    {
+        return ($get('entry_mode') ?? TransactionEntryMode::IMMEDIATE->value) === TransactionEntryMode::INSTALLMENT->value;
+    }
+
+    public static function isReceivablePaymentForm(callable $get): bool
+    {
+        if (! self::userUsesAccountsReceivable()) {
+            return false;
+        }
+
+        return $get('type') === TransactionType::INCOME->value
+            && (bool) $get('has_loan')
+            && ($get('loan_link_kind') ?? LoanType::BORROWED->value) === LoanType::RECEIVABLE->value;
+    }
+
+    public static function installmentLabel(Transaction $record): ?string
+    {
+        if (blank($record->installment_group_id) || blank($record->installment_number)) {
+            return null;
+        }
+
+        $total = $record->installmentGroup?->installments_count;
+
+        if (blank($total)) {
+            return "Parcela {$record->installment_number}";
+        }
+
+        return "Parcela {$record->installment_number}/{$total}";
+    }
+
+    public static function guardGroupedInstallmentDeletion(Transaction $record): void
+    {
+        if (blank($record->installment_group_id)) {
+            return;
+        }
+
+        Notification::make()
+            ->title('Exclusão bloqueada')
+            ->body('Parcelas de um grupo não podem ser excluídas individualmente nesta versão.')
+            ->warning()
+            ->send();
+
+        throw new Halt();
     }
 
     public static function makeViewAction(string $name = 'view'): ViewAction
@@ -931,6 +1065,7 @@ class TransactionResource extends Resource
             'category_path' => $categoryPath,
             'person' => $person,
             'city' => $record->city?->name,
+            'installment' => self::installmentLabel($record),
             'counterparty' => collect([$person, $categoryPath])
                 ->filter()
                 ->implode(' • ') ?: '-',

@@ -30,14 +30,14 @@ return [
                 'description' => 'Recebimentos posteriores, vendas a prazo, pagamentos parciais e fechamento automático.',
             ],
             [
+                'title' => 'Parcelamentos',
+                'status' => 'completed',
+                'description' => 'Compras e lançamentos podem ser divididos em parcelas mensais, com geração automática das transações e acompanhamento por parcela.',
+            ],
+            [
                 'title' => 'Empréstimos e dívidas',
                 'status' => 'in_progress',
                 'description' => 'Controle do que foi emprestado, devido e pendente.',
-            ],
-            [
-                'title' => 'Parcelamentos',
-                'status' => 'in_progress',
-                'description' => 'Compras e pagamentos divididos em parcelas.',
             ],
             [
                 'title' => 'Transações recorrentes',
@@ -108,6 +108,11 @@ return [
                 'title' => 'Login com e-mail e Google',
                 'status' => 'completed',
                 'description' => 'Acesso com credenciais ou conta Google.',
+            ],
+            [
+                'title' => 'PWA instalável',
+                'status' => 'completed',
+                'description' => 'Instalação como aplicativo, atualizações e tela segura para momentos sem conexão.',
             ],
             [
                 'title' => 'Primeira versão beta',

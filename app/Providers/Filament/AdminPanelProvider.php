@@ -37,11 +37,13 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Green,
                 'danger' => Color::Rose,
             ])
+            ->favicon(asset('favicon.ico'))
             ->brandLogo(asset('images/logo/light.png'))
             ->darkModeBrandLogo(asset('images/logo/dark.png'))
             ->brandLogoHeight('2rem')
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->globalSearch(false)
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Dashboard::class,
                 Profile::class,

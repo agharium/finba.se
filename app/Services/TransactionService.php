@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\IncomePaymentMode;
+use App\Enums\TransactionEntryMode;
 use App\Enums\TransactionType;
 use App\Models\Transaction;
 use App\Models\User;
@@ -13,6 +14,7 @@ class TransactionService
     public function __construct(
         private ReceivableSaleService $receivableSaleService,
         private ReceivablePaymentService $receivablePaymentService,
+        private InstallmentGroupService $installmentGroupService,
     ) {}
 
     /**
@@ -37,6 +39,12 @@ class TransactionService
             );
 
             return TransactionCreationResult::transaction($transaction);
+        }
+
+        if ($this->installmentGroupService->supports($data)) {
+            $result = $this->installmentGroupService->create($user, $data);
+
+            return TransactionCreationResult::transaction($result->transactions->first());
         }
 
         $transaction = Transaction::query()->create($this->prepareAttributes($data));
@@ -76,7 +84,17 @@ class TransactionService
             ? $data['category_id']
             : null;
 
-        unset($data['parent_category_id'], $data['child_category_id'], $data['payment_mode']);
+        unset(
+            $data['parent_category_id'],
+            $data['child_category_id'],
+            $data['payment_mode'],
+            $data['entry_mode'],
+            $data['installments_count'],
+            $data['first_installment_date'],
+            $data['has_loan'],
+            $data['loan_link_kind'],
+            $data['contribution_toggle'],
+        );
 
         return $data;
     }

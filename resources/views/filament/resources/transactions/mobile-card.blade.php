@@ -8,7 +8,9 @@
     $subcategoryName = $parentCategory ? $category?->name : null;
     $personName = $record->person?->name;
     $cityName = $record->city?->name;
+    $installmentLabel = $card['installment'] ?? null;
     $metadataRows = collect([
+        filled($installmentLabel) ? ['label' => 'Parcela:', 'value' => str_replace('Parcela ', '', $installmentLabel)] : null,
         filled($categoryName) ? ['label' => 'Categoria:', 'value' => $categoryName] : null,
         filled($subcategoryName) ? ['label' => 'Subcategoria:', 'value' => $subcategoryName] : null,
         filled($personName) ? ['label' => 'Pessoa:', 'value' => $personName] : null,
@@ -19,6 +21,7 @@
         || filled($cityName)
         || filled($categoryName)
         || filled($subcategoryName)
+        || filled($installmentLabel)
         || filled($card['date']);
 @endphp
 

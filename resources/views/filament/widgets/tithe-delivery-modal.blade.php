@@ -27,7 +27,7 @@
                 <span class="finba-tithe-modal__label">Dízimo pendente</span>
                 <span class="finba-tithe-modal__value">
                     @if ($summary['tithe_pending'] > 0)
-                        {{ DashboardMetrics::formatBrl($summary['tithe_pending']) }}
+                        {{ DashboardMetrics::formatMoney($summary['tithe_pending']) }}
                     @else
                         Já cumprido
                     @endif
@@ -55,7 +55,7 @@
                 <span class="finba-tithe-modal__label">Oferta complementar pendente</span>
                 <span class="finba-tithe-modal__value">
                     @if ($summary['offering_pending'] > 0)
-                        {{ DashboardMetrics::formatBrl($summary['offering_pending']) }}
+                        {{ DashboardMetrics::formatMoney($summary['offering_pending']) }}
                     @else
                         Já cumprida
                     @endif
@@ -83,7 +83,7 @@
                 <span class="finba-tithe-modal__label">Primícias pendentes</span>
                 <span class="finba-tithe-modal__value">
                     @if ($summary['firstfruits_pending'] > 0)
-                        {{ DashboardMetrics::formatBrl($summary['firstfruits_pending']) }}
+                        {{ DashboardMetrics::formatMoney($summary['firstfruits_pending']) }}
                     @else
                         Já cumpridas
                     @endif
@@ -105,7 +105,7 @@
         <div class="finba-tithe-modal__row finba-tithe-modal__row--total">
             <span class="finba-tithe-modal__label">Total selecionado</span>
             <span class="finba-tithe-modal__value finba-tithe-modal__value--total">
-                {{ DashboardMetrics::formatBrl($selectedTotal) }}
+                {{ DashboardMetrics::formatMoney($selectedTotal) }}
             </span>
         </div>
     </div>

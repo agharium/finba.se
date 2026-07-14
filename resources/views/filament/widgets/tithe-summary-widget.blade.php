@@ -12,28 +12,28 @@
             <div class="finba-dashboard-tithe__row">
                 <span class="finba-dashboard-tithe__label">Saldo a dizimar</span>
                 <span class="finba-dashboard-tithe__value">
-                    {{ DashboardMetrics::formatBrl($summary['tithe_pending']) }}
+                    {{ DashboardMetrics::formatMoney($summary['tithe_pending']) }}
                 </span>
             </div>
 
             <div class="finba-dashboard-tithe__row">
                 <span class="finba-dashboard-tithe__label">Oferta complementar</span>
                 <span class="finba-dashboard-tithe__value">
-                    {{ DashboardMetrics::formatBrl($summary['offering_pending']) }}
+                    {{ DashboardMetrics::formatMoney($summary['offering_pending']) }}
                 </span>
             </div>
 
             <div class="finba-dashboard-tithe__row">
                 <span class="finba-dashboard-tithe__label">Primícias</span>
                 <span class="finba-dashboard-tithe__value">
-                    {{ DashboardMetrics::formatBrl($summary['firstfruits_pending']) }}
+                    {{ DashboardMetrics::formatMoney($summary['firstfruits_pending']) }}
                 </span>
             </div>
 
             <div class="finba-dashboard-tithe__row finba-dashboard-tithe__row--total">
                 <span class="finba-dashboard-tithe__label">Total pendente</span>
                 <span class="finba-dashboard-tithe__value finba-dashboard-tithe__value--total">
-                    {{ DashboardMetrics::formatBrl($summary['combined']) }}
+                    {{ DashboardMetrics::formatMoney($summary['combined']) }}
                 </span>
             </div>
         </div>

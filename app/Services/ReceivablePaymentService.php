@@ -10,6 +10,7 @@ use App\Exceptions\ReceivablePaymentException;
 use App\Models\Loan;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\MoneyFormatter;
 
 class ReceivablePaymentService
 {
@@ -75,9 +76,9 @@ class ReceivablePaymentService
         return $this->remainingBalance($loan);
     }
 
-    public function formatMoney(float|string|null $amount): string
+    public function formatMoney(float|string|null $amount, ?User $user = null): string
     {
-        return 'R$ ' . number_format((float) $amount, 2, ',', '.');
+        return MoneyFormatter::format($amount, $user);
     }
 
     /**
@@ -90,11 +91,12 @@ class ReceivablePaymentService
     public function summaryFor(Loan $loan): array
     {
         $paid = $this->paidAmountFor($loan);
+        $user = $loan->user;
 
         return [
-            'original' => $this->formatMoney($loan->original_amount),
-            'received' => $this->formatMoney($paid),
-            'remaining' => $this->formatMoney($this->remainingBalanceFor($loan)),
+            'original' => $this->formatMoney($loan->original_amount, $user),
+            'received' => $this->formatMoney($paid, $user),
+            'remaining' => $this->formatMoney($this->remainingBalanceFor($loan), $user),
         ];
     }
 

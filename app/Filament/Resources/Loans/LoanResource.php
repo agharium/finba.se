@@ -12,12 +12,13 @@ use App\Models\Loan;
 use App\Models\Person;
 use App\Services\ReceivablePaymentService;
 use App\Support\Helpers;
+use App\Support\MoneyFormatter;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -71,6 +72,8 @@ class LoanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultCurrency(fn (): string => MoneyFormatter::currencyCode())
+            ->defaultNumberLocale(fn (): string => MoneyFormatter::numberLocale())
             ->recordTitleAttribute('description')
             ->defaultSort('created_at', 'desc')
             ->columns([
@@ -103,19 +106,19 @@ class LoanResource extends Resource
 
                 TextColumn::make('original_amount')
                     ->label('Original')
-                    ->money('BRL')
+                    ->money()
                     ->visibleFrom('md'),
 
                 TextColumn::make('received_amount')
                     ->label('Recebido')
                     ->state(fn (Loan $record): string => app(ReceivablePaymentService::class)->paidAmountFor($record))
-                    ->money('BRL')
+                    ->money()
                     ->visibleFrom('md'),
 
                 TextColumn::make('remaining_amount')
                     ->label('Falta receber')
                     ->state(fn (Loan $record): string => app(ReceivablePaymentService::class)->remainingBalanceFor($record))
-                    ->money('BRL')
+                    ->money()
                     ->weight('bold')
                     ->color('warning')
                     ->visibleFrom('md'),

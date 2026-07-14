@@ -127,10 +127,10 @@ class TitheMetrics
             $label = $pendingItems->keys()->first();
             $amount = $pendingItems->first();
 
-            return sprintf('Entregar %s em %s', DashboardMetrics::formatBrl($amount), $label);
+            return sprintf('Entregar %s em %s', DashboardMetrics::formatMoney($amount), $label);
         }
 
-        return sprintf('Entregar %s', DashboardMetrics::formatBrl($summary['combined']));
+        return sprintf('Entregar %s', DashboardMetrics::formatMoney($summary['combined']));
     }
 
     public static function ctaEnabled(array $summary): bool

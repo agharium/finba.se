@@ -17,7 +17,7 @@
                 <article class="finba-dashboard-category">
                     <span class="finba-dashboard-category__name">{{ $category->category_name }}</span>
                     <span class="finba-dashboard-category__amount">
-                        {{ DashboardMetrics::formatBrl($category->total) }}
+                        {{ DashboardMetrics::formatMoney($category->total) }}
                     </span>
                 </article>
             @endforeach

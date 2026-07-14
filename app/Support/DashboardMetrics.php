@@ -85,7 +85,7 @@ class DashboardMetrics
 
     public function monthLabel(): string
     {
-        return Helpers::monthLabelPtBr($this->month->month) . ' ' . $this->month->year;
+        return Helpers::monthLabelPtBr($this->month->month).' '.$this->month->year;
     }
 
     /**
@@ -143,7 +143,7 @@ class DashboardMetrics
 
     public static function transactionsUrl(string $tab, int $year, int $month): string
     {
-        return TransactionResource::getUrl('index') . '?' . http_build_query([
+        return TransactionResource::getUrl('index').'?'.http_build_query([
             'tab' => $tab,
             'filters' => [
                 'year' => ['value' => (string) $year],
@@ -152,9 +152,9 @@ class DashboardMetrics
         ]);
     }
 
-    public static function formatBrl(float|int|string|null $amount): string
+    public static function formatMoney(float|int|string|null $amount): string
     {
-        return 'R$ ' . number_format((float) ($amount ?? 0), 2, ',', '.');
+        return MoneyFormatter::format($amount);
     }
 
     public static function categoryDisplayName(Transaction $transaction): ?string
@@ -166,7 +166,7 @@ class DashboardMetrics
         }
 
         if ($category->parent) {
-            return $category->parent->name . ' • ' . $category->name;
+            return $category->parent->name.' • '.$category->name;
         }
 
         return $category->name;

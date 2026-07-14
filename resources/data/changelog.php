@@ -5,7 +5,7 @@ return [
         'date' => '2026-07-14',
         'version' => null,
         'badge' => 'Em desenvolvimento',
-        'title' => 'Parcelamentos e experiência como aplicativo',
+        'title' => 'Parcelamentos, PWA e moeda por país',
         'groups' => [
             [
                 'title' => 'Parcelamentos',
@@ -42,6 +42,27 @@ return [
                     [
                         'type' => 'added',
                         'text' => 'Também foram incluídos suporte a atualizações e uma tela segura para momentos sem conexão.',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Moeda e interface',
+                'items' => [
+                    [
+                        'type' => 'changed',
+                        'text' => 'Valores monetários passaram a seguir a moeda do país configurado no perfil, em vez de ficarem fixos em real.',
+                    ],
+                    [
+                        'type' => 'changed',
+                        'text' => 'Dashboard, transações, contas a receber e campos de valor usam a mesma formatação de moeda e locale do usuário.',
+                    ],
+                    [
+                        'type' => 'fixed',
+                        'text' => 'Foi ajustado o contraste dos botões verdes e o estado desabilitado do resumo de dízimos.',
+                    ],
+                    [
+                        'type' => 'fixed',
+                        'text' => 'Foi removido o indicador de seta que aparecia ao passar o mouse nos cards de receitas e despesas.',
                     ],
                 ],
             ],

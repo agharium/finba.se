@@ -241,20 +241,6 @@ DASHBOARD PAGE
         background 0.18s ease;
 }
 
-.finba-dashboard-kpi--link::after {
-    color: rgb(148, 156, 169);
-    content: "›";
-    font-size: 1.15rem;
-    font-weight: 600;
-    line-height: 1;
-    opacity: 0;
-    position: absolute;
-    right: 1.15rem;
-    top: 1.15rem;
-    transform: translateX(-4px);
-    transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
 .finba-dashboard-kpi--link:hover,
 .finba-dashboard-kpi--link:focus-visible {
     transform: translateY(-2px);
@@ -283,12 +269,6 @@ DASHBOARD PAGE
         0 0 0 1px rgba(220, 38, 38, 0.05);
     background:
         linear-gradient(145deg, rgba(254, 242, 242, 0.98), rgba(249, 250, 252, 0.96));
-}
-
-.finba-dashboard-kpi--link:hover::after,
-.finba-dashboard-kpi--link:focus-visible::after {
-    opacity: 0.85;
-    transform: translateX(0);
 }
 
 .dark .finba-dashboard-page .finba-dashboard-kpi--income.finba-dashboard-kpi--link:hover,

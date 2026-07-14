@@ -2,7 +2,9 @@
 
 namespace App\Filament\Components;
 
+use App\Support\MoneyFormatter;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Support\Number;
 
 class MoneyInput extends TextInput
 {
@@ -10,26 +12,28 @@ class MoneyInput extends TextInput
     {
         parent::setUp();
 
+        $locale = MoneyFormatter::inputLocale();
+
         $this
-            ->prefix('R$')
+            ->prefix(fn (): string => MoneyFormatter::symbol())
             ->inputMode('numeric')
             ->extraInputAttributes([
-                'x-on:input' => <<<'JS'
-                    let digits = $event.target.value.replace(/\D/g, '');
+                'x-on:input' => <<<JS
+                    let digits = \$event.target.value.replace(/\\D/g, '');
 
                     if (! digits) {
-                        $event.target.value = '';
+                        \$event.target.value = '';
                         return;
                     }
 
-                    $event.target.value = (Number(digits) / 100).toLocaleString('pt-BR', {
+                    \$event.target.value = (Number(digits) / 100).toLocaleString('{$locale}', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                     });
                 JS,
             ])
             ->formatStateUsing(fn ($state) => filled($state)
-                ? number_format((float) $state, 2, ',', '.')
+                ? Number::format((float) $state, precision: 2, locale: MoneyFormatter::numberLocale())
                 : null
             )
             ->dehydrateStateUsing(function ($state) {
@@ -37,19 +41,19 @@ class MoneyInput extends TextInput
                     return null;
                 }
 
-                return str($state)
-                    ->replace('.', '')
-                    ->replace(',', '.')
-                    ->toString();
+                $digits = preg_replace('/\D/', '', (string) $state);
+
+                if ($digits === '' || $digits === null) {
+                    return null;
+                }
+
+                return number_format(((int) $digits) / 100, 2, '.', '');
             })
             ->rule(function () {
                 return function (string $attribute, mixed $value, \Closure $fail): void {
-                    $normalized = str($value)
-                        ->replace('.', '')
-                        ->replace(',', '.')
-                        ->toString();
+                    $digits = preg_replace('/\D/', '', (string) $value);
 
-                    if (! is_numeric($normalized)) {
+                    if ($digits === '' || $digits === null || ! is_numeric($digits)) {
                         $fail('O valor informado é inválido.');
                     }
                 };

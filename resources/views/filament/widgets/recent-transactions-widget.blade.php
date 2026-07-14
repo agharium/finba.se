@@ -51,7 +51,7 @@
 
                     <div class="finba-dashboard-transaction__aside">
                         <p class="finba-dashboard-transaction__amount">
-                            {{ DashboardMetrics::formatBrl($transaction->amount) }}
+                            {{ DashboardMetrics::formatMoney($transaction->amount) }}
                         </p>
                         <p class="finba-dashboard-transaction__date">
                             {{ $transaction->date?->format('d/m/Y') }}

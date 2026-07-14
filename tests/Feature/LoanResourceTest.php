@@ -9,6 +9,7 @@ use App\Models\Person;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\ReceivablePaymentService;
+use App\Support\MoneyFormatter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -20,10 +21,12 @@ function loanResourceUser(): User
         'email' => fake()->unique()->safeEmail(),
         'password' => 'password',
         'email_verified_at' => now(),
+        'default_country_code' => 'BR',
         'settings' => [
             'advanced' => true,
             'tither' => false,
             'accounts_receivable' => true,
+            'locale' => 'pt-BR',
         ],
     ]);
 }
@@ -67,9 +70,9 @@ it('displays remaining balance on loan cards', function () {
 
     expect($card['description'])->toBe('Produtos diversos')
         ->and($card['customer'])->toBe('Maria')
-        ->and($card['original'])->toBe('R$ 400,00')
-        ->and($card['received'])->toBe('R$ 150,00')
-        ->and($card['remaining'])->toBe('R$ 250,00')
+        ->and($card['original'])->toBe(MoneyFormatter::format(400, $user))
+        ->and($card['received'])->toBe(MoneyFormatter::format(150, $user))
+        ->and($card['remaining'])->toBe(MoneyFormatter::format(250, $user))
         ->and($card['is_open'])->toBeTrue();
 });
 
@@ -146,8 +149,8 @@ it('tracks balances independently for multiple customers', function () {
         'date' => now()->toDateString(),
     ]);
 
-    expect(LoanResource::mobileCardData($mariaReceivable->fresh(['person']))['remaining'])->toBe('R$ 300,00')
-        ->and(LoanResource::mobileCardData($joaoReceivable->fresh(['person']))['remaining'])->toBe('R$ 300,00')
+    expect(LoanResource::mobileCardData($mariaReceivable->fresh(['person']))['remaining'])->toBe(MoneyFormatter::format(300, $user))
+        ->and(LoanResource::mobileCardData($joaoReceivable->fresh(['person']))['remaining'])->toBe(MoneyFormatter::format(300, $user))
         ->and($mariaReceivable->fresh()->status)->toBe(LoanStatus::OPEN)
         ->and($joaoReceivable->fresh()->status)->toBe(LoanStatus::OPEN);
 });

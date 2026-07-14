@@ -8,9 +8,9 @@ use App\Enums\LoanType;
 use App\Enums\Purpose;
 use App\Enums\TransactionEntryMode;
 use App\Enums\TransactionType;
-use App\Filament\Resources\Transactions\Pages\ManageTransactions;
 use App\Filament\Components\MoneyInput;
 use App\Filament\Forms\LocationFormFields;
+use App\Filament\Resources\Transactions\Pages\ManageTransactions;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Loan;
@@ -19,18 +19,20 @@ use App\Models\Transaction;
 use App\Services\TransactionService;
 use App\Support\Helpers;
 use App\Support\InstallmentDistributor;
+use App\Support\MoneyFormatter;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
@@ -40,9 +42,9 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
-use Filament\Support\Icons\Heroicon;
 use Filament\Support\Enums\TextSize;
 use Filament\Support\Exceptions\Halt;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Enums\FiltersLayout;
@@ -52,10 +54,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Filament\Actions\Action;
-use Filament\Forms\Components\CheckboxList;
 use Illuminate\Validation\Rule;
-use Filament\Forms\Components\Hidden;
 
 class TransactionResource extends Resource
 {
@@ -83,7 +82,7 @@ class TransactionResource extends Resource
     public static function form(Schema $schema): Schema
     {
         $user = Auth::user();
-    
+
         return $schema
             ->components([
                 ToggleButtons::make('type')
@@ -98,7 +97,7 @@ class TransactionResource extends Resource
                     ->afterStateUpdated(function (callable $get, callable $set, ?string $state): void {
                         $parentId = $get('parent_category_id');
 
-                        if (!$parentId || !$state) {
+                        if (! $parentId || ! $state) {
                             return;
                         }
 
@@ -106,7 +105,7 @@ class TransactionResource extends Resource
                             ->where('user_id', Auth::id())
                             ->find($parentId);
 
-                        if (!$parent || !in_array($state, $parent->types ?? [])) {
+                        if (! $parent || ! in_array($state, $parent->types ?? [])) {
                             $set('parent_category_id', null);
                             $set('child_category_id', null);
                             $set('category_id', null);
@@ -114,7 +113,7 @@ class TransactionResource extends Resource
                             $set('purpose', null);
                         }
                     }),
-    
+
                 ToggleButtons::make('payment_mode')
                     ->label('Forma de recebimento')
                     ->options(IncomePaymentMode::options())
@@ -206,11 +205,11 @@ class TransactionResource extends Resource
                     ->live()
                     ->afterStateUpdated(function (?string $state, callable $set): void {
                         $set('city_id', null);
-                    
+
                         if (! $state) {
                             return;
                         }
-                    
+
                         $cityIds = Person::query()
                             ->where('user_id', Auth::id())
                             ->whereKey($state)
@@ -218,7 +217,7 @@ class TransactionResource extends Resource
                             ?->cities()
                             ->pluck('cities.id')
                             ->all() ?? [];
-                    
+
                         if (count($cityIds) === 1) {
                             $set('city_id', $cityIds[0]);
                         }
@@ -228,7 +227,7 @@ class TransactionResource extends Resource
                     cityField: 'city_id',
                     visible: fn (): bool => (bool) Auth::user()?->hasAdvancedMode(),
                 ),
-    
+
                 Select::make('parent_category_id')
                     ->label('Categoria')
                     ->options(fn (callable $get): array => Category::query()
@@ -271,7 +270,7 @@ class TransactionResource extends Resource
                                     ->validationMessages([
                                         'unique' => 'Você já possui uma categoria com este nome neste nível.',
                                     ]),
-                    
+
                                 Select::make('parent_id')
                                     ->label('Categoria pai')
                                     ->options(fn (): array => Category::query()
@@ -286,7 +285,7 @@ class TransactionResource extends Resource
                                     ->preload()
                                     ->nullable()
                                     ->helperText('Se selecionar uma categoria pai, a nova categoria será criada como subcategoria.'),
-                    
+
                                 CheckboxList::make('types')
                                     ->label('Tipo')
                                     ->options(TransactionType::options())
@@ -296,7 +295,7 @@ class TransactionResource extends Resource
                                     ->minItems(1)
                                     ->live()
                                     ->disabled(fn (callable $get): bool => filled($get('purpose'))),
-                    
+
                                 Select::make('purpose')
                                     ->label('Finalidade especial')
                                     ->options(Purpose::class)
@@ -319,13 +318,13 @@ class TransactionResource extends Resource
                                     'user_id' => Auth::id(),
                                     'parent_id' => $data['parent_id'] ?? null,
                                 ]);
-                    
+
                                 if (count($data['types']) === 1) {
                                     $set('type', $data['types'][0]);
                                 }
-                    
+
                                 $set('purpose', $category->purpose?->value ?? $category->purpose);
-                    
+
                                 if ($category->parent_id) {
                                     $set('parent_category_id', $category->parent_id);
                                     $set('child_category_id', $category->id);
@@ -337,7 +336,7 @@ class TransactionResource extends Resource
                                 }
                             })
                     ),
-                
+
                 Select::make('child_category_id')
                     ->label('Subcategoria')
                     ->options(fn (callable $get): array => Category::query()
@@ -367,22 +366,22 @@ class TransactionResource extends Resource
 
                             return;
                         }
-                    
+
                         $category = Category::query()
                             ->where('user_id', Auth::id())
                             ->find($state);
-                    
+
                         $types = $category?->types ?? [];
-                    
+
                         if (count($types) === 1) {
                             $set('type', $types[0]);
                         }
 
                         self::applyCategoryPurpose($state, $set);
                     }),
-    
+
                 Toggle::make('has_loan')
-                    ->columnSpanFull(fn (callable $get): bool => !filled($get('parent_category_id')))
+                    ->columnSpanFull(fn (callable $get): bool => ! filled($get('parent_category_id')))
                     ->label(fn (callable $get): string => match ($get('type')) {
                         TransactionType::INCOME->value => self::userUsesAccountsReceivable()
                             ? 'Relacionar com dívida ou conta a receber'
@@ -392,8 +391,7 @@ class TransactionResource extends Resource
                     })
                     ->live()
                     ->dehydrated(false)
-                    ->visible(fn (callable $get): bool =>
-                        (bool) Auth::user()?->hasAdvancedMode()
+                    ->visible(fn (callable $get): bool => (bool) Auth::user()?->hasAdvancedMode()
                         && filled($get('type'))
                         && ! self::isReceivableLaterForm($get)
                         && ! self::isInstallmentForm($get)
@@ -408,8 +406,7 @@ class TransactionResource extends Resource
                     ->default(LoanType::BORROWED->value)
                     ->live()
                     ->dehydrated(false)
-                    ->visible(fn (callable $get): bool =>
-                        self::userUsesAccountsReceivable()
+                    ->visible(fn (callable $get): bool => self::userUsesAccountsReceivable()
                         && $get('type') === TransactionType::INCOME->value
                         && (bool) $get('has_loan')
                         && ! self::isReceivableLaterForm($get)
@@ -441,8 +438,7 @@ class TransactionResource extends Resource
                     ->searchable()
                     ->preload()
                     ->nullable()
-                    ->visible(fn (callable $get): bool =>
-                        (bool) Auth::user()?->hasAdvancedMode()
+                    ->visible(fn (callable $get): bool => (bool) Auth::user()?->hasAdvancedMode()
                         && filled($get('type'))
                         && (bool) $get('has_loan')
                         && ! self::isReceivableLaterForm($get)
@@ -465,9 +461,10 @@ class TransactionResource extends Resource
                     ->afterStateUpdated(function (bool $state, callable $set, callable $get): void {
                         if (! $state) {
                             $set('purpose', null);
+
                             return;
                         }
-                
+
                         $set(
                             'purpose',
                             $get('type') === TransactionType::EXPENSE->value
@@ -475,8 +472,7 @@ class TransactionResource extends Resource
                                 : Purpose::TITHE->value
                         );
                     })
-                    ->visible(fn (callable $get): bool =>
-                        (bool) Auth::user()?->isTither()
+                    ->visible(fn (callable $get): bool => (bool) Auth::user()?->isTither()
                         && filled($get('type'))
                         && ! self::isReceivableLaterForm($get)
                     ),
@@ -492,6 +488,8 @@ class TransactionResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema
+            ->defaultCurrency(fn (): string => MoneyFormatter::currencyCode())
+            ->defaultNumberLocale(fn (): string => MoneyFormatter::numberLocale())
             ->components([
                 Section::make()
                     ->schema([
@@ -519,7 +517,7 @@ class TransactionResource extends Resource
                                         TextEntry::make('amount')
                                             ->label('Valor')
                                             ->hiddenLabel()
-                                            ->money('BRL')
+                                            ->money()
                                             ->size(TextSize::Large)
                                             ->weight(FontWeight::ExtraBold)
                                             ->extraAttributes([
@@ -625,6 +623,8 @@ class TransactionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultCurrency(fn (): string => MoneyFormatter::currencyCode())
+            ->defaultNumberLocale(fn (): string => MoneyFormatter::numberLocale())
             ->recordTitleAttribute('description')
             ->defaultSort('date', 'desc')
             ->columns([
@@ -676,7 +676,7 @@ class TransactionResource extends Resource
 
                 // TextColumn::make('amount')
                 //     ->label('Valor')
-                //     ->money('BRL')
+                //     ->money()
                 //     ->sortable()
                 //     ->visibleFrom('md'),
 
@@ -884,12 +884,12 @@ class TransactionResource extends Resource
                     }),
             ]);
 
-            // ->toolbarActions([
-            //     BulkActionGroup::make([
-            //         DeleteBulkAction::make()
-            //             ->requiresConfirmation(),
-            //     ]),
-            // ]);
+        // ->toolbarActions([
+        //     BulkActionGroup::make([
+        //         DeleteBulkAction::make()
+        //             ->requiresConfirmation(),
+        //     ]),
+        // ]);
     }
 
     private static function mutateTransactionRecordDataForForm(array $data): array
@@ -985,7 +985,7 @@ class TransactionResource extends Resource
             ->warning()
             ->send();
 
-        throw new Halt();
+        throw new Halt;
     }
 
     public static function makeViewAction(string $name = 'view'): ViewAction
@@ -1059,7 +1059,7 @@ class TransactionResource extends Resource
 
         return [
             'description' => filled($record->description) ? $record->description : null,
-            'amount' => 'R$ ' . number_format((float) $record->amount, 2, ',', '.'),
+            'amount' => MoneyFormatter::format($record->amount),
             'date' => $record->date?->format('d/m/Y'),
             'category' => $category?->name,
             'category_path' => $categoryPath,
@@ -1211,6 +1211,7 @@ class TransactionResource extends Resource
     {
         if (! $categoryId) {
             $set('purpose', null);
+
             return;
         }
 

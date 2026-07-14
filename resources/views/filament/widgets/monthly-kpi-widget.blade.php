@@ -17,7 +17,7 @@
                     class="finba-dashboard-kpi__icon"
                 />
             </div>
-            <p class="finba-dashboard-kpi__amount">{{ DashboardMetrics::formatBrl($balance) }}</p>
+            <p class="finba-dashboard-kpi__amount">{{ DashboardMetrics::formatMoney($balance) }}</p>
         </article>
 
         <a href="{{ $incomeUrl }}" class="finba-dashboard-kpi finba-dashboard-kpi--income finba-dashboard-kpi--link" aria-label="Ver receitas do mês">
@@ -28,7 +28,7 @@
                     class="finba-dashboard-kpi__icon finba-dashboard-kpi__icon--income"
                 />
             </div>
-            <p class="finba-dashboard-kpi__amount">{{ DashboardMetrics::formatBrl($income) }}</p>
+            <p class="finba-dashboard-kpi__amount">{{ DashboardMetrics::formatMoney($income) }}</p>
         </a>
 
         <a href="{{ $expenseUrl }}" class="finba-dashboard-kpi finba-dashboard-kpi--expense finba-dashboard-kpi--link" aria-label="Ver despesas do mês">
@@ -39,7 +39,7 @@
                     class="finba-dashboard-kpi__icon finba-dashboard-kpi__icon--expense"
                 />
             </div>
-            <p class="finba-dashboard-kpi__amount">{{ DashboardMetrics::formatBrl($expense) }}</p>
+            <p class="finba-dashboard-kpi__amount">{{ DashboardMetrics::formatMoney($expense) }}</p>
         </a>
     </div>
 </div>

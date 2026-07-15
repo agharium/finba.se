@@ -38,9 +38,16 @@ it('documents cloud run production conventions in env example', function () {
 });
 
 it('ships a cloud run dockerfile and entrypoint', function () {
+    $dockerfile = file_get_contents(base_path('Dockerfile'));
+    $entrypoint = file_get_contents(base_path('docker/entrypoint.sh'));
+
     expect(file_exists(base_path('Dockerfile')))->toBeTrue()
         ->and(file_exists(base_path('docker/entrypoint.sh')))->toBeTrue()
         ->and(file_exists(base_path('docker/Caddyfile')))->toBeTrue()
-        ->and(file_get_contents(base_path('Dockerfile')))->toContain('frankenphp')
-        ->and(file_get_contents(base_path('docker/entrypoint.sh')))->toContain('php artisan optimize');
+        ->and($dockerfile)->toContain('frankenphp')
+        ->and($dockerfile)->toContain('pdo_sqlite')
+        ->and($dockerfile)->toContain('country-region-data.json')
+        ->and($entrypoint)->toContain('php artisan optimize')
+        ->and($entrypoint)->toContain('sushi-*.sqlite')
+        ->and($entrypoint)->toContain('framework/cache/sushi');
 });

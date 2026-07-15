@@ -34,6 +34,7 @@ Foco atual do desenvolvimento:
 * Compute: Google Cloud Run (`southamerica-east1`), imagem FrankenPHP, host `https://app.finba.se`
 * DNS/proxy: Cloudflare (domínio customizado preferencialmente via Load Balancer + serverless NEG). `trustProxies(at: '*')` + headers `X-Forwarded-*` para scheme/host/port públicos (`https://app.finba.se`)
 * Auth Google (Socialite): rotas `/auth/google/*` excluídas do Filament SPA/prefetch; login usa navegação completa do browser. `APP_URL` e `GOOGLE_REDIRECT_URL` absolutos no host público; `ASSET_URL` unset. Logos do painel em paths relativos (`/images/logo/*`)
+* Catálogo de países (`App\Models\Country`): Sushi sobre `resources/data/country-region-data.json` + moedas em `resources/data/country-currencies.php`. Cache em arquivo desligado (SQLite `:memory:`); imagem inclui `pdo_sqlite`. Não há tabela `countries` no PostgreSQL. Diagnóstico: `php artisan finba:country-catalog-check`
 * Email: Resend
 * Armazenamento de arquivos: `FINBA_STORAGE_DISK` → disk `local` (dev) ou `finba` (produção, S3-compatível / Supabase Storage, bucket privado). Sem dependência de filesystem persistente do container. Ver `docs/supabase-storage.md`
 * Sessões/cache compartilhados via driver `database` (Cloud Run stateless)

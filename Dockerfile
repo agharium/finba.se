@@ -54,7 +54,9 @@ RUN apt-get update \
         opcache \
         pcntl \
         pdo_pgsql \
+        pdo_sqlite \
         pgsql \
+        sqlite3 \
         zip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -74,12 +76,14 @@ COPY --from=frontend --chown=finba:finba /app/public/build /app/public/build
 
 RUN mkdir -p \
         storage/framework/cache/data \
+        storage/framework/cache/sushi \
         storage/framework/sessions \
         storage/framework/views \
         storage/logs \
         storage/app/private \
         bootstrap/cache \
     && chown -R finba:finba storage bootstrap/cache \
+    && test -f resources/data/country-region-data.json \
     && rm -f .env .env.* \
     && rm -rf tests node_modules
 

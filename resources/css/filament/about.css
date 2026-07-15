@@ -57,15 +57,15 @@
     margin: 0 0 0.75rem;
     border-radius: 999px;
     padding: 0.2rem 0.7rem;
-    background: rgba(37, 99, 235, 0.14);
-    color: rgb(29, 78, 216);
+    background: rgba(217, 119, 6, 0.14);
+    color: rgb(180, 83, 9);
     font-size: 0.78rem;
     font-weight: 700;
 }
 
 .dark .finba-about-page .finba-about__badge {
-    background: rgba(96, 165, 250, 0.18);
-    color: rgb(147, 197, 253);
+    background: rgba(251, 191, 36, 0.16);
+    color: rgb(252, 211, 77);
 }
 
 .finba-about__version {

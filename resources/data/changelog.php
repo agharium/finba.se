@@ -19,6 +19,10 @@ return [
                         'text' => 'A aplicação passou a operar em produção.',
                     ],
                     [
+                        'type' => 'fixed',
+                        'text' => 'O login com Google voltou a abrir a autorização no navegador, sem interferência da navegação SPA do painel.',
+                    ],
+                    [
                         'type' => 'decision',
                         'text' => 'O foco do desenvolvimento passa a ser estabilidade, refinamentos de experiência e evolução baseada no feedback dos usuários.',
                     ],

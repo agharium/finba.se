@@ -125,6 +125,9 @@ APP_FALLBACK_LOCALE=en
 LOG_CHANNEL=stderr
 LOG_LEVEL=info
 
+# Do not set ASSET_URL unless assets are served from another intentional origin.
+# Relative panel logos (/images/logo/*) follow the browser host.
+
 APP_VERSION=0.1.0-beta
 APP_BUILD=            # set per deploy, UTC YYYYMMDDHHMMSS
 GIT_SHA=              # short commit sha
@@ -322,10 +325,13 @@ Cloud Run native domain mapping is not available in every region (including pote
 - [ ] Service healthy on `run.app`
 - [ ] Certificate issued for `app.finba.se`
 - [ ] `APP_URL=https://app.finba.se`
+- [ ] `GOOGLE_REDIRECT_URL=https://app.finba.se/auth/google/callback`
+- [ ] `ASSET_URL` unset (unless using a dedicated CDN intentionally)
+- [ ] Worker/proxy forwards `X-Forwarded-Proto`, `X-Forwarded-Host`, `X-Forwarded-Port`
 - [ ] Google OAuth origins/redirect updated
 - [ ] Resend domain / from-address verified
 - [ ] Cookies secure on HTTPS
-- [ ] No mixed-content assets
+- [ ] No mixed-content assets / no `http://*.run.app` logo URLs in HTML
 - [ ] PWA manifest/`start_url` resolves on the custom host
 - [ ] Cloudflare DNS only changed after LB/target works
 
@@ -341,8 +347,11 @@ Google Cloud Console:
 Also set:
 
 ```env
+APP_URL=https://app.finba.se
 GOOGLE_REDIRECT_URL=https://app.finba.se/auth/google/callback
 ```
+
+Do **not** set `ASSET_URL` for Cloud Run alone. Panel SPA mode excludes `/auth/google/*` so Livewire does not fetch the Socialite redirect (that causes browser CORS errors against Google). The “Entrar com Google” control uses a full browser navigation (`spa-mode=false` / `wire:navigate.ignore`).
 
 Resend:
 

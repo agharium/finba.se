@@ -32,7 +32,8 @@ Foco atual do desenvolvimento:
 * Filament 5
 * PostgreSQL (Supabase)
 * Compute: Google Cloud Run (`southamerica-east1`), imagem FrankenPHP, host `https://app.finba.se`
-* DNS/proxy: Cloudflare (domínio customizado preferencialmente via Load Balancer + serverless NEG)
+* DNS/proxy: Cloudflare (domínio customizado preferencialmente via Load Balancer + serverless NEG). `trustProxies(at: '*')` + headers `X-Forwarded-*` para scheme/host/port públicos (`https://app.finba.se`)
+* Auth Google (Socialite): rotas `/auth/google/*` excluídas do Filament SPA/prefetch; login usa navegação completa do browser. `APP_URL` e `GOOGLE_REDIRECT_URL` absolutos no host público; `ASSET_URL` unset. Logos do painel em paths relativos (`/images/logo/*`)
 * Email: Resend
 * Armazenamento de arquivos: `FINBA_STORAGE_DISK` → disk `local` (dev) ou `finba` (produção, S3-compatível / Supabase Storage, bucket privado). Sem dependência de filesystem persistente do container. Ver `docs/supabase-storage.md`
 * Sessões/cache compartilhados via driver `database` (Cloud Run stateless)

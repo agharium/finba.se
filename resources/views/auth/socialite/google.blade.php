@@ -2,6 +2,8 @@
     :href="route('socialite.redirect', 'google')"
     tag="a"
     color="gray"
+    :spa-mode="false"
+    wire:navigate.ignore
     style="margin-top: -0.5rem"
 >
     <svg

@@ -33,6 +33,14 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->spa(hasPrefetching: true)
+            ->spaUrlExceptions(fn (): array => [
+                // Absolute URLs for the current request / APP_URL host.
+                url('/auth/google/redirect'),
+                url('/auth/google/callback'),
+                // Host-agnostic patterns (Cloudflare custom domain vs run.app).
+                '*/auth/google/redirect',
+                '*/auth/google/callback',
+            ])
             ->unsavedChangesAlerts()
             ->login(Login::class)
             ->registration(Register::class)
@@ -42,9 +50,10 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Green,
                 'danger' => Color::Rose,
             ])
-            ->favicon(asset('favicon.ico'))
-            ->brandLogo(asset('images/logo/light.png'))
-            ->darkModeBrandLogo(asset('images/logo/dark.png'))
+            // Relative paths so logos follow the browser host (app.finba.se), not APP_URL/run.app.
+            ->favicon('/favicon.ico')
+            ->brandLogo('/images/logo/light.png')
+            ->darkModeBrandLogo('/images/logo/dark.png')
             ->brandLogoHeight('2rem')
             ->globalSearch(false)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

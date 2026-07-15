@@ -9,8 +9,14 @@ it('exposes an unauthenticated health endpoint', function () {
 });
 
 it('trusts proxies for cloud load balancers', function () {
-    expect(file_get_contents(base_path('bootstrap/app.php')))
-        ->toContain("trustProxies(at: '*')");
+    $bootstrap = file_get_contents(base_path('bootstrap/app.php'));
+
+    expect($bootstrap)
+        ->toContain('trustProxies(')
+        ->toContain("at: '*'")
+        ->toContain('HEADER_X_FORWARDED_PROTO')
+        ->toContain('HEADER_X_FORWARDED_HOST')
+        ->toContain('HEADER_X_FORWARDED_PORT');
 });
 
 it('documents cloud run production conventions in env example', function () {
@@ -25,7 +31,10 @@ it('documents cloud run production conventions in env example', function () {
         ->toContain('QUEUE_CONNECTION=sync')
         ->toContain('GOOGLE_CLIENT_ID=')
         ->toContain('SESSION_SECURE_COOKIE=true')
-        ->toContain('DB_SSLMODE=require');
+        ->toContain('DB_SSLMODE=require')
+        ->toContain('APP_URL=https://app.finba.se')
+        ->toContain('GOOGLE_REDIRECT_URL=https://app.finba.se/auth/google/callback')
+        ->toContain('ASSET_URL');
 });
 
 it('ships a cloud run dockerfile and entrypoint', function () {

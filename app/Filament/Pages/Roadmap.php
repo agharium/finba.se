@@ -13,7 +13,7 @@ class Roadmap extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Projeto';
+    protected static string|UnitEnum|null $navigationGroup = 'Sistema';
 
     protected static ?string $navigationLabel = 'Roadmap';
 
@@ -25,7 +25,7 @@ class Roadmap extends Page
 
     protected string $view = 'filament.pages.roadmap';
 
-    public function getSubheading(): string | Htmlable | null
+    public function getSubheading(): string|Htmlable|null
     {
         return 'Acompanhe o que já foi concluído, o que está em desenvolvimento e o que está planejado para o Finba.se.';
     }

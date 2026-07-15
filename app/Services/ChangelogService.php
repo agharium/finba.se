@@ -109,9 +109,14 @@ class ChangelogService
      */
     private function presentEntry(array $entry, string $locale): array
     {
+        $version = filled($entry['version'] ?? null) ? (string) $entry['version'] : null;
+
         return [
             ...$entry,
             'formatted_date' => $this->formatEntryDate((string) $entry['date'], $locale),
+            'display_version' => $version !== null
+                ? (str_starts_with($version, 'v') ? $version : 'v'.$version)
+                : null,
             'groups' => collect($entry['groups'] ?? [])
                 ->map(fn (array $group): array => [
                     ...$group,

@@ -2,6 +2,21 @@
 
 A flexible personal finance platform built for people who outgrew rigid finance apps.
 
+## Status
+
+🧪 Beta
+
+The first beta version of Finba is now available.
+
+Current development focuses on:
+
+- stability
+- UX refinement
+- performance
+- community feedback
+
+---
+
 ## Why?
 
 I’ve tried many finance apps over the years, but they always felt limiting.
@@ -36,6 +51,16 @@ Backend:
 Database:
 - PostgreSQL (Supabase)
 
+File storage:
+- Local disk in development (`FINBA_STORAGE_DISK=local`)
+- Private Supabase Storage via S3-compatible disk `finba` in production (see `docs/supabase-storage.md`)
+
+Production hosting:
+- Google Cloud Run + FrankenPHP container
+- Supabase PostgreSQL + Supabase Storage
+- Resend email, Cloudflare DNS
+- See `docs/deployment-gcp-cloud-run.md`
+
 Mobile strategy:
 - Web-first installable PWA
 - Native packaging remains a future possibility
@@ -56,20 +81,21 @@ finba.se is built around a few ideas:
 
 ## Roadmap
 
-Finba.se is currently in **alpha**, preparing the first beta release.
-
 **Completed highlights**
 - Core financial organization: categories, people, transactions, monthly dashboard, accounts receivable, and installment purchases
 - Personal features: tithes and first fruits, onboarding, and locale/location preferences
-- Product foundations: responsive UI, installable PWA, public changelog, and email/Google login
+- Product foundations: responsive UI, installable PWA, public changelog, in-app feedback channel, About page, and email/Google login
+- First public beta in production
 
 **In progress**
+- Beta stabilization based on user feedback
 - Loans and debts, and recurring transactions
-- First beta release and production environment setup
 
 **Planned next**
 - Transfers, budgeting, reminders and notifications, and a public landing page
 - Shared finances for organizing money with other people
+
+Created by **José Paulo Oliveira Filho**.
 
 The detailed and continuously updated roadmap is available inside the Finba.se application.
 
@@ -102,9 +128,3 @@ I’m documenting the journey publicly on LinkedIn.
 
 Follow along:
 https://www.linkedin.com/in/jose-paulo-oliveira-filho/
-
----
-
-## Status
-
-Alpha — preparing the first beta release.

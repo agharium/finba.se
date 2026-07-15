@@ -3,15 +3,16 @@
 namespace App\Providers;
 
 use App\Filament\Pages\Changelog;
+use App\Filament\Pages\SendFeedback;
 use App\Models\Transaction;
 use App\Observers\TransactionObserver;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Vite;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
             fn (): ?\Illuminate\Contracts\View\View => auth()->check()
                 ? view('filament.components.alpha-banner', [
                     'changelogUrl' => Changelog::getUrl(),
+                    'feedbackUrl' => SendFeedback::getUrl(),
                 ])
                 : null,
         );
@@ -49,6 +51,13 @@ class AppServiceProvider extends ServiceProvider
         );
 
         FilamentView::registerRenderHook(
+            PanelsRenderHook::FOOTER,
+            fn (): ?\Illuminate\Contracts\View\View => auth()->check()
+                ? view('filament.components.project-footer')
+                : null,
+        );
+
+        FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_END,
             fn () => new HtmlString('
                 <meta name="referrer" content="no-referrer">
@@ -64,16 +73,18 @@ class AppServiceProvider extends ServiceProvider
                 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
                 <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#16c04b">
                 <link rel="manifest" href="/manifest.webmanifest">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/transactions.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/loans.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/dashboard.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/profile.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/onboarding.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/alpha-banner.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/changelog.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/roadmap.css') . '">
-                <link rel="stylesheet" href="' . Vite::asset('resources/css/filament/pwa.css') . '">
-                <script type="module" src="' . Vite::asset('resources/js/pwa-manager.js') . '"></script>
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/transactions.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/loans.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/dashboard.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/profile.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/onboarding.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/alpha-banner.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/changelog.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/roadmap.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/feedback.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/about.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/pwa.css').'">
+                <script type="module" src="'.Vite::asset('resources/js/pwa-manager.js').'"></script>
             ')
         );
     }

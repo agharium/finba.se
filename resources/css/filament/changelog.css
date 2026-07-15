@@ -9,6 +9,99 @@
     min-width: 0;
 }
 
+.finba-changelog-summary {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.94));
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+}
+
+.dark .finba-changelog-summary {
+    border-color: rgba(255, 255, 255, 0.09);
+    background: linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(24, 24, 27, 0.94));
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.finba-changelog-summary__brand {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.55rem 0.85rem;
+    margin-bottom: 0.85rem;
+}
+
+.finba-changelog-summary__name {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: rgb(17, 24, 39);
+}
+
+.dark .finba-changelog-summary__name {
+    color: rgb(244, 244, 245);
+}
+
+.finba-changelog-summary__version {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgb(22, 163, 74);
+}
+
+.dark .finba-changelog-summary__version {
+    color: rgb(134, 239, 172);
+}
+
+.finba-changelog-summary__status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+}
+
+.finba-changelog-summary__status-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgb(113, 113, 122);
+}
+
+.dark .finba-changelog-summary__status-label {
+    color: rgb(161, 161, 170);
+}
+
+.finba-changelog-summary__status-value {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.15rem 0.65rem;
+    background: rgba(22, 163, 74, 0.14);
+    color: rgb(22, 163, 74);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.dark .finba-changelog-summary__status-value {
+    background: rgba(74, 222, 128, 0.14);
+    color: rgb(134, 239, 172);
+}
+
+.finba-changelog-summary__highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    gap: 0.45rem 0.85rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: rgb(63, 63, 70);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.dark .finba-changelog-summary__highlights {
+    color: rgb(212, 212, 216);
+}
+
 .finba-changelog-day {
     display: grid;
     grid-template-columns: 1.25rem minmax(0, 1fr);

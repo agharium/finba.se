@@ -2,6 +2,7 @@
 
 use App\Filament\Pages\Changelog;
 use App\Filament\Pages\Profile;
+use App\Filament\Pages\SendFeedback;
 use App\Models\User;
 use App\Services\ChangelogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,11 +26,14 @@ it('allows authenticated users to access changelog', function () {
         ->test(Changelog::class)
         ->assertSuccessful()
         ->assertSee('Changelog')
+        ->assertSee('Finba')
+        ->assertSee('v0.1.0-beta')
+        ->assertSee('Produção')
+        ->assertSee('PWA instalável')
+        ->assertSee('Lançamento da primeira versão beta')
         ->assertSee('Fundação do projeto Finba.se')
         ->assertSee('Onboarding, localização e changelog alfa')
-        ->assertSee('Parcelamentos, PWA e moeda por país')
-        ->assertSee('Experiência como aplicativo')
-        ->assertSee('Moeda e interface');
+        ->assertSee('Parcelamentos, PWA e moeda por país');
 });
 
 it('denies guests access to changelog', function () {
@@ -63,32 +67,37 @@ it('represents the first project date in the changelog', function () {
     expect(app(ChangelogService::class)->earliestDate())->toBe('2026-05-16');
 });
 
-it('describes the current phase as alfa rather than beta', function () {
+it('describes the current phase as beta', function () {
     $banner = view('filament.components.alpha-banner', [
         'changelogUrl' => Changelog::getUrl(),
+        'feedbackUrl' => SendFeedback::getUrl(),
     ])->render();
 
     expect($banner)
-        ->toContain('Alfa')
-        ->toContain('fase alfa')
-        ->not->toContain('em versão beta')
-        ->not->toContain('0.1.0-beta');
+        ->toContain('Beta')
+        ->toContain('versão beta do Finba')
+        ->toContain('Ver Changelog')
+        ->toContain('Enviar Feedback')
+        ->not->toContain('fase alfa')
+        ->not->toContain('Alfa');
 
     Livewire::actingAs(changelogUser())
         ->test(Changelog::class)
-        ->assertSee('fase alfa')
-        ->assertDontSee('0.1.0-beta');
+        ->assertSee('Beta')
+        ->assertSee('v0.1.0-beta')
+        ->assertSee('Lançamento da primeira versão beta');
 });
 
-it('links the alpha banner to changelog', function () {
+it('links the release banner to changelog and feedback', function () {
     $html = view('filament.components.alpha-banner', [
         'changelogUrl' => Changelog::getUrl(),
+        'feedbackUrl' => SendFeedback::getUrl(),
     ])->render();
 
     expect($html)
         ->toContain(Changelog::getUrl())
-        ->toContain('Ver changelog')
-        ->toContain('finba_alpha_banner_dismissed')
+        ->toContain(SendFeedback::getUrl())
+        ->toContain('finba_release_banner_dismissed')
         ->toContain('sessionStorage');
 });
 
@@ -97,6 +106,7 @@ it('keeps changelog accessible regardless of banner dismissal state', function (
 
     view('filament.components.alpha-banner', [
         'changelogUrl' => Changelog::getUrl(),
+        'feedbackUrl' => SendFeedback::getUrl(),
     ])->render();
 
     Livewire::actingAs($user)
@@ -110,12 +120,13 @@ it('uses card and timeline markup instead of tables', function () {
 
     expect($view)
         ->toContain('finba-changelog-day')
+        ->toContain('finba-changelog-summary')
         ->not->toContain('<table');
 });
 
 it('places changelog after perfil in navigation order', function () {
     expect(Changelog::getNavigationSort())->toBeGreaterThan(Profile::getNavigationSort())
-        ->and(Changelog::getNavigationGroup())->toBe('Projeto');
+        ->and(Changelog::getNavigationGroup())->toBe('Sistema');
 });
 
 it('labels changelog item types in portuguese', function () {

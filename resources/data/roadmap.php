@@ -115,14 +115,29 @@ return [
                 'description' => 'Instalação como aplicativo, atualizações e tela segura para momentos sem conexão.',
             ],
             [
+                'title' => 'Canal de feedback dentro do aplicativo',
+                'status' => 'completed',
+                'description' => 'Envio de problemas e sugestões com protocolo, contexto técnico opcional e notificação por e-mail.',
+            ],
+            [
+                'title' => 'Página institucional Sobre o Finba.se',
+                'status' => 'completed',
+                'description' => 'Autoria, status do produto, open source e links públicos do projeto.',
+            ],
+            [
                 'title' => 'Primeira versão beta',
-                'status' => 'in_progress',
-                'description' => 'Preparação para testadores externos.',
+                'status' => 'completed',
+                'description' => 'Primeira versão beta publicada.',
             ],
             [
                 'title' => 'Preparação do ambiente de produção',
+                'status' => 'completed',
+                'description' => 'Infraestrutura e publicação em produção.',
+            ],
+            [
+                'title' => 'Estabilização da versão beta',
                 'status' => 'in_progress',
-                'description' => 'Infraestrutura e deploy para uso real.',
+                'description' => 'Correções, melhorias de desempenho, refinamentos de experiência e evolução contínua baseada no feedback dos usuários.',
             ],
             [
                 'title' => 'Landing page',

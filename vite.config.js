@@ -16,6 +16,8 @@ export default defineConfig({
                 'resources/css/filament/alpha-banner.css',
                 'resources/css/filament/changelog.css',
                 'resources/css/filament/roadmap.css',
+                'resources/css/filament/feedback.css',
+                'resources/css/filament/about.css',
                 'resources/css/filament/pwa.css',
                 'resources/js/pwa-manager.js',
             ],

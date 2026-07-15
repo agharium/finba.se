@@ -16,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'username', 'password', 'avatar', 'settings', 'email_verified_at', 'default_country_code', 'default_region_code', 'default_city_id', 'onboarding_completed_at'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail
 {
     use HasUuids, Notifiable;
 
@@ -116,5 +116,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     public function providers(): HasMany
     {
         return $this->hasMany(UserProvider::class);
+    }
+
+    public function feedback(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
     }
 }

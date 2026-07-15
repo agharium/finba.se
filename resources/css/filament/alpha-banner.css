@@ -17,13 +17,13 @@
     width: 100%;
     max-width: 100%;
     margin: 0 auto;
-    padding: 0.55rem 1rem;
+    padding: 0.65rem 1rem;
     box-sizing: border-box;
 }
 
 .finba-alpha-banner__content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.65rem;
     min-width: 0;
     flex: 1;
@@ -46,11 +46,36 @@
     color: rgb(252, 211, 77);
 }
 
+.finba-alpha-banner__copy {
+    min-width: 0;
+    flex: 1;
+}
+
+.finba-alpha-banner__title {
+    margin: 0 0 0.35rem;
+    color: rgb(120, 53, 15);
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.dark .finba-alpha-banner__title {
+    color: rgb(254, 243, 199);
+}
+
 .finba-alpha-banner__text {
     margin: 0;
     color: rgb(146, 64, 14);
-    font-size: 0.875rem;
-    line-height: 1.4;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+}
+
+.finba-alpha-banner__text p {
+    margin: 0;
+}
+
+.finba-alpha-banner__text p + p {
+    margin-top: 0.35rem;
 }
 
 .dark .finba-alpha-banner__text {
@@ -62,6 +87,8 @@
     align-items: center;
     gap: 0.5rem;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .finba-alpha-banner__link {
@@ -137,6 +164,6 @@
 
     .finba-alpha-banner__actions {
         width: 100%;
-        justify-content: space-between;
+        justify-content: flex-start;
     }
 }

@@ -4,6 +4,10 @@
 
 Finba.se é um sistema de controle financeiro pessoal desenvolvido em Laravel 13 + Filament 5.
 
+Versão atual: **0.1.0-beta** (`v0.1.0-beta` na UI)  
+Estágio: **Beta**  
+Deploy: **Production** (`https://app.finba.se`)
+
 Objetivo principal:
 
 * Controle financeiro simples para usuários comuns.
@@ -11,6 +15,13 @@ Objetivo principal:
 * Forte foco em UX.
 * Mobile-first via installable PWA (online-first; native packaging still deferred).
 * Multi-idioma desde o início (pt-BR e en-US).
+
+Foco atual do desenvolvimento:
+
+* correção de bugs
+* melhorias de UX
+* desempenho
+* feedback dos usuários
 
 ---
 
@@ -20,6 +31,16 @@ Objetivo principal:
 * Laravel 13
 * Filament 5
 * PostgreSQL (Supabase)
+* Compute: Google Cloud Run (`southamerica-east1`), imagem FrankenPHP, host `https://app.finba.se`
+* DNS/proxy: Cloudflare (domínio customizado preferencialmente via Load Balancer + serverless NEG)
+* Email: Resend
+* Armazenamento de arquivos: `FINBA_STORAGE_DISK` → disk `local` (dev) ou `finba` (produção, S3-compatível / Supabase Storage, bucket privado). Sem dependência de filesystem persistente do container. Ver `docs/supabase-storage.md`
+* Sessões/cache compartilhados via driver `database` (Cloud Run stateless)
+* Queue em produção: `sync` (sem worker dedicado nesta fase). Scheduler: não requerido ainda
+* Migrations: Cloud Run Job `finba-migrate` (`php artisan migrate --force`), nunca no boot do serviço web
+* Logs produção: `LOG_CHANNEL=stderr` → Cloud Logging
+* Health: `GET /up`
+* Deploy docs/scripts: `docs/deployment-gcp-cloud-run.md`, `scripts/deploy-cloud-run.sh`, `scripts/migrate-cloud-run.sh`
 * UUIDs em todas as entidades
 * Soft Deletes onde fizer sentido
 
@@ -381,7 +402,7 @@ Comportamento atual:
 
 Storage permitido no navegador:
 
-* flags de UI em `sessionStorage` (banner alfa, instalação sugerida, update adiado)
+* flags de UI em `sessionStorage` (banner de release, instalação sugerida, update adiado)
 
 Proibido:
 
@@ -395,9 +416,40 @@ Adiado:
 
 ---
 
+# Feedback e Transparência
+
+Canal manual de feedback:
+
+* Página autenticada `Feedback` (`/feedback`) no grupo Sistema
+* Persistência na tabela `feedback` (UUID, protocolo `FDB-AAAA-XXXXXXXX`, tipo, status, assunto, mensagem, ação tentada, contexto JSON seguro, anexo opcional)
+* Tipos: `BUG`, `SUGGESTION`, `OTHER`
+* Status: `OPEN`, `REVIEWING`, `RESOLVED`, `DISMISSED`
+* Anexos de feedback: caminhos de objeto no disk da aplicação (`FINBA_STORAGE_DISK` → `config('finba.storage.disk')`), nunca URLs assinadas/públicas nem caminhos absolutos locais. Convenção: `feedback/{feedback_uuid}/{arquivo-gerado.ext}`. Local: disk Laravel `local`. Produção: disk `finba` (S3-compatível → Supabase Storage, bucket privado). APIs agnósticas via `FileStorageService` / `Storage::disk(...)`. E-mail anexa via leitura server-side (`Attachment::fromStorageDisk`). Soft delete mantém o arquivo; `forceDelete` remove o objeto. Setup: `docs/supabase-storage.md`. Diagnóstico: `php artisan finba:storage-check`.
+* Contexto técnico opcional (URL/path, UA, viewport/tela, locale, timezone). Sem senhas, tokens, cookies, payloads financeiros
+* Metadados de build sempre anexados ao contexto via `App\Support\ApplicationBuild` / `config/finba.php`: `APP_VERSION` (default `0.1.0-beta`), `APP_STAGE` (default `Beta`), `APP_BUILD`, `GIT_SHA`. UI exibe `v0.1.0-beta`.
+* E-mail via `FINBA_FEEDBACK_EMAIL` (`config/finba.php`). Se vazio: salva e registra warning. Se o envio falhar após persistir: mantém o registro e avisa o usuário
+* Rate limit padrão: 8 envios/usuário/hora (`FINBA_FEEDBACK_RATE_LIMIT`)
+* Envio de e-mail síncrono nesta fase (filas não exigidas)
+* Sem Resource/admin de listagem neste momento; domínio preparado para CRUD interno futuro
+* Sentry / monitoramento automático de exceções: **adiado**
+
+Página `Sobre o Finba` (`/about`):
+
+* Conteúdo institucional (produto em Beta, versão `v0.1.0-beta`, criador, AGPL, build in public)
+* Metadados públicos do criador em `config/finba.creator` (GitHub/LinkedIn fixos; `url` null até o portfólio)
+
+Rodapé autenticado:
+
+* `Finba.se © {ano}` / `Desenvolvido por José Paulo Oliveira Filho` / `Beta · v0.1.0-beta · AGPL v3`
+* Nome clicável somente quando `config('finba.creator.url')` estiver definido
+
+Navegação Sistema: Changelog → Roadmap → Feedback → Sobre o Finba
+
 # Situação Atual
 
-Fluxos principais já utilizáveis:
+Produto em **Beta** em produção (`v0.1.0-beta`).
+
+Fluxos principais disponíveis:
 
 * Transações à vista
 * Contas a receber
@@ -405,10 +457,12 @@ Fluxos principais já utilizáveis:
 * Dashboard mensal
 * Onboarding e preferências
 * PWA instalável (online-first)
+* Canal de feedback e página Sobre o Finba
 
-Próximo foco:
+Foco atual:
 
-1. Empréstimos e dívidas
-2. Transações recorrentes
-3. Lembretes e notificações
-4. Preparação da primeira versão beta
+1. Estabilização da versão beta (bugs, UX, desempenho, feedback)
+2. Empréstimos e dívidas
+3. Transações recorrentes
+4. Lembretes e notificações
+5. Monitoramento automático de erros (Sentry) — ainda não iniciado

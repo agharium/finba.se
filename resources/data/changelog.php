@@ -2,6 +2,31 @@
 
 return [
     [
+        'date' => '2026-07-15',
+        'version' => '0.1.0-beta',
+        'badge' => 'Beta',
+        'title' => 'Lançamento da primeira versão beta',
+        'groups' => [
+            [
+                'title' => 'Lançamento',
+                'items' => [
+                    [
+                        'type' => 'added',
+                        'text' => 'A primeira versão beta do Finba foi publicada.',
+                    ],
+                    [
+                        'type' => 'changed',
+                        'text' => 'A aplicação passou a operar em produção.',
+                    ],
+                    [
+                        'type' => 'decision',
+                        'text' => 'O foco do desenvolvimento passa a ser estabilidade, refinamentos de experiência e evolução baseada no feedback dos usuários.',
+                    ],
+                ],
+            ],
+        ],
+    ],
+    [
         'date' => '2026-07-14',
         'version' => null,
         'badge' => 'Em desenvolvimento',
@@ -63,6 +88,27 @@ return [
                     [
                         'type' => 'fixed',
                         'text' => 'Foi removido o indicador de seta que aparecia ao passar o mouse nos cards de receitas e despesas.',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Comunicação e transparência',
+                'items' => [
+                    [
+                        'type' => 'added',
+                        'text' => 'Foi adicionado um canal interno para envio de problemas e sugestões.',
+                    ],
+                    [
+                        'type' => 'added',
+                        'text' => 'Os relatos passaram a ser armazenados com informações técnicas opcionais e notificação por e-mail.',
+                    ],
+                    [
+                        'type' => 'added',
+                        'text' => 'Também foi criada uma página sobre o projeto com autoria, status e links públicos.',
+                    ],
+                    [
+                        'type' => 'changed',
+                        'text' => 'O armazenamento de anexos foi preparado para utilizar um serviço persistente fora do servidor da aplicação.',
                     ],
                 ],
             ],

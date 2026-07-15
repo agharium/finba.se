@@ -4,9 +4,12 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\Login;
 use App\Filament\Auth\Register;
+use App\Filament\Pages\About;
 use App\Filament\Pages\Changelog;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Profile;
+use App\Filament\Pages\Roadmap;
+use App\Filament\Pages\SendFeedback;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,6 +32,8 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
+            ->spa(hasPrefetching: true)
+            ->unsavedChangesAlerts()
             ->login(Login::class)
             ->registration(Register::class)
             ->emailVerification()
@@ -48,6 +53,9 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
                 Profile::class,
                 Changelog::class,
+                Roadmap::class,
+                SendFeedback::class,
+                About::class,
             ])
             ->widgets([])
             ->middleware([

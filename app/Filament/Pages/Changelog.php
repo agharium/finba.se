@@ -13,7 +13,7 @@ class Changelog extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Projeto';
+    protected static string|UnitEnum|null $navigationGroup = 'Sistema';
 
     protected static ?string $navigationLabel = 'Changelog';
 
@@ -25,7 +25,7 @@ class Changelog extends Page
 
     protected string $view = 'filament.pages.changelog';
 
-    public function getSubheading(): string | Htmlable | null
+    public function getSubheading(): string|Htmlable|null
     {
         return 'Histórico detalhado das evoluções do Finba.se, em ordem cronológica.';
     }

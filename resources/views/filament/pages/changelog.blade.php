@@ -1,5 +1,29 @@
+@php
+    use App\Support\ApplicationBuild;
+@endphp
+
 <x-filament-panels::page>
     <div class="finba-changelog mx-auto w-full max-w-3xl">
+        <section class="finba-changelog-summary" aria-label="Resumo da versão">
+            <div class="finba-changelog-summary__brand">
+                <h2 class="finba-changelog-summary__name">Finba</h2>
+                <p class="finba-changelog-summary__version">{{ ApplicationBuild::displayVersion() }}</p>
+            </div>
+
+            <div class="finba-changelog-summary__status">
+                <span class="finba-changelog-summary__status-label">Status</span>
+                <span class="finba-changelog-summary__status-value">{{ ApplicationBuild::stage() }}</span>
+            </div>
+
+            <ul class="finba-changelog-summary__highlights">
+                <li>✓ Produção</li>
+                <li>✓ PWA instalável</li>
+                <li>✓ Parcelamentos</li>
+                <li>✓ Contas a receber</li>
+                <li>✓ Feedback integrado</li>
+            </ul>
+        </section>
+
         @forelse ($this->getEntries() as $entry)
             <article class="finba-changelog-day" wire:key="changelog-day-{{ $entry['date'] }}">
                 <div class="finba-changelog-day__marker" aria-hidden="true"></div>
@@ -14,7 +38,7 @@
                             <div class="finba-changelog-day__badges">
                                 @if (filled($entry['version'] ?? null))
                                     <span class="finba-changelog-day__badge finba-changelog-day__badge--version">
-                                        {{ $entry['version'] }}
+                                        {{ $entry['display_version'] }}
                                     </span>
                                 @endif
 

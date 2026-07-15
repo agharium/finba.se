@@ -39,7 +39,7 @@ it('uses the roadmap route slug', function () {
 });
 
 it('places roadmap in the projeto navigation group after changelog', function () {
-    expect(Roadmap::getNavigationGroup())->toBe('Projeto')
+    expect(Roadmap::getNavigationGroup())->toBe('Sistema')
         ->and(Roadmap::getNavigationSort())->toBeGreaterThan(Changelog::getNavigationSort());
 });
 
@@ -58,17 +58,19 @@ it('shows correct summary counts from roadmap data', function () {
     $counts = app(RoadmapService::class)->statusCounts();
 
     expect($counts)->toBe([
-        'completed' => 15,
-        'in_progress' => 4,
+        'completed' => 19,
+        'in_progress' => 3,
         'planned' => 5,
     ]);
 
     Livewire::actingAs(roadmapUser())
         ->test(Roadmap::class)
-        ->assertSee('15')
+        ->assertSee('19')
         ->assertSee('Concluídos')
         ->assertSee('Em desenvolvimento')
-        ->assertSee('Planejados');
+        ->assertSee('Planejados')
+        ->assertSee('Primeira versão beta publicada')
+        ->assertSee('Estabilização da versão beta');
 });
 
 it('handles unsupported statuses safely', function () {

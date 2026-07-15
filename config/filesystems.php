@@ -60,6 +60,25 @@ return [
             'report' => false,
         ],
 
+        /*
+        | Supabase Storage via S3-compatible API.
+        | Use FINBA_STORAGE_DISK=finba in production (stateless hosts like Cloud Run).
+        | Endpoint example: https://<project-ref>.storage.supabase.co/storage/v1/s3
+        | Path-style endpoints are required for this provider.
+        */
+        'finba' => [
+            'driver' => 's3',
+            'key' => env('SUPABASE_STORAGE_ACCESS_KEY_ID'),
+            'secret' => env('SUPABASE_STORAGE_SECRET_ACCESS_KEY'),
+            'region' => env('SUPABASE_STORAGE_REGION'),
+            'bucket' => env('SUPABASE_STORAGE_BUCKET'),
+            'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
     ],
 
     /*

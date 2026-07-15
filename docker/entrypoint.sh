@@ -24,6 +24,6 @@ php artisan event:clear --ansi >/dev/null 2>&1 || true
 
 php artisan optimize --ansi
 
-echo "Finba ready on 0.0.0.0:${PORT} (GIT_SHA=${GIT_SHA:-unknown} APP_BUILD=${APP_BUILD:-unknown})"
+echo "Finba.se ready on 0.0.0.0:${PORT} (GIT_SHA=${GIT_SHA:-unknown} APP_BUILD=${APP_BUILD:-unknown})"
 
 exec frankenphp run --config /etc/caddy/Caddyfile --adapter caddyfile

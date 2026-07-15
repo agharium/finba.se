@@ -11,7 +11,7 @@ class FinbaStorageCheckCommand extends Command
 {
     protected $signature = 'finba:storage-check';
 
-    protected $description = 'Validate the configured Finba storage disk with a write/read/delete probe';
+    protected $description = 'Validate the configured Finba.se storage disk with a write/read/delete probe';
 
     public function handle(FileStorageService $storage): int
     {

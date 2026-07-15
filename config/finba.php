@@ -34,7 +34,7 @@ return [
 
     'creator' => [
         'name' => 'José Paulo Oliveira Filho',
-        'url' => null,
+        'url' => 'https://finba.se',
         'github_url' => 'https://github.com/agharium/finba.se',
         'linkedin_url' => 'https://www.linkedin.com/in/jose-paulo-oliveira-filho/',
     ],

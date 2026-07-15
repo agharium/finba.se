@@ -6,7 +6,7 @@
     <div class="finba-changelog mx-auto w-full max-w-3xl">
         <section class="finba-changelog-summary" aria-label="Resumo da versão">
             <div class="finba-changelog-summary__brand">
-                <h2 class="finba-changelog-summary__name">Finba</h2>
+                <h2 class="finba-changelog-summary__name">Finba.se</h2>
                 <p class="finba-changelog-summary__version">{{ ApplicationBuild::displayVersion() }}</p>
             </div>
 

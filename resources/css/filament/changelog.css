@@ -75,15 +75,15 @@
     align-items: center;
     border-radius: 9999px;
     padding: 0.15rem 0.65rem;
-    background: rgba(22, 163, 74, 0.14);
-    color: rgb(22, 163, 74);
+    background: rgba(37, 99, 235, 0.14);
+    color: rgb(29, 78, 216);
     font-size: 0.78rem;
     font-weight: 700;
 }
 
 .dark .finba-changelog-summary__status-value {
-    background: rgba(74, 222, 128, 0.14);
-    color: rgb(134, 239, 172);
+    background: rgba(96, 165, 250, 0.18);
+    color: rgb(147, 197, 253);
 }
 
 .finba-changelog-summary__highlights {
@@ -218,14 +218,14 @@
 }
 
 .finba-changelog-day__badge--status {
-    background: rgba(217, 119, 6, 0.14);
-    color: rgb(180, 83, 9);
+    background: rgba(37, 99, 235, 0.14);
+    color: rgb(29, 78, 216);
     text-transform: uppercase;
 }
 
 .dark .finba-changelog-day__badge--status {
-    background: rgba(251, 191, 36, 0.16);
-    color: rgb(252, 211, 77);
+    background: rgba(96, 165, 250, 0.18);
+    color: rgb(147, 197, 253);
 }
 
 .finba-changelog-day__title {

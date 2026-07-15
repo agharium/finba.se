@@ -13,9 +13,9 @@ class About extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'Sistema';
 
-    protected static ?string $navigationLabel = 'Sobre o Finba';
+    protected static ?string $navigationLabel = 'Sobre o Finba.se';
 
-    protected static ?string $title = 'Sobre o Finba';
+    protected static ?string $title = 'Sobre o Finba.se';
 
     protected static ?string $slug = 'about';
 

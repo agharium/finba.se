@@ -1,6 +1,6 @@
-# Supabase Storage (Finba production files)
+# Supabase Storage (Finba.se production files)
 
-Finba stores private application files through Laravel's filesystem abstraction.
+Finba.se stores private application files through Laravel's filesystem abstraction.
 
 - Local development: `FINBA_STORAGE_DISK=local`
 - Production: `FINBA_STORAGE_DISK=finba` (S3-compatible Supabase Storage)
@@ -20,7 +20,7 @@ Do **not**:
 - use the Supabase JavaScript client for server uploads;
 - expose S3 credentials to the browser / Vite;
 - reuse database or service-role keys as storage credentials;
-- make the Finba bucket public.
+- make the Finba.se bucket public.
 
 ## Dashboard setup
 

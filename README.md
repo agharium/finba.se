@@ -6,7 +6,7 @@ A flexible personal finance platform built for people who outgrew rigid finance 
 
 🧪 Beta
 
-The first beta version of Finba is now available.
+The first beta version of Finba.se is now available.
 
 Current development focuses on:
 

@@ -17,7 +17,7 @@
     >
         <section class="finba-feedback__intro">
             <p>
-                Seu relato ajuda a evoluir o Finba. Problemas, ideias e observações são bem-vindos.
+                Seu relato ajuda a evoluir o Finba.se. Problemas, ideias e observações são bem-vindos.
             </p>
         </section>
 

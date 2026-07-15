@@ -22,10 +22,12 @@ function aboutUser(): User
 }
 
 it('allows authenticated users to access about page', function () {
+    config(['finba.creator.url' => null]);
+
     Livewire::actingAs(aboutUser())
         ->test(About::class)
         ->assertSuccessful()
-        ->assertSee('Sobre o Finba')
+        ->assertSee('Sobre o Finba.se')
         ->assertSee('O que é o Finba.se')
         ->assertSee('José Paulo Oliveira Filho')
         ->assertSee('LinkedIn')
@@ -35,7 +37,7 @@ it('allows authenticated users to access about page', function () {
         ->assertDontSee('Portfólio')
         ->assertSee('Beta')
         ->assertSee('v0.1.0-beta')
-        ->assertSee('O Finba encontra-se em fase beta.')
+        ->assertSee('O Finba.se encontra-se em fase beta.')
         ->assertSee('Changelog')
         ->assertSee('Roadmap');
 });
@@ -70,5 +72,5 @@ it('orders sistema navigation pages as expected', function () {
         ->and(SendFeedback::getNavigationGroup())->toBe('Sistema')
         ->and(About::getNavigationGroup())->toBe('Sistema')
         ->and(SendFeedback::getNavigationLabel())->toBe('Feedback')
-        ->and(About::getNavigationLabel())->toBe('Sobre o Finba');
+        ->and(About::getNavigationLabel())->toBe('Sobre o Finba.se');
 });

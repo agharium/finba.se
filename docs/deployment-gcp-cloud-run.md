@@ -1,4 +1,4 @@
-# Deploy Finba to Google Cloud Run
+# Deploy Finba.se to Google Cloud Run
 
 First beta production hosting for Finba.se.
 
@@ -61,7 +61,7 @@ Create Artifact Registry:
 gcloud artifacts repositories create finba \
   --repository-format=docker \
   --location=southamerica-east1 \
-  --description="Finba application images"
+  --description="Finba.se application images"
 ```
 
 ---
@@ -116,7 +116,7 @@ Then verify:
 Set on the Cloud Run service (plain env vars):
 
 ```env
-APP_NAME=Finba
+APP_NAME=Finba.se
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://app.finba.se

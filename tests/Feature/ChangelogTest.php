@@ -26,7 +26,7 @@ it('allows authenticated users to access changelog', function () {
         ->test(Changelog::class)
         ->assertSuccessful()
         ->assertSee('Changelog')
-        ->assertSee('Finba')
+        ->assertSee('Finba.se')
         ->assertSee('v0.1.0-beta')
         ->assertSee('Produção')
         ->assertSee('PWA instalável')
@@ -75,7 +75,7 @@ it('describes the current phase as beta', function () {
 
     expect($banner)
         ->toContain('Beta')
-        ->toContain('versão beta do Finba')
+        ->toContain('versão beta do Finba.se')
         ->toContain('Ver Changelog')
         ->toContain('Enviar Feedback')
         ->not->toContain('fase alfa')

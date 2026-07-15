@@ -433,7 +433,7 @@ Canal manual de feedback:
 * Sem Resource/admin de listagem neste momento; domínio preparado para CRUD interno futuro
 * Sentry / monitoramento automático de exceções: **adiado**
 
-Página `Sobre o Finba` (`/about`):
+Página `Sobre o Finba.se` (`/about`):
 
 * Conteúdo institucional (produto em Beta, versão `v0.1.0-beta`, criador, AGPL, build in public)
 * Metadados públicos do criador em `config/finba.creator` (GitHub/LinkedIn fixos; `url` null até o portfólio)
@@ -443,7 +443,7 @@ Rodapé autenticado:
 * `Finba.se © {ano}` / `Desenvolvido por José Paulo Oliveira Filho` / `Beta · v0.1.0-beta · AGPL v3`
 * Nome clicável somente quando `config('finba.creator.url')` estiver definido
 
-Navegação Sistema: Changelog → Roadmap → Feedback → Sobre o Finba
+Navegação Sistema: Changelog → Roadmap → Feedback → Sobre o Finba.se
 
 # Situação Atual
 
@@ -457,7 +457,7 @@ Fluxos principais disponíveis:
 * Dashboard mensal
 * Onboarding e preferências
 * PWA instalável (online-first)
-* Canal de feedback e página Sobre o Finba
+* Canal de feedback e página Sobre o Finba.se
 
 Foco atual:
 

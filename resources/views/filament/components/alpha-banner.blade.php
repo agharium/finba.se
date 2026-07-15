@@ -13,7 +13,7 @@
 
             <div class="finba-alpha-banner__copy">
                 <p class="finba-alpha-banner__title">
-                    Você está utilizando a versão beta do Finba.
+                    Você está utilizando a versão beta do Finba.se.
                 </p>
 
                 <div class="finba-alpha-banner__text">

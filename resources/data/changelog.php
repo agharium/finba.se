@@ -12,7 +12,7 @@ return [
                 'items' => [
                     [
                         'type' => 'added',
-                        'text' => 'A primeira versão beta do Finba foi publicada.',
+                        'text' => 'A primeira versão beta do Finba.se foi publicada.',
                     ],
                     [
                         'type' => 'changed',

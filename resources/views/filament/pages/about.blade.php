@@ -20,7 +20,7 @@
             <h2 class="finba-about__title">Estado atual</h2>
             <p class="finba-about__badge">{{ ApplicationBuild::stage() }}</p>
             <p class="finba-about__version">{{ ApplicationBuild::displayVersion() }}</p>
-            <p class="finba-about__text">O Finba encontra-se em fase beta.</p>
+            <p class="finba-about__text">O Finba.se encontra-se em fase beta.</p>
             <p class="finba-about__text">
                 Esta primeira versão pública já está disponível e continuará recebendo melhorias, refinamentos de experiência e novas funcionalidades até a primeira versão estável.
             </p>

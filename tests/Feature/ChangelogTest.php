@@ -126,7 +126,7 @@ it('uses card and timeline markup instead of tables', function () {
 
 it('places changelog after perfil in navigation order', function () {
     expect(Changelog::getNavigationSort())->toBeGreaterThan(Profile::getNavigationSort())
-        ->and(Changelog::getNavigationGroup())->toBe('Sistema');
+        ->and(Changelog::getNavigationGroup())->toBe('Projeto');
 });
 
 it('labels changelog item types in portuguese', function () {

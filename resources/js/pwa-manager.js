@@ -1,10 +1,12 @@
 const INSTALL_SUGGESTION_KEY = 'finba_pwa_install_suggestion_dismissed';
 const UPDATE_DISMISS_KEY = 'finba_pwa_update_prompt_dismissed';
+const FORCE_INSTALL_CHECK_KEY = 'finba_pwa_force_install_check';
 
 const state = {
     deferredPrompt: null,
     installAvailable: false,
     iosGuideAvailable: false,
+    installUiPending: false,
     installed: false,
     updateWaiting: false,
     registration: null,
@@ -20,6 +22,7 @@ function getPublicState() {
         isInstalled: isInstalled(),
         installAvailable: state.installAvailable,
         iosGuideAvailable: state.iosGuideAvailable,
+        installUiPending: state.installUiPending,
         updateWaiting: state.updateWaiting,
     };
 }
@@ -50,6 +53,20 @@ function isLikelyIosSafari() {
     return /Safari/i.test(ua);
 }
 
+function isChromiumDesktopCandidate() {
+    if (isInstalled() || isIosDevice()) {
+        return false;
+    }
+
+    if (! ('serviceWorker' in navigator)) {
+        return false;
+    }
+
+    const ua = window.navigator.userAgent || '';
+
+    return /Chrome|Chromium|Edg/i.test(ua) && ! /OPR|Opera|SamsungBrowser/i.test(ua);
+}
+
 function isInstalled() {
     return state.installed || isStandalone();
 }
@@ -59,7 +76,23 @@ function canInstall() {
         return false;
     }
 
-    return state.installAvailable || state.iosGuideAvailable;
+    return state.installAvailable || state.iosGuideAvailable || state.installUiPending;
+}
+
+function refreshInstallUiPending() {
+    if (isInstalled()) {
+        state.installUiPending = false;
+
+        return;
+    }
+
+    if (state.installAvailable || state.iosGuideAvailable) {
+        state.installUiPending = false;
+
+        return;
+    }
+
+    state.installUiPending = isChromiumDesktopCandidate();
 }
 
 function syncInstalledState() {
@@ -72,12 +105,16 @@ function syncInstalledState() {
         state.deferredPrompt = null;
         state.installAvailable = false;
         state.iosGuideAvailable = false;
+        state.installUiPending = false;
 
         if (! wasInstalled) {
             dispatch('finba:pwa-installed');
         }
     } else if (isLikelyIosSafari()) {
         state.iosGuideAvailable = true;
+        state.installUiPending = false;
+    } else {
+        refreshInstallUiPending();
     }
 
     dispatch('finba:pwa-state-changed');
@@ -95,6 +132,8 @@ async function registerServiceWorker() {
 
         state.registration = registration;
         bindUpdateDetection(registration);
+        refreshInstallUiPending();
+        dispatch('finba:pwa-state-changed');
 
         return registration;
     } catch (error) {
@@ -135,14 +174,22 @@ function markUpdateWaiting(waiting) {
 }
 
 async function requestInstallation() {
-    if (state.iosGuideAvailable || ! state.deferredPrompt) {
+    if (state.iosGuideAvailable) {
+        return { outcome: 'unavailable' };
+    }
+
+    if (! state.deferredPrompt) {
+        dispatch('finba:pwa-install-refresh-needed');
+
         return { outcome: 'unavailable' };
     }
 
     const promptEvent = state.deferredPrompt;
 
+    // Native prompt events are single-use; clear only after invoking.
     state.deferredPrompt = null;
     state.installAvailable = false;
+    refreshInstallUiPending();
     dispatch('finba:pwa-state-changed');
 
     promptEvent.prompt();
@@ -151,7 +198,10 @@ async function requestInstallation() {
 
     if (choice.outcome === 'accepted') {
         state.installed = true;
+        state.installUiPending = false;
         dispatch('finba:pwa-installed');
+    } else {
+        refreshInstallUiPending();
     }
 
     dispatch('finba:pwa-state-changed');
@@ -184,6 +234,11 @@ function dismissUpdatePrompt() {
     dispatch('finba:pwa-state-changed');
 }
 
+function reloadForInstallPrompt() {
+    sessionStorage.setItem(FORCE_INSTALL_CHECK_KEY, '1');
+    window.location.reload();
+}
+
 function bindBeforeInstallPrompt() {
     window.addEventListener('beforeinstallprompt', (event) => {
         event.preventDefault();
@@ -195,6 +250,7 @@ function bindBeforeInstallPrompt() {
         state.deferredPrompt = event;
         state.installAvailable = true;
         state.iosGuideAvailable = false;
+        state.installUiPending = false;
 
         dispatch('finba:pwa-install-available');
         dispatch('finba:pwa-state-changed');
@@ -206,6 +262,7 @@ function bindAppInstalled() {
         state.deferredPrompt = null;
         state.installAvailable = false;
         state.iosGuideAvailable = false;
+        state.installUiPending = false;
         state.installed = true;
 
         dispatch('finba:pwa-installed');
@@ -224,6 +281,22 @@ function bindDisplayModeChanges() {
     }
 }
 
+function bindLifecycleRefresh() {
+    window.addEventListener('pageshow', () => {
+        syncInstalledState();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            syncInstalledState();
+        }
+    });
+
+    window.addEventListener('focus', () => {
+        syncInstalledState();
+    });
+}
+
 function bindControllerChangeReload() {
     let refreshing = false;
 
@@ -235,6 +308,35 @@ function bindControllerChangeReload() {
         refreshing = true;
         window.location.reload();
     });
+}
+
+function maybeOpenInstallAfterForcedCheck() {
+    if (sessionStorage.getItem(FORCE_INSTALL_CHECK_KEY) !== '1') {
+        return;
+    }
+
+    sessionStorage.removeItem(FORCE_INSTALL_CHECK_KEY);
+
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const timer = window.setInterval(() => {
+        attempts += 1;
+
+        if (window.FinbaPwa?.canInstall?.() && ! window.FinbaPwa?.isInstalled?.()) {
+            window.clearInterval(timer);
+
+            const shell = document.querySelector('#finba-pwa-shell');
+            const data = shell && window.Alpine ? window.Alpine.$data(shell) : null;
+            data?.openInstallFlow?.('manual');
+
+            return;
+        }
+
+        if (attempts >= maxAttempts) {
+            window.clearInterval(timer);
+        }
+    }, 150);
 }
 
 function registerAlpineComponents() {
@@ -299,7 +401,12 @@ function registerAlpineComponents() {
                 this.maybeSuggestInstallation(root);
             });
 
+            window.addEventListener('finba:pwa-install-refresh-needed', () => {
+                reloadForInstallPrompt();
+            });
+
             this.maybeSuggestInstallation(root);
+            maybeOpenInstallAfterForcedCheck();
         },
 
         maybeSuggestInstallation(root) {
@@ -308,6 +415,11 @@ function registerAlpineComponents() {
             const pwa = window.FinbaPwa;
 
             if (! pwa || ! pwa.canInstall() || pwa.isInstalled()) {
+                return;
+            }
+
+            // Only auto-suggest when the browser can show a native install prompt.
+            if (! pwa.getState?.().installAvailable && ! pwa.isIosGuide?.()) {
                 return;
             }
 
@@ -392,7 +504,13 @@ function registerAlpineComponents() {
                 dismissInstallSuggestion();
             }
 
-            await window.FinbaPwa?.requestInstallation?.();
+            const result = await window.FinbaPwa?.requestInstallation?.();
+
+            if (result?.outcome === 'unavailable' && ! window.FinbaPwa?.isIosGuide?.()) {
+                reloadForInstallPrompt();
+                return;
+            }
+
             this.restoreFocus();
         },
 
@@ -423,6 +541,7 @@ export function bootPwa() {
         dismissInstallSuggestion,
         isInstallSuggestionDismissed,
         dismissUpdatePrompt,
+        reloadForInstallPrompt,
         getState: getPublicState,
     };
 
@@ -436,6 +555,7 @@ export function bootPwa() {
     bindBeforeInstallPrompt();
     bindAppInstalled();
     bindDisplayModeChanges();
+    bindLifecycleRefresh();
     bindControllerChangeReload();
     registerServiceWorker();
 

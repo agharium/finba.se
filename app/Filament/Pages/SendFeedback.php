@@ -23,7 +23,7 @@ class SendFeedback extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleLeftRight;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sistema';
+    protected static string|UnitEnum|null $navigationGroup = 'Projeto';
 
     protected static ?string $navigationLabel = 'Feedback';
 

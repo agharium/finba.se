@@ -420,7 +420,7 @@ Adiado:
 
 Canal manual de feedback:
 
-* Página autenticada `Feedback` (`/feedback`) no grupo Sistema
+* Página autenticada `Feedback` (`/feedback`) no grupo Projeto
 * Persistência na tabela `feedback` (UUID, protocolo `FDB-AAAA-XXXXXXXX`, tipo, status, assunto, mensagem, ação tentada, contexto JSON seguro, anexo opcional)
 * Tipos: `BUG`, `SUGGESTION`, `OTHER`
 * Status: `OPEN`, `REVIEWING`, `RESOLVED`, `DISMISSED`
@@ -443,7 +443,7 @@ Rodapé autenticado:
 * `Finba.se © {ano}` / `Desenvolvido por José Paulo Oliveira Filho` / `Beta · v0.1.0-beta · AGPL v3`
 * Nome clicável somente quando `config('finba.creator.url')` estiver definido
 
-Navegação Sistema: Changelog → Roadmap → Feedback → Sobre o Finba.se
+Navegação Projeto: Changelog → Roadmap → Feedback → Sobre o Finba.se
 
 # Situação Atual
 

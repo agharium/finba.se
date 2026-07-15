@@ -13,7 +13,7 @@ class Roadmap extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sistema';
+    protected static string|UnitEnum|null $navigationGroup = 'Projeto';
 
     protected static ?string $navigationLabel = 'Roadmap';
 

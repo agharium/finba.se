@@ -67,10 +67,10 @@ it('orders sistema navigation pages as expected', function () {
         ->and(Roadmap::getNavigationSort())->toBe(1020)
         ->and(SendFeedback::getNavigationSort())->toBe(1030)
         ->and(About::getNavigationSort())->toBe(1040)
-        ->and(Changelog::getNavigationGroup())->toBe('Sistema')
-        ->and(Roadmap::getNavigationGroup())->toBe('Sistema')
-        ->and(SendFeedback::getNavigationGroup())->toBe('Sistema')
-        ->and(About::getNavigationGroup())->toBe('Sistema')
+        ->and(Changelog::getNavigationGroup())->toBe('Projeto')
+        ->and(Roadmap::getNavigationGroup())->toBe('Projeto')
+        ->and(SendFeedback::getNavigationGroup())->toBe('Projeto')
+        ->and(About::getNavigationGroup())->toBe('Projeto')
         ->and(SendFeedback::getNavigationLabel())->toBe('Feedback')
         ->and(About::getNavigationLabel())->toBe('Sobre o Finba.se');
 });

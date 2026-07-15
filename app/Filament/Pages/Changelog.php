@@ -13,7 +13,7 @@ class Changelog extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sistema';
+    protected static string|UnitEnum|null $navigationGroup = 'Projeto';
 
     protected static ?string $navigationLabel = 'Changelog';
 

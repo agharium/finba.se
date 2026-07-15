@@ -39,7 +39,7 @@ it('uses the roadmap route slug', function () {
 });
 
 it('places roadmap in the projeto navigation group after changelog', function () {
-    expect(Roadmap::getNavigationGroup())->toBe('Sistema')
+    expect(Roadmap::getNavigationGroup())->toBe('Projeto')
         ->and(Roadmap::getNavigationSort())->toBeGreaterThan(Changelog::getNavigationSort());
 });
 

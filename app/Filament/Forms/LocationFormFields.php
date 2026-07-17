@@ -3,16 +3,18 @@
 namespace App\Filament\Forms;
 
 use App\Filament\Pages\Profile;
-use App\Models\City;
 use App\Models\User;
 use App\Services\LocationCatalogService;
 use App\Services\LocationDefaultsService;
 use App\Services\UserCityService;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ViewField;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Facades\Auth;
@@ -92,7 +94,12 @@ class LocationFormFields
     }
 
     /**
-     * @return array<int, \Filament\Forms\Components\Component>
+     * Progressive location picker inside a Filament Section:
+     * 1) cities (full width)
+     * 2) override switch | temporary state (side by side)
+     * 3) temporary-search warning directly under the switch
+     *
+     * @return array<int, Component|\Filament\Schemas\Components\Component>
      */
     public static function compactLocationPicker(
         string $cityField = 'city_id',
@@ -101,77 +108,127 @@ class LocationFormFields
         ?string $cityHelperText = null,
     ): array {
         $visible ??= fn (): bool => true;
+        $hasDefaults = fn (): bool => $visible()
+            && app(LocationDefaultsService::class)->hasConfiguredLocation(Auth::user());
+
+        $section = Section::make($multiple ? 'Cidades vinculadas' : 'Cidade')
+            ->columnSpanFull()
+            ->visible($hasDefaults)
+            ->schema([
+                self::buildCitySelect(
+                    countryResolver: fn (Get $get): ?string => self::activeSearchCountry($get),
+                    regionResolver: fn (Get $get): ?string => self::activeSearchRegion($get),
+                    name: $cityField,
+                    multiple: $multiple,
+                    required: false,
+                    nullable: ! $multiple,
+                    visible: $hasDefaults,
+                    useConfiguredDefaultsGate: true,
+                )
+                    ->hiddenLabel()
+                    ->columnSpanFull()
+                    ->placeholder(function (Get $get): ?string {
+                        if ((bool) $get('search_other_region') && blank($get('temporary_region_code'))) {
+                            return 'Selecione um estado primeiro';
+                        }
+
+                        return null;
+                    })
+                    ->helperText(fn (Get $get): string => self::citySelectContextHelper($get)),
+
+                Grid::make([
+                    'default' => 1,
+                    'sm' => 2,
+                ])
+                    ->schema([
+                        Grid::make(1)
+                            ->schema([
+                                Toggle::make('search_other_region')
+                                    ->label('Buscar em outro estado')
+                                    ->dehydrated(false)
+                                    ->live()
+                                    ->afterStateUpdated(function (bool $state, Set $set) use ($cityField, $multiple): void {
+                                        $set('temporary_region_code', null);
+
+                                        if ($multiple) {
+                                            $set($cityField, []);
+                                        } else {
+                                            $set($cityField, null);
+                                        }
+                                    }),
+
+                                ViewField::make('location_override_hint')
+                                    ->dehydrated(false)
+                                    ->hiddenLabel()
+                                    ->visible(fn (Get $get): bool => (bool) $get('search_other_region'))
+                                    ->view('filament.forms.location-override-hint')
+                                    ->viewData([
+                                        'profileUrl' => Profile::getUrl(),
+                                    ]),
+                            ]),
+
+                        self::regionSelect(
+                            countryField: '_internal_country_code',
+                            name: 'temporary_region_code',
+                            cityField: $cityField,
+                            live: true,
+                            required: false,
+                        )
+                            ->dehydrated(false)
+                            ->options(fn (LocationCatalogService $service): array => $service->regionOptions(
+                                app(LocationDefaultsService::class)->internalCountryCode(Auth::user()),
+                            ))
+                            ->disabled(fn (): bool => blank(app(LocationDefaultsService::class)->internalCountryCode(Auth::user())))
+                            ->visible(fn (Get $get): bool => (bool) $get('search_other_region'))
+                            ->required(fn (Get $get): bool => (bool) $get('search_other_region'))
+                            ->afterStateUpdated(function (Set $set) use ($cityField, $multiple): void {
+                                if ($multiple) {
+                                    $set($cityField, []);
+                                } else {
+                                    $set($cityField, null);
+                                }
+                            }),
+                    ]),
+            ]);
+
+        if (filled($cityHelperText)) {
+            $section->description($cityHelperText);
+        }
 
         return [
             ViewField::make('location_configuration_prompt')
                 ->dehydrated(false)
-                ->visible(fn (Get $get): bool => $visible()
-                    && ! app(LocationDefaultsService::class)->hasConfiguredLocation(Auth::user())
-                    && ! (bool) $get('search_other_region'))
+                ->columnSpanFull()
+                ->visible(fn (): bool => $visible()
+                    && ! app(LocationDefaultsService::class)->hasConfiguredLocation(Auth::user()))
                 ->view('filament.forms.location-configuration-prompt')
                 ->viewData([
                     'profileUrl' => Profile::getUrl(),
                 ]),
 
-            self::buildCitySelect(
-                countryResolver: fn (Get $get): ?string => self::activeSearchCountry($get),
-                regionResolver: fn (Get $get): ?string => self::activeSearchRegion($get),
-                name: $cityField,
-                multiple: $multiple,
-                required: false,
-                nullable: ! $multiple,
-                visible: fn (Get $get): bool => $visible() && app(LocationDefaultsService::class)->canSearchCities($get),
-                helperText: $cityHelperText,
-                useConfiguredDefaultsGate: true,
-            ),
-
-            Toggle::make('search_other_region')
-                ->label('Buscar em outro estado')
-                ->dehydrated(false)
-                ->live()
-                ->visible(fn (Get $get): bool => $visible()
-                    && app(LocationDefaultsService::class)->hasConfiguredLocation(Auth::user()))
-                ->afterStateUpdated(function (bool $state, Set $set) use ($cityField, $multiple): void {
-                    if (! $state) {
-                        $set('temporary_region_code', null);
-                    }
-
-                    if ($multiple) {
-                        $set($cityField, []);
-                    } else {
-                        $set($cityField, null);
-                    }
-                }),
-
-            self::regionSelect(
-                countryField: '_internal_country_code',
-                name: 'temporary_region_code',
-                cityField: $cityField,
-                live: true,
-                required: false,
-            )
-                ->dehydrated(false)
-                ->options(fn (LocationCatalogService $service): array => $service->regionOptions(
-                    app(LocationDefaultsService::class)->internalCountryCode(Auth::user()),
-                ))
-                ->disabled(fn (): bool => blank(app(LocationDefaultsService::class)->internalCountryCode(Auth::user())))
-                ->visible(fn (Get $get): bool => $visible() && (bool) $get('search_other_region'))
-                ->afterStateUpdated(function (Set $set) use ($cityField, $multiple): void {
-                    if ($multiple) {
-                        $set($cityField, []);
-                    } else {
-                        $set($cityField, null);
-                    }
-                }),
-
-            ViewField::make('location_override_hint')
-                ->dehydrated(false)
-                ->visible(fn (Get $get): bool => $visible() && (bool) $get('search_other_region'))
-                ->view('filament.forms.location-override-hint')
-                ->viewData([
-                    'profileUrl' => Profile::getUrl(),
-                ]),
+            $section,
         ];
+    }
+
+    public static function citySelectContextHelper(Get $get): string
+    {
+        if ((bool) $get('search_other_region') && blank($get('temporary_region_code'))) {
+            return 'Selecione um estado para carregar suas cidades.';
+        }
+
+        $regionCode = self::activeSearchRegion($get);
+
+        if (blank($regionCode)) {
+            return 'Selecione um estado para carregar suas cidades.';
+        }
+
+        $message = 'Exibindo cidades do '.strtoupper((string) $regionCode);
+
+        if ((bool) $get('search_other_region')) {
+            return $message.' (temporário).';
+        }
+
+        return $message.'.';
     }
 
     public static function manualCityInput(
@@ -256,7 +313,7 @@ class LocationFormFields
         bool $required = false,
         bool $nullable = true,
         ?callable $visible = null,
-        ?string $helperText = null,
+        string|\Closure|null $helperText = null,
         bool $useConfiguredDefaultsGate = true,
     ): Select {
         $select = Select::make($name)

@@ -185,26 +185,6 @@ TRANSACTIONS MOBILE
         row-gap: calc(var(--spacing) * 3);
     }
 
-    .finba-transactions-page .finba-mobile-fab {
-        position: fixed !important;
-        right: 1.25rem !important;
-        bottom: calc(6.2rem + env(safe-area-inset-bottom)) !important;
-        z-index: 25 !important;
-
-        width: 3.75rem !important;
-        height: 3.75rem !important;
-        min-width: 3.75rem !important;
-        padding: 0 !important;
-        border-radius: 9999px !important;
-
-        font-size: 0 !important;
-        overflow: hidden !important;
-
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22) !important;
-        transition: all 0.2s ease !important;
-    }
-
-    .finba-transactions-page .finba-mobile-fab svg,
     .finba-transactions-page .finba-desktop-record-action {
         display: none !important;
     }
@@ -217,20 +197,9 @@ TRANSACTIONS MOBILE
         display: flex !important;
     }
 
-    .finba-transactions-page .finba-mobile-fab::after {
-        content: "+";
-        position: absolute;
-        inset: 0;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        font-size: 2rem;
-        line-height: 1;
-        font-weight: 300;
-
-        transform: translateY(-1px);
+    /* Keep the FAB above the fixed Receitas/Despesas tabs. */
+    .finba-transactions-page .finba-mobile-fab {
+        bottom: calc(6.2rem + env(safe-area-inset-bottom)) !important;
     }
 
     .finba-transactions-page .fi-sc-tabs {
@@ -291,7 +260,6 @@ TRANSACTIONS MOBILE
         box-shadow: none !important;
     }
 
-    .finba-transactions-page:has(.fi-modal-content) .finba-mobile-fab,
     .finba-transactions-page:has(.fi-modal-content) .fi-sc-tabs {
         opacity: 0 !important;
         pointer-events: none !important;

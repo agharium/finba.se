@@ -6,9 +6,9 @@
     gap: 0.45rem;
     min-height: 2.25rem;
     border-radius: 0.65rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.04);
-    color: rgb(228, 228, 231);
+    border: 1px solid rgba(24, 24, 27, 0.12);
+    background: rgba(24, 24, 27, 0.04);
+    color: rgb(39, 39, 42);
     padding: 0.35rem 0.7rem;
     font-size: 0.8rem;
     font-weight: 600;
@@ -18,14 +18,30 @@
 }
 
 .finba-pwa-install:hover {
+    background: rgba(22, 163, 74, 0.1);
+    border-color: rgba(22, 163, 74, 0.35);
+    color: rgb(21, 128, 61);
+}
+
+.finba-pwa-install:focus-visible {
+    outline: 2px solid rgb(22, 163, 74);
+    outline-offset: 2px;
+}
+
+.dark .finba-pwa-install {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgb(228, 228, 231);
+}
+
+.dark .finba-pwa-install:hover {
     background: rgba(22, 192, 75, 0.12);
     border-color: rgba(22, 192, 75, 0.35);
     color: rgb(134, 239, 172);
 }
 
-.finba-pwa-install:focus-visible {
-    outline: 2px solid rgb(134, 239, 172);
-    outline-offset: 2px;
+.dark .finba-pwa-install:focus-visible {
+    outline-color: rgb(134, 239, 172);
 }
 
 .finba-pwa-install__icon {

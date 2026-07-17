@@ -11,6 +11,8 @@ use App\Services\LocationCatalogService;
 use App\Services\LocationDefaultsService;
 use App\Services\UserCityService;
 use Filament\Facades\Filament;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -57,10 +59,41 @@ it('does not render país in profile location fields', function () {
     expect($labels)->not->toContain('País');
 });
 
+/**
+ * @return list<string>
+ */
+function compactLocationPickerFieldNames(string $cityField = 'city_id'): array
+{
+    $names = [];
+
+    $walk = function ($component) use (&$walk, &$names): void {
+        if (method_exists($component, 'getName') && filled($component->getName())) {
+            $names[] = $component->getName();
+        }
+
+        $children = [];
+
+        if (method_exists($component, 'getDefaultChildComponents')) {
+            $children = $component->getDefaultChildComponents();
+        }
+
+        foreach ($children as $child) {
+            $walk($child);
+        }
+    };
+
+    foreach (LocationFormFields::compactLocationPicker(
+        cityField: $cityField,
+        cityHelperText: 'Quando esta pessoa for selecionada em uma transação, estas cidades poderão ser escolhidas.',
+    ) as $component) {
+        $walk($component);
+    }
+
+    return $names;
+}
+
 it('does not include geolocation in compact location picker', function () {
-    $names = collect(LocationFormFields::compactLocationPicker('city_id'))
-        ->map(fn ($component) => $component->getName())
-        ->all();
+    $names = compactLocationPickerFieldNames();
 
     expect($names)->not->toContain('location_geolocation_shortcut')
         ->and($names)->not->toContain('geolocation_suggest');
@@ -145,14 +178,111 @@ it('resolves catalog city labels without querying invalid uuids', function () {
 });
 
 it('builds compact location picker without visible country fields', function () {
-    $names = collect(LocationFormFields::compactLocationPicker('city_id'))
-        ->map(fn ($component) => $component->getName())
-        ->all();
+    $names = compactLocationPickerFieldNames();
 
     expect($names)->toContain('city_id')
         ->and($names)->toContain('search_other_region')
         ->and($names)->toContain('temporary_region_code')
+        ->and($names)->toContain('location_override_hint')
         ->and($names)->not->toContain('temporary_country_code');
+});
+
+it('orders compact location picker as cities, then switch with hint under it beside state', function () {
+    $names = compactLocationPickerFieldNames('cities');
+
+    expect(array_search('cities', $names, true))
+        ->toBeLessThan(array_search('search_other_region', $names, true))
+        ->and(array_search('search_other_region', $names, true))
+        ->toBeLessThan(array_search('location_override_hint', $names, true))
+        ->and(array_search('location_override_hint', $names, true))
+        ->toBeLessThan(array_search('temporary_region_code', $names, true));
+});
+
+it('disables city search until a temporary state is selected', function () {
+    $user = locationUxUser();
+    $this->actingAs($user);
+
+    $defaults = app(LocationDefaultsService::class);
+
+    $formGet = function (array $state): Get {
+        $get = mock(Get::class);
+        $get->shouldReceive('__invoke')->andReturnUsing(
+            fn (?string $key = null): mixed => $state[$key] ?? null,
+        );
+
+        return $get;
+    };
+
+    expect($defaults->canSearchCities($formGet([
+        'search_other_region' => false,
+        'temporary_region_code' => null,
+    ])))->toBeTrue()
+        ->and($defaults->canSearchCities($formGet([
+            'search_other_region' => true,
+            'temporary_region_code' => null,
+        ])))->toBeFalse()
+        ->and($defaults->canSearchCities($formGet([
+            'search_other_region' => true,
+            'temporary_region_code' => 'SP',
+        ])))->toBeTrue()
+        ->and($defaults->searchContextFromFormState($formGet([
+            'search_other_region' => false,
+            'temporary_region_code' => 'SP',
+        ]))['region_code'])->toBe('RS')
+        ->and($defaults->searchContextFromFormState($formGet([
+            'search_other_region' => true,
+            'temporary_region_code' => 'SP',
+        ]))['region_code'])->toBe('SP');
+});
+
+it('builds the city select helper from the active state acronym', function () {
+    $user = locationUxUser();
+    $this->actingAs($user);
+
+    $formGet = function (array $state): Get {
+        $get = mock(Get::class);
+        $get->shouldReceive('__invoke')->andReturnUsing(
+            fn (?string $key = null): mixed => $state[$key] ?? null,
+        );
+
+        return $get;
+    };
+
+    expect(LocationFormFields::citySelectContextHelper($formGet([
+        'search_other_region' => false,
+        'temporary_region_code' => null,
+    ])))->toBe('Exibindo cidades do RS.')
+        ->and(LocationFormFields::citySelectContextHelper($formGet([
+            'search_other_region' => true,
+            'temporary_region_code' => null,
+        ])))->toBe('Selecione um estado para carregar suas cidades.')
+        ->and(LocationFormFields::citySelectContextHelper($formGet([
+            'search_other_region' => true,
+            'temporary_region_code' => 'pr',
+        ])))->toBe('Exibindo cidades do PR (temporário).');
+});
+
+it('uses the person cities helper as the section description', function () {
+    $section = collect(LocationFormFields::compactLocationPicker(
+        cityField: 'cities',
+        multiple: true,
+        cityHelperText: 'Quando esta pessoa for selecionada em uma transação, estas cidades poderão ser escolhidas.',
+    ))->first(
+        fn ($component): bool => $component instanceof Section,
+    );
+
+    expect($section)->not->toBeNull()
+        ->and($section->getDescription())
+        ->toBe('Quando esta pessoa for selecionada em uma transação, estas cidades poderão ser escolhidas.');
+});
+
+it('keeps the temporary search warning copy for the override hint', function () {
+    $hint = file_get_contents(resource_path('views/filament/forms/location-override-hint.blade.php'));
+
+    expect($hint)
+        ->toContain('Esta busca é temporária')
+        ->toContain('Altere sua localização padrão no Perfil')
+        ->toContain('color="primary"');
 });
 
 it('keeps existing transaction city on edit', function () {

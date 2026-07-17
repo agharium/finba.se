@@ -84,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
                 <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/feedback.css').'">
                 <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/about.css').'">
                 <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/pwa.css').'">
+                <link rel="stylesheet" href="'.Vite::asset('resources/css/filament/ui.css').'">
                 <script type="module" src="'.Vite::asset('resources/js/pwa-manager.js').'"></script>
             ')
         );

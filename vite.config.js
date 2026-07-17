@@ -19,6 +19,7 @@ export default defineConfig({
                 'resources/css/filament/feedback.css',
                 'resources/css/filament/about.css',
                 'resources/css/filament/pwa.css',
+                'resources/css/filament/ui.css',
                 'resources/js/pwa-manager.js',
             ],
             refresh: true,

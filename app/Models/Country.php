@@ -17,9 +17,9 @@ class Country extends Model
     protected static ?array $catalogRows = null;
 
     /**
-     * Cloud Run is multi-request and non-root. File-based Sushi SQLite caches can
-     * race (empty .sqlite without a countries table). This dataset is small, so
-     * rebuild in :memory: per process instead of caching on disk.
+     * Prefer in-memory SQLite for this small static catalog.
+     * File-based Sushi caches can race under concurrent requests and leave an
+     * empty database without a countries table.
      */
     protected function sushiShouldCache(): bool
     {

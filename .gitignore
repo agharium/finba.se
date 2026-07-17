@@ -37,6 +37,10 @@ auth.json
 .phpactor.json
 /.vscode/
 .idea/
+/.cursor/
+/.claude/
+/.agents/
+/agent-transcripts/
 
 # OS files
 .DS_Store

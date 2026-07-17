@@ -16,8 +16,7 @@ mkdir -p \
   storage/app/private \
   bootstrap/cache
 
-# Drop stale on-disk Sushi SQLite files. Country uses in-memory Sushi at runtime;
-# leftover empty caches previously caused "no such table: countries".
+# Remove stale on-disk Sushi SQLite files; Country rebuilds in memory at runtime.
 rm -f storage/framework/cache/sushi-*.sqlite \
   storage/framework/cache/sushi/sushi-*.sqlite \
   2>/dev/null || true
@@ -29,7 +28,7 @@ php artisan route:clear --ansi >/dev/null 2>&1 || true
 php artisan view:clear --ansi >/dev/null 2>&1 || true
 php artisan event:clear --ansi >/dev/null 2>&1 || true
 
-# optimize caches config/routes/views only — do not prebuild Sushi SQLite files.
+# Cache config/routes/views only; do not prebuild Sushi SQLite files.
 php artisan optimize --ansi
 
 echo "Finba.se ready on 0.0.0.0:${PORT} (GIT_SHA=${GIT_SHA:-unknown} APP_BUILD=${APP_BUILD:-unknown})"

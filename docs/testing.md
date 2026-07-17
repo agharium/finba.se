@@ -1,6 +1,32 @@
-# Finba.se beta smoke test
+# Testing
 
-Run after a production (or staging) deploy before inviting testers.
+## Automated tests
+
+From the project root:
+
+```bash
+composer test
+# or
+php artisan test --compact
+```
+
+Run a focused file or filter when working on a specific area:
+
+```bash
+php artisan test --compact tests/Feature/ExampleTest.php
+php artisan test --compact --filter=testName
+```
+
+Useful operational checks:
+
+```bash
+php artisan finba:storage-check
+php artisan finba:country-catalog-check
+```
+
+## Beta smoke test
+
+Run after a production or staging deploy before inviting testers.
 
 Environment under test:
 
@@ -11,7 +37,7 @@ Environment under test:
 
 Mark each item only after manual verification.
 
-## Access and auth
+### Access and auth
 
 - [ ] `GET /up` returns HTTP 200 without auth
 - [ ] Register a new account
@@ -21,13 +47,13 @@ Mark each item only after manual verification.
 - [ ] Login with Google OAuth
 - [ ] Password reset email + flow
 
-## Onboarding and profile
+### Onboarding and profile
 
 - [ ] First-access onboarding completes
 - [ ] Profile locale/location preferences save
-- [ ] Navigation reflects profile preference refresh if applicable
+- [ ] Navigation reflects preference refresh if applicable
 
-## Core finance flows
+### Core finance flows
 
 - [ ] Create category and subcategory
 - [ ] Create person
@@ -41,36 +67,36 @@ Mark each item only after manual verification.
 - [ ] Full receivable payment / closure
 - [ ] Tithe / first fruits delivery recorded
 
-## Feedback and storage
+### Feedback and storage
 
 - [ ] Submit feedback with screenshot
 - [ ] Object appears privately under `feedback/{uuid}/...` in Supabase Storage
 - [ ] Database stores object path only (no signed/public URL)
 - [ ] Feedback notification email arrives with attachment when configured
-- [ ] Soft-deleted feedback does not immediately delete the object (if tested in admin/tooling)
+- [ ] Soft-deleted feedback does not immediately delete the object (if tested)
 
-## Product surfaces
+### Product surfaces
 
 - [ ] Changelog renders
 - [ ] Roadmap renders
 - [ ] About page renders with expected public info
 
-## PWA
+### PWA
 
-- [ ] Install modal / install affordance appears where expected
+- [ ] Install affordance appears where expected
 - [ ] App launches in standalone display mode after install
-- [ ] Service worker updates without sticky stale SW (`Cache-Control: no-cache`)
+- [ ] Service worker updates without sticky stale caches
 - [ ] Offline fallback (`/offline.html`) appears when offline
-- [ ] Offline does not allow financial mutations / unsafe stale editing assumptions
+- [ ] Offline does not allow financial mutations
 
-## Mobile and security checks
+### Mobile and security
 
 - [ ] Mobile layout usable on a phone viewport
 - [ ] No mixed-content warnings
 - [ ] `APP_DEBUG=false` (no stack traces for normal errors)
-- [ ] Session survives request landing on a different Cloud Run instance (repeat a few logged-in navigations)
+- [ ] Session survives requests landing on different Cloud Run instances
 
-## Sign-off
+### Sign-off
 
 - [ ] Safe to invite limited beta testers
 - [ ] Known defects recorded: ____________________

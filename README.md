@@ -1,130 +1,112 @@
-# finba.se
+# Finba.se
 
-A flexible personal finance platform built for people who outgrew rigid finance apps.
+A flexible personal finance platform for people who outgrew rigid finance apps.
 
 ## Status
 
-🧪 Beta
+**Beta** — version `0.1.0-beta` is live at [app.finba.se](https://app.finba.se).
 
-The first beta version of Finba.se is now available.
+Current development focuses on stability, UX refinement, performance, and community feedback.
 
-Current development focuses on:
+## Why Finba.se?
 
-- stability
-- UX refinement
-- performance
-- community feedback
+Many finance apps feel limiting: too rigid, weak organization, or no concept of people. Finba.se is built to track categories and subcategories, who owes whom, purchases linked to people, shared household finances, recurring and installment transactions, and workflows that adapt to the user.
 
----
+The first version of this idea was built in Xamarin in 2019 and used for years before the current rebuild.
 
-## Why?
+## Stack
 
-I’ve tried many finance apps over the years, but they always felt limiting.
-
-Some were too rigid.
-Some didn’t let me organize data the way I wanted.
-Others completely ignored an important dimension: people.
-
-I wanted to track:
-
-- Categories and subcategories
-- Who owes me
-- Who I owe
-- Purchases linked to people
-- Shared household finances
-- Recurring and installment transactions
-- Financial organization that adapts to *my* workflow
-
-So I built my own.
-
-fun fact: the first version of this idea was built in Xamarin back in 2019 — and I actually used it for years before deciding to rebuild it properly.
-
----
-
-## Current stack
-
-Backend:
-- PHP 8+
-- Laravel
-- Filament PHP
-
-Database:
+- PHP 8.4, Laravel 13, Filament 5
 - PostgreSQL (Supabase)
+- Private file storage: local disk in development; S3-compatible Supabase Storage in production
+- Production hosting: Google Cloud Run + FrankenPHP, Resend email, Cloudflare DNS
+- Web-first installable PWA (native packaging remains a future option)
 
-File storage:
-- Local disk in development (`FINBA_STORAGE_DISK=local`)
-- Private Supabase Storage via S3-compatible disk `finba` in production (see `docs/supabase-storage.md`)
+## Local setup
 
-Production hosting:
-- Google Cloud Run + FrankenPHP container
-- Supabase PostgreSQL + Supabase Storage
-- Resend email, Cloudflare DNS
-- See `docs/deployment-gcp-cloud-run.md`
+Requirements: PHP 8.4+, Composer, Node.js, and PostgreSQL (or SQLite for quick local experiments).
 
-Mobile strategy:
-- Web-first installable PWA
-- Native packaging remains a future possibility
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
 
----
+# Configure database and other values in .env, then:
+php artisan migrate
 
-## Core principles
+npm install
+npm run build
+# or npm run dev during frontend work
 
-finba.se is built around a few ideas:
+composer dev
+# or: php artisan serve
+```
 
-- Flexibility over rigid workflows
-- Simple UX, powerful organization
-- Productive, pragmatic engineering
-- Build in public
-- Open source by default
+Useful environment notes:
 
----
+- `FINBA_STORAGE_DISK=local` for development
+- Google OAuth and Resend are optional locally
+- See `.env.example` for production reminders
+
+## Testing
+
+```bash
+php artisan test --compact
+```
+
+Operational checks and the post-deploy smoke checklist live in [docs/testing.md](docs/testing.md).
+
+## Documentation
+
+| Document | Description |
+| --- | --- |
+| [docs/architecture.md](docs/architecture.md) | Domain model and system decisions |
+| [docs/deployment.md](docs/deployment.md) | Cloud Run deployment and operations |
+| [docs/storage.md](docs/storage.md) | Private file storage configuration |
+| [docs/pwa.md](docs/pwa.md) | PWA assets, caching, and hosting |
+| [docs/testing.md](docs/testing.md) | Automated tests and beta smoke checklist |
 
 ## Roadmap
 
 **Completed highlights**
+
 - Core financial organization: categories, people, transactions, monthly dashboard, accounts receivable, and installment purchases
 - Personal features: tithes and first fruits, onboarding, and locale/location preferences
-- Product foundations: responsive UI, installable PWA, public changelog, in-app feedback channel, About page, and email/Google login
+- Product foundations: responsive UI, installable PWA, public changelog, in-app feedback, About page, and email/Google login
 - First public beta in production
 
 **In progress**
+
 - Beta stabilization based on user feedback
 - Loans and debts, and recurring transactions
 
 **Planned next**
+
 - Transfers, budgeting, reminders and notifications, and a public landing page
 - Shared finances for organizing money with other people
 
-Created by **José Paulo Oliveira Filho**.
+The detailed roadmap is also available inside the Finba.se application.
 
-The detailed and continuously updated roadmap is available inside the Finba.se application.
+## Principles
 
----
+- Flexibility over rigid workflows
+- Simple UX with powerful organization
+- Productive, pragmatic engineering
+- Build in public
+- Open source by default
 
 ## Why PHP?
 
-Because building matters more than hype.
+Because shipping a maintainable product matters more than chasing hype. The stack prioritizes delivery speed, maintainability, and developer experience.
 
-finba is intentionally built with a stack that optimizes delivery speed, maintainability, and developer experience.
-
----
-
-## Open source
+## License
 
 Licensed under the GNU AGPL v3.
 
-This means:
-- you can use it
-- modify it
-- self-host it
+You may use, modify, and self-host Finba.se. If you modify it and offer it as a networked service, your changes must remain open as well.
 
-But if you modify it and offer it as a networked service, your changes must remain open as well.
+## Author
 
----
+Created by **José Paulo Oliveira Filho**.
 
-## Build in public
-
-I’m documenting the journey publicly on LinkedIn.
-
-Follow along:
-https://www.linkedin.com/in/jose-paulo-oliveira-filho/
+Build-in-public updates: [LinkedIn](https://www.linkedin.com/in/jose-paulo-oliveira-filho/)

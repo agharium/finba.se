@@ -20,11 +20,11 @@ return [
                     ],
                     [
                         'type' => 'fixed',
-                        'text' => 'O login com Google voltou a abrir a autorização no navegador, sem interferência da navegação SPA do painel.',
+                        'text' => 'Corrigido o login com Google atrás do proxy de produção, para abrir a autorização com navegação completa do navegador.',
                     ],
                     [
                         'type' => 'fixed',
-                        'text' => 'O catálogo de países voltou a carregar corretamente em produção (Sushi em memória, sem depender de tabela no PostgreSQL).',
+                        'text' => 'Corrigido o catálogo de países em produção, carregado em memória sem depender de tabela no PostgreSQL.',
                     ],
                     [
                         'type' => 'decision',

@@ -18,7 +18,7 @@ return [
     | Local development uses the Laravel "local" disk. Production should set
     | FINBA_STORAGE_DISK=finba (S3-compatible Supabase Storage). Application
     | code must resolve files via FileStorageService / Storage::disk(...) and
-    | never assume local filesystem paths. See docs/supabase-storage.md.
+    | never assume local filesystem paths. See docs/storage.md.
     |
     */
     'storage' => [

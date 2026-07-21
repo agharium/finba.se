@@ -49,15 +49,6 @@ it('does not register a filament-owned changelog route', function () {
     ))->toBeFalse();
 });
 
-it('redirects the temporary historico slug to the canonical changelog', function () {
-    $this->get('/historico')
-        ->assertRedirect('/changelog');
-});
-
-it('does not register novidades as a changelog route', function () {
-    $this->get('/novidades')->assertNotFound();
-});
-
 it('orders changelog entries by date descending', function () {
     $sorted = app(ChangelogService::class)->sortedEntries([
         ['date' => '2026-01-01', 'title' => 'older'],

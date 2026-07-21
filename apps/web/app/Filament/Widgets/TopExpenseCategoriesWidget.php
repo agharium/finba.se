@@ -13,7 +13,7 @@ class TopExpenseCategoriesWidget extends Widget
 
     protected static ?int $sort = 4;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.top-expense-categories-widget';
 

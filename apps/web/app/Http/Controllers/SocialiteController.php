@@ -36,9 +36,9 @@ class SocialiteController extends Controller
                 ]);
 
                 // if (! $user->avatar) {
-                    $user->update([
-                        'avatar' => $socialUser->getAvatar(),
-                    ]);
+                $user->update([
+                    'avatar' => $socialUser->getAvatar(),
+                ]);
                 // }
             }
         } else {

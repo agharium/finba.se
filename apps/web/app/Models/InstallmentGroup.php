@@ -26,6 +26,7 @@ class InstallmentGroup extends Model
 {
     /** @use HasFactory<InstallmentGroupFactory> */
     use HasFactory;
+
     use HasUuids;
     use SoftDeletes;
 

@@ -24,7 +24,7 @@ class RecentTransactionsWidget extends Widget implements HasActions, HasSchemas
 
     protected static ?int $sort = 3;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.recent-transactions-widget';
 
@@ -38,7 +38,7 @@ class RecentTransactionsWidget extends Widget implements HasActions, HasSchemas
                 ->findOrFail($key));
     }
 
-    protected function getMountedActionSchemaModel(): Model | string | null
+    protected function getMountedActionSchemaModel(): Model|string|null
     {
         return Transaction::class;
     }

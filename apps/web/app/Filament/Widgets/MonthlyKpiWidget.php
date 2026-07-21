@@ -14,7 +14,7 @@ class MonthlyKpiWidget extends Widget
 
     protected static ?int $sort = 1;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.monthly-kpi-widget';
 

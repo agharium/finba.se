@@ -15,13 +15,13 @@ return new class extends Migration
             $table->uuid('user_id');
             $table->uuid('category_id');
             $table->uuid('person_id');
-        
+
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->foreign('category_id')->references('id')->on('categories')->cascadeOnDelete();
             $table->foreign('person_id')->references('id')->on('people')->cascadeOnDelete();
-        
+
             $table->primary(['category_id', 'person_id']);
-        
+
             $table->index(['user_id', 'person_id']);
             $table->index(['user_id', 'category_id']);
         });

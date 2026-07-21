@@ -2,21 +2,20 @@
 
 namespace App\Filament\Resources\Categories;
 
+use App\Enums\Purpose;
+use App\Enums\TransactionType;
 use App\Filament\Resources\Categories\Pages\ManageCategories;
 use App\Models\Category;
 use App\Models\Person;
-use App\Enums\Purpose;
-use App\Enums\TransactionType;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -121,10 +120,10 @@ class CategoryResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->rule(fn (callable $get) => Rule::unique('categories', 'name')
-                    ->where('user_id', Auth::id())
-                    ->where(fn ($query) => $get('parent_id')
-                        ? $query->where('parent_id', $get('parent_id'))
-                        : $query->whereNull('parent_id'))),
+                        ->where('user_id', Auth::id())
+                        ->where(fn ($query) => $get('parent_id')
+                            ? $query->where('parent_id', $get('parent_id'))
+                            : $query->whereNull('parent_id'))),
 
                 Select::make('parent_id')
                     ->label('Categoria pai')
@@ -229,7 +228,7 @@ class CategoryResource extends Resource
                         }
 
                         $set('types', array_values(array_unique($types)));
-                    })
+                    }),
             ]);
     }
 
@@ -239,21 +238,21 @@ class CategoryResource extends Resource
             ->components([
                 TextEntry::make('name')
                     ->label('Nome'),
-    
+
                 TextEntry::make('types')
                     ->label('Tipo')
                     ->badge()
                     ->formatStateUsing(fn (array|string|null $state): string => self::formatTypes($state)),
-    
+
                 TextEntry::make('parent.name')
                     ->label('Categoria pai')
                     ->placeholder('-'),
-    
+
                 TextEntry::make('created_at')
                     ->label('Criado em')
                     ->dateTime()
                     ->placeholder('-'),
-    
+
                 TextEntry::make('updated_at')
                     ->label('Atualizado em')
                     ->dateTime()
@@ -271,25 +270,25 @@ class CategoryResource extends Resource
                     ->label('Nome')
                     ->searchable()
                     ->sortable(),
-    
+
                 TextColumn::make('types')
                     ->label('Tipo')
                     ->badge()
                     ->formatStateUsing(fn (array|string|null $state): string => self::formatTypes($state))
                     ->color(fn (array|string|null $state): string => self::typesColor($state)),
-    
+
                 TextColumn::make('parent.name')
                     ->label('Categoria pai')
                     ->placeholder('-')
                     ->searchable()
                     ->sortable(),
-    
+
                 TextColumn::make('created_at')
                     ->label('Criado em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-    
+
                 TextColumn::make('updated_at')
                     ->label('Atualizado em')
                     ->dateTime()

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\LoanStatus;
 use App\Enums\LoanType;
-use Database\Factories\LoanFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

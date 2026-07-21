@@ -36,9 +36,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/changelog', ChangelogController::class)
     ->name('changelog');
 
-// Temporary alias from the short-lived Filament slug; bookmarks keep working.
-Route::redirect('/historico', '/changelog', 301);
-
 Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirect'])
     ->name('socialite.redirect');
 

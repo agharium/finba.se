@@ -135,7 +135,7 @@ jobs:
             --execution-environment=gen2
             --cpu-boost
             --update-labels=${{ steps.meta.outputs.labels }}
-            --set-env-vars=GEO_ENV=production,GEO_DATABASE_PATH=/app/data/geo.db,LOG_LEVEL=info,GEO_TRUST_PROXY_HEADERS=true
+            --set-env-vars=GEO_ENV=production,GEO_DATABASE_PATH=/app/data/geo.db,LOG_LEVEL=info
             --update-secrets=GEO_INTERNAL_API_KEY=GEO_INTERNAL_API_KEY:latest,GEO_TRUSTED_API_KEYS=GEO_TRUSTED_API_KEYS:latest
 
       - name: Resolve service URL

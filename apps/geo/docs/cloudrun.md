@@ -192,28 +192,50 @@ Workflow permissions already include `id-token: write` for OIDC.
 
 ## 4. Secret Manager
 
-Runtime secrets are mounted into Cloud Run as environment variables.
+Runtime secrets are mounted into Cloud Run as environment variables. Non-secret settings (`GEO_ENV`, `GEO_TRUST_PROXY_HEADERS`, …) stay as normal Cloud Run env vars.
 
-| Secret Manager secret | Cloud Run env | Purpose |
-|-----------------------|---------------|---------|
-| `GEO_INTERNAL_API_KEY` | `GEO_INTERNAL_API_KEY` | Finba Laravel → Geo (internal tier) |
-| `GEO_TRUSTED_API_KEYS` | `GEO_TRUSTED_API_KEYS` | Optional comma-separated trusted keys (may be empty string) |
+| Secret Manager secret | Cloud Run env | Required? | Purpose |
+|-----------------------|---------------|-----------|---------|
+| `GEO_INTERNAL_API_KEY` | `GEO_INTERNAL_API_KEY` | **Yes for Finba** | Single key for Laravel → Geo **internal** rate-limit tier |
+| `GEO_TRUSTED_API_KEYS` | `GEO_TRUSTED_API_KEYS` | Optional (empty OK) | Comma-separated **trusted** keys (partners / automation) |
 
-There is no separate `PUBLIC_KEYS` / `GEO_INTERNAL_KEYS` app variable today. Public access is anonymous (IP-limited). Use the names the binary already reads.
+There is no separate `PUBLIC_KEYS` / `GEO_INTERNAL_KEYS` app variable. Public access is anonymous (IP-limited). Use the names the binary already reads.
 
-Create secrets once:
+**Do not** create or mount a Cloud Run secret named `GITHUB_TOKEN`. That variable is only for local/CI catalog tooling (`cmd/release`, `cmd/download`, `cmd/update`). The deploy workflow’s `${{ secrets.GITHUB_TOKEN }}` is GitHub Actions’ built-in token for the job — it is **not** injected into the Geo Cloud Run service.
+
+### Generate keys
+
+Use cryptographically random values (≥ 32 bytes of entropy). Examples:
+
+```bash
+# Internal (one value)
+INTERNAL_KEY="$(openssl rand -base64 32)"
+echo "$INTERNAL_KEY"   # copy once into Secret Manager + Laravel GEO_INTERNAL_API_KEY
+
+# Trusted (zero or more; join with commas, no spaces required)
+TRUSTED_A="$(openssl rand -base64 32)"
+TRUSTED_B="$(openssl rand -base64 32)"
+TRUSTED_KEYS="${TRUSTED_A},${TRUSTED_B}"   # or leave empty: TRUSTED_KEYS=""
+
+# From apps/geo:
+# make gen-api-key
+```
+
+Format: opaque string (base64/hex/alphanumeric). No max length enforced by the API; avoid whitespace inside a key. Trusted list is comma-separated; empties and duplicates are ignored.
+
+### Create secrets once
 
 ```bash
 # Generate strong values offline; do not commit them.
-printf '%s' 'YOUR_INTERNAL_KEY' | gcloud secrets create GEO_INTERNAL_API_KEY \
+printf '%s' "$INTERNAL_KEY" | gcloud secrets create GEO_INTERNAL_API_KEY \
   --data-file=- --project="$PROJECT_ID"
 
 # Trusted keys: comma-separated, or empty placeholder so --update-secrets succeeds.
-printf '%s' '' | gcloud secrets create GEO_TRUSTED_API_KEYS \
+printf '%s' "$TRUSTED_KEYS" | gcloud secrets create GEO_TRUSTED_API_KEYS \
   --data-file=- --project="$PROJECT_ID"
 
 # Later rotations:
-printf '%s' 'NEW_INTERNAL_KEY' | gcloud secrets versions add GEO_INTERNAL_API_KEY \
+printf '%s' "$INTERNAL_KEY" | gcloud secrets versions add GEO_INTERNAL_API_KEY \
   --data-file=- --project="$PROJECT_ID"
 ```
 
@@ -262,11 +284,34 @@ Non-secret environment variables set by deploy:
 GEO_ENV=production
 GEO_DATABASE_PATH=/app/data/geo.db
 LOG_LEVEL=info
-GEO_TRUST_PROXY_HEADERS=true
 PORT=8080
+# GEO_TRUST_PROXY_HEADERS=true   # only after trusted proxy path is locked down (see below)
 ```
 
-`GEO_TRUST_PROXY_HEADERS=true` is only safe when every request arrives through a trusted proxy path (Cloudflare → Cloud Run). Spoofed `CF-Connecting-IP` / `X-Forwarded-For` must not reach the service from an open path without that boundary.
+### `GEO_TRUST_PROXY_HEADERS` (deployment opt-in)
+
+The binary and image default to **not** trusting proxy headers (`false` / unset). The deploy workflow does **not** set this variable.
+
+Do **not** bake `GEO_TRUST_PROXY_HEADERS=true` into the Dockerfile. That would encode a network-topology assumption in every image tag and is unsafe while the service is reachable on its public `*.run.app` URL: clients can spoof `CF-Connecting-IP` / `X-Forwarded-For` because the app does not validate that the peer is Cloudflare.
+
+This is a **deployment concern**, not an application bug. Forward-header trust is a deliberate switch for environments where the edge already sanitizes those headers.
+
+Enable `true` on the Cloud Run service only when **all** of the following are true:
+
+1. Every request reaches the application through a trusted reverse proxy (for example Cloudflare → Cloud Run).
+2. Direct access to the `*.run.app` endpoint is prevented or is otherwise not a bypass of that proxy.
+3. Proxy headers are considered trustworthy on that path.
+
+Example (after the checklist is satisfied):
+
+```bash
+gcloud run services update "$CLOUD_RUN_SERVICE" \
+  --project="$PROJECT_ID" \
+  --region="$REGION" \
+  --update-env-vars=GEO_TRUST_PROXY_HEADERS=true
+```
+
+Until then, leave it unset so public rate limiting uses `RemoteAddr`.
 
 Optional HTTP timeouts (`HTTP_READ_TIMEOUT`, `HTTP_WRITE_TIMEOUT`, `HTTP_IDLE_TIMEOUT`) keep binary defaults unless you have a measured need to override.
 

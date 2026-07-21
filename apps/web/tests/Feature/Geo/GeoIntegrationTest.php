@@ -28,13 +28,14 @@ it('resolves facade and dependency injection under App\\Support\\Geo', function 
         ->and(Geo::countries()->first())->toBeInstanceOf(Country::class);
 });
 
-it('sends bearer authentication headers', function () {
+it('sends the internal API key as X-API-Key on every request', function () {
     fakeGeoContractApi();
 
     Geo::countries();
 
-    Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'Bearer test-geo-key')
+    Http::assertSent(fn ($request): bool => $request->hasHeader('X-API-Key', 'test-geo-key')
         && $request->hasHeader('Accept', 'application/json')
+        && ! $request->hasHeader('Authorization')
         && str_ends_with($request->url(), '/v1/countries'));
 });
 

@@ -19,7 +19,7 @@ return [
     | Internal API Key
     |--------------------------------------------------------------------------
     |
-    | Sent as Authorization: Bearer <key>. Never expose to the browser.
+    | Sent as X-API-Key on every GeoClient request. Never expose to the browser.
     |
     */
 

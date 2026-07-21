@@ -381,9 +381,21 @@ On HTTP 429:
 
 #### Proxy headers
 
-`GEO_TRUST_PROXY_HEADERS` defaults to `false`. When false, only `RemoteAddr` is used.
+`GEO_TRUST_PROXY_HEADERS` defaults to `false`. When false, only `RemoteAddr` is used for public rate-limit buckets.
 
-Enable proxy trust only when every request is guaranteed to arrive through a trusted proxy path (for example Cloudflare → Cloud Run). Spoofable `CF-Connecting-IP` / `X-Forwarded-For` values must not be trusted at the edge of an open network path.
+When true, the API trusts client-supplied `CF-Connecting-IP` and `X-Forwarded-For` (see precedence under Access control). The application does **not** verify that the immediate TCP peer is Cloudflare.
+
+This is a **deployment concern**, not an application bug: trusting forward headers is correct only when the network topology guarantees those headers come from a reverse proxy you control. Baking `true` into the container image would force that assumption on every environment, including a first Cloud Run revision whose `*.run.app` URL is still publicly reachable.
+
+Enable `GEO_TRUST_PROXY_HEADERS=true` only when **all** of the following hold:
+
+1. Every request reaches the application through a trusted reverse proxy (for example Cloudflare → Cloud Run).
+2. Direct access to the Cloud Run `*.run.app` URL is prevented or is otherwise not a practical bypass of that proxy.
+3. Proxy headers are therefore considered trustworthy (clients cannot inject `CF-Connecting-IP` / `X-Forwarded-For` on an open path).
+
+Until then, leave the variable unset or `false` so public limiting uses the real peer address.
+
+Set the flag explicitly on the Cloud Run service (or deploy flags) when the topology is ready — never in the Dockerfile.
 
 #### Multi-instance limitation
 
@@ -430,30 +442,108 @@ After schema changes, rebuild the catalog (`make force-update` / `go run ./cmd/u
 
 ## Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `8080` | Listen port (Cloud Run injects this) |
-| `GEO_ENV` | `development` | `development`, `staging`, `production`, or `test` |
-| `GEO_DATABASE_PATH` | `./data/geo.db` | Path to SQLite file |
-| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
-| `HTTP_READ_TIMEOUT` | `5s` | Go duration or integer seconds |
-| `HTTP_READ_HEADER_TIMEOUT` | `5s` | Go duration or integer seconds |
-| `HTTP_WRITE_TIMEOUT` | `10s` | Go duration or integer seconds |
-| `HTTP_IDLE_TIMEOUT` | `60s` | Go duration or integer seconds |
-| `HTTP_SHUTDOWN_TIMEOUT` | `10s` | Graceful shutdown deadline |
-| `GEO_PUBLIC_RATE_LIMIT_PER_MINUTE` | `60` | Public token-bucket refill (req/min) |
-| `GEO_PUBLIC_RATE_LIMIT_BURST` | `15` | Public burst |
-| `GEO_TRUSTED_RATE_LIMIT_PER_MINUTE` | `300` | Trusted req/min |
-| `GEO_TRUSTED_RATE_LIMIT_BURST` | `60` | Trusted burst |
-| `GEO_INTERNAL_RATE_LIMIT_PER_MINUTE` | `10000` | Internal req/min |
-| `GEO_INTERNAL_RATE_LIMIT_BURST` | `500` | Internal burst |
-| `GEO_INTERNAL_API_KEY` | _(empty)_ | Finba backend API key (Secret Manager in prod) |
-| `GEO_TRUSTED_API_KEYS` | _(empty)_ | Comma-separated trusted keys |
-| `GEO_ACCESS_CLIENT_TTL` | `30m` | Inactive limiter bucket TTL |
-| `GEO_ACCESS_CLEANUP_INTERVAL` | `5m` | Limiter cleanup interval |
-| `GEO_TRUST_PROXY_HEADERS` | `false` | Trust CF / X-Forwarded-For (see warning above; image default `true`) |
+Environment variables fall into two groups:
+
+1. **API runtime** (`cmd/api` / Cloud Run) — listen port, database path, access tiers, proxy trust
+2. **Catalog tooling** (`cmd/release`, `cmd/download`, `cmd/update`) — optional GitHub auth while building `geo.db`
+
+Cloud Run must never receive catalog-tooling secrets. The production image already contains a baked `geo.db`; the API process does not call GitHub.
+
+### First-deploy secrets checklist
+
+| Variable | Required on Cloud Run? | Store as | Notes |
+|----------|------------------------|----------|-------|
+| `GEO_INTERNAL_API_KEY` | **Strongly recommended** (required for Finba Laravel) | **Secret Manager** | Same value on Geo and Laravel (`apps/web` `GEO_INTERNAL_API_KEY`) |
+| `GEO_TRUSTED_API_KEYS` | Optional (empty OK) | **Secret Manager** | Comma-separated; create secret even if empty so deploy `--update-secrets` succeeds |
+| `GEO_TRUST_PROXY_HEADERS` | Leave `false` until proxy path is locked down | Normal env var | Default `false`; enable only per checklist below — never bake into the image |
+| `GITHUB_TOKEN` | **No — do not mount on Cloud Run** | N/A at runtime | Only for local/CI catalog tooling; Actions uses the built-in workflow token during deploy jobs |
+
+Generate API keys offline (cryptographically random). There is no committed key generator beyond this recipe:
+
+```bash
+# Internal key (single value) — 32 bytes → ~43 chars base64
+openssl rand -base64 32
+
+# Trusted key (repeat per partner / automation client)
+openssl rand -base64 32
+
+# Alternative (hex)
+openssl rand -hex 32
+
+# Alternative (pwgen, if installed)
+pwgen -s 48 1
+```
+
+Or via Make from `apps/geo`:
+
+```bash
+make gen-api-key
+```
+
+Recommended: at least **32 bytes** of entropy (e.g. `openssl rand -base64 32`). Do not use dictionary words, short strings, or the examples below in production.
+
+Example **non-secret** placeholders (never reuse as real values):
+
+```text
+GEO_INTERNAL_API_KEY=replace-me-with-openssl-rand-base64-32
+GEO_TRUSTED_API_KEYS=partner-a-key,partner-b-key
+GEO_TRUST_PROXY_HEADERS=false
+```
+
+Store the internal key in Secret Manager, then configure Laravel with the **same** value (also as a secret on the web service). Never put either key in browser JS, public repos, or GitHub Actions secrets when Secret Manager is available.
+
+### API runtime variables
+
+| Variable | Required | Default | Cloud Run | Description |
+|----------|----------|---------|-----------|-------------|
+| `PORT` | Yes (Cloud Run injects) | `8080` | Env | Listen port |
+| `GEO_ENV` | No | `development` | Env → `production` | `development`, `staging`, `production`, or `test` |
+| `GEO_DATABASE_PATH` | No | `./data/geo.db` | Env → `/app/data/geo.db` | SQLite catalog path (baked into the image) |
+| `LOG_LEVEL` | No | `info` | Env | `debug`, `info`, `warn`, `error` |
+| `HTTP_READ_TIMEOUT` | No | `5s` | Env (optional) | Go duration or integer seconds |
+| `HTTP_READ_HEADER_TIMEOUT` | No | `5s` | Env (optional) | Go duration or integer seconds |
+| `HTTP_WRITE_TIMEOUT` | No | `10s` | Env (optional) | Go duration or integer seconds |
+| `HTTP_IDLE_TIMEOUT` | No | `60s` | Env (optional) | Go duration or integer seconds |
+| `HTTP_SHUTDOWN_TIMEOUT` | No | `10s` | Env (optional) | Graceful shutdown deadline |
+| `GEO_PUBLIC_RATE_LIMIT_PER_MINUTE` | No | `60` | Env (optional) | Public token-bucket refill (req/min) |
+| `GEO_PUBLIC_RATE_LIMIT_BURST` | No | `15` | Env (optional) | Public burst |
+| `GEO_TRUSTED_RATE_LIMIT_PER_MINUTE` | No | `300` | Env (optional) | Trusted req/min |
+| `GEO_TRUSTED_RATE_LIMIT_BURST` | No | `60` | Env (optional) | Trusted burst |
+| `GEO_INTERNAL_RATE_LIMIT_PER_MINUTE` | No | `10000` | Env (optional) | Internal req/min |
+| `GEO_INTERNAL_RATE_LIMIT_BURST` | No | `500` | Env (optional) | Internal burst |
+| `GEO_INTERNAL_API_KEY` | Recommended in prod | _(empty)_ | **Secret** | Single Finba backend key → **internal** tier |
+| `GEO_TRUSTED_API_KEYS` | No | _(empty)_ | **Secret** | Comma-separated keys → **trusted** tier |
+| `GEO_ACCESS_CLIENT_TTL` | No | `30m` | Env (optional) | Inactive limiter bucket TTL |
+| `GEO_ACCESS_CLEANUP_INTERVAL` | No | `5m` | Env (optional) | Limiter cleanup interval |
+| `GEO_TRUST_PROXY_HEADERS` | No (default safe) | `false` | Env (opt-in later) | Trust `CF-Connecting-IP` / `X-Forwarded-For` for public IP buckets — see Proxy headers |
+
+### Catalog tooling only (not Cloud Run)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GITHUB_TOKEN` | No | _(empty)_ | Optional Bearer token for GitHub Releases API / asset download (`cmd/release`, `cmd/download`, `cmd/update`). Raises rate limits. Unauthenticated GitHub access still works with lower limits. |
+
+`GITHUB_TOKEN` is read via `os.Getenv` inside the release/download clients so local and CI catalog builds can opt in without changing flags. The API binary (`cmd/api`) does **not** read it. Do **not** add it to Cloud Run env or Secret Manager for the Geo service.
 
 There is no CORS configuration: the API is server-to-server only (Finba Laravel → Geo). Do not call it from browsers with the internal key.
+
+### Access-key design (why two tiers?)
+
+**No data endpoint requires an API key.** Catalog routes (`/v1/countries`, `/v1/cities/search`, …) work anonymously at the **public** tier (IP-limited). Keys only raise the rate-limit tier:
+
+| Tier | Env | Who | Default limit | Purpose |
+|------|-----|-----|---------------|---------|
+| Public | _(none)_ | Anonymous internet / misconfigured clients | 60/min | Abuse protection by client IP |
+| Trusted | `GEO_TRUSTED_API_KEYS` | Optional partners, scripts, non-Finba automation | 300/min | Higher quota without Finba’s internal key |
+| Internal | `GEO_INTERNAL_API_KEY` | Finba Laravel only | 10000/min | Server-to-server traffic; still capped to stop accidental loops |
+
+Excluded from auth/rate limits: `GET /health`, `GET /version`, `GET /v1/version`.
+
+If `GEO_INTERNAL_API_KEY` is missing: the API still starts; Finba without a key is treated as **public** (stricter limits). If Finba sends a key that does not match, the API returns **401**.
+
+If `GEO_TRUSTED_API_KEYS` is missing/empty: no trusted tier; only public + (optional) internal.
+
+If `GEO_TRUST_PROXY_HEADERS` is missing/`false`: public rate limits use `RemoteAddr`. That is the correct default for a direct Cloud Run (`*.run.app`) deployment. Enabling `true` too early allows header spoofing; enabling it after a trusted proxy path is locked down improves per-client fairness when Cloudflare (or similar) sits in front.
 
 ## Docker / Cloud Run
 

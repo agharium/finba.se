@@ -1,4 +1,4 @@
-.PHONY: tidy fmt vet test build run import inspect inspect-json release release-json download download-json download-extract update force-update update-json docker-build docker-run clean
+.PHONY: tidy fmt vet test build run import inspect inspect-json release release-json download download-json download-extract update force-update update-json docker-build docker-run gen-api-key clean
 
 INPUT ?= ./data/cities.csv
 OUTPUT ?= ./data/geo.db
@@ -105,6 +105,11 @@ docker-run:
 		-e GEO_DATABASE_PATH=/app/data/geo.db \
 		-e LOG_LEVEL=info \
 		"$(DOCKER_IMAGE)"
+
+# Cryptographically random opaque API key (base64, 32 bytes).
+# Copy into Secret Manager / Laravel — never commit the output.
+gen-api-key:
+	@openssl rand -base64 32
 
 clean:
 	rm -rf bin/

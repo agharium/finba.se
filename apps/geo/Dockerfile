@@ -1,6 +1,7 @@
-# syntax=docker/dockerfile:1
-
 # Multi-stage build for Cloud Run.
+#
+# Compatible with classic Docker / Cloud Build (gcr.io/cloud-builders/docker).
+# Do not use BuildKit-only syntax (RUN --mount, # syntax=docker/dockerfile, …).
 #
 # Runtime image choice: gcr.io/distroless/static-debian12:nonroot
 # - modernc.org/sqlite is pure Go → CGO_ENABLED=0 static binary
@@ -12,10 +13,9 @@ FROM golang:1.26-bookworm AS builder
 
 WORKDIR /src
 
-# Cache module downloads separately from source for faster rebuilds.
+# Cache module downloads in a Docker layer (invalidates only when go.mod/go.sum change).
 COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download
+RUN go mod download
 
 COPY . .
 
@@ -23,9 +23,7 @@ ARG VERSION=dev
 ARG GIT_COMMIT=unknown
 ARG BUILD_DATE=unknown
 
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath \
       -ldflags="-s -w \
         -X finba.se/geo/internal/buildinfo.Version=${VERSION} \
@@ -44,8 +42,7 @@ COPY data/geo.db /app/data/geo.db
 ENV PORT=8080 \
     GEO_ENV=production \
     GEO_DATABASE_PATH=/app/data/geo.db \
-    LOG_LEVEL=info \
-    GEO_TRUST_PROXY_HEADERS=true
+    LOG_LEVEL=info
 
 EXPOSE 8080
 

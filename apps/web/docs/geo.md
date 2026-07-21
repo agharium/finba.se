@@ -27,6 +27,8 @@ GEO_CACHE_CITY_TTL=86400
 
 `GEO_INTERNAL_API_KEY` is server-side only. It must never appear in browser responses, Livewire payloads, or public config.
 
+All HTTP calls go through `App\Support\Geo\GeoClient`, which reads `GEO_BASE_URL` and sends `X-API-Key: {GEO_INTERNAL_API_KEY}` when the key is configured (internal rate-limit tier on the Go API). Do not call `Http` against the Geo host from controllers or other services.
+
 ## Meaning of `geo_city_id`
 
 On `users`, `transactions`, and `people`:

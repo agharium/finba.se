@@ -76,18 +76,20 @@ class GeoClient
 
     private function request(): PendingRequest
     {
+        $headers = [
+            'User-Agent' => $this->userAgent,
+        ];
+
+        if (filled($this->apiKey)) {
+            $headers['X-API-Key'] = $this->apiKey;
+        }
+
         $request = Http::baseUrl($this->baseUrl)
             ->acceptJson()
             ->asJson()
             ->timeout($this->timeout)
             ->connectTimeout($this->connectTimeout)
-            ->withHeaders([
-                'User-Agent' => $this->userAgent,
-            ]);
-
-        if (filled($this->apiKey)) {
-            $request = $request->withToken($this->apiKey);
-        }
+            ->withHeaders($headers);
 
         if ($this->retryAttempts > 0) {
             $request = $request->retry(

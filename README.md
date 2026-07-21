@@ -1,112 +1,88 @@
 # Finba.se
 
-A flexible personal finance platform for people who outgrew rigid finance apps.
+Monorepo for Finba — personal finance (web) plus the geographic catalog API (geo).
 
-## Status
+## Layout
 
-**Beta** — version `0.1.0-beta` is live at [app.finba.se](https://app.finba.se).
-
-Current development focuses on stability, UX refinement, performance, and community feedback.
-
-## Why Finba.se?
-
-Many finance apps feel limiting: too rigid, weak organization, or no concept of people. Finba.se is built to track categories and subcategories, who owes whom, purchases linked to people, shared household finances, recurring and installment transactions, and workflows that adapt to the user.
-
-The first version of this idea was built in Xamarin in 2019 and used for years before the current rebuild.
-
-## Stack
-
-- PHP 8.4, Laravel 13, Filament 5
-- PostgreSQL (Supabase)
-- Private file storage: local disk in development; S3-compatible Supabase Storage in production
-- Production hosting: Google Cloud Run + FrankenPHP, Resend email, Cloudflare DNS
-- Web-first installable PWA (native packaging remains a future option)
-
-## Local setup
-
-Requirements: PHP 8.4+, Composer, Node.js, and PostgreSQL (or SQLite for quick local experiments).
-
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-
-# Configure database and other values in .env, then:
-php artisan migrate
-
-npm install
-npm run build
-# or npm run dev during frontend work
-
-composer dev
-# or: php artisan serve
+```text
+finba.se/
+├── .github/workflows/     # CI/CD (path-filtered per app)
+├── apps/
+│   ├── web/               # Laravel + Filament app → app.finba.se
+│   └── geo/               # Go Geo API → geo.finba.se
+├── LICENSE
+└── README.md              # this file
 ```
 
-Useful environment notes:
+| App | Path | Stack | Production host |
+|-----|------|-------|-----------------|
+| Web | [`apps/web`](apps/web) | PHP 8.4, Laravel, Filament | https://app.finba.se |
+| Geo | [`apps/geo`](apps/geo) | Go, SQLite, Cloud Run | https://geo.finba.se |
 
-- `FINBA_STORAGE_DISK=local` for development
-- Google OAuth and Resend are optional locally
-- See `.env.example` for production reminders
-
-## Testing
-
-```bash
-php artisan test --compact
-```
-
-Operational checks and the post-deploy smoke checklist live in [docs/testing.md](docs/testing.md).
+Each app is independent: its own dependencies, Dockerfile, tests, and docs. Work **inside** the app directory (or use scripts that resolve their own app root).
 
 ## Documentation
 
-| Document | Description |
-| --- | --- |
-| [docs/architecture.md](docs/architecture.md) | Domain model and system decisions |
-| [docs/deployment.md](docs/deployment.md) | Cloud Run deployment and operations |
-| [docs/storage.md](docs/storage.md) | Private file storage configuration |
-| [docs/pwa.md](docs/pwa.md) | PWA assets, caching, and hosting |
-| [docs/testing.md](docs/testing.md) | Automated tests and beta smoke checklist |
+- [Project changelog](https://app.finba.se/changelog) — public product and platform history
+- [Web app docs](apps/web/README.md) · [Geo API docs](apps/geo/README.md)
 
-## Roadmap
+## Quick start
 
-**Completed highlights**
+### Web (`apps/web`)
 
-- Core financial organization: categories, people, transactions, monthly dashboard, accounts receivable, and installment purchases
-- Personal features: tithes and first fruits, onboarding, and locale/location preferences
-- Product foundations: responsive UI, installable PWA, public changelog, in-app feedback, About page, and email/Google login
-- First public beta in production
+```bash
+cd apps/web
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm install
+npm run build
+composer dev
+```
 
-**In progress**
+Tests: `php artisan test --compact`  
+Docs: [`apps/web/README.md`](apps/web/README.md), [`apps/web/docs/`](apps/web/docs/)
 
-- Beta stabilization based on user feedback
-- Loans and debts, and recurring transactions
+### Geo (`apps/geo`)
 
-**Planned next**
+```bash
+cd apps/geo
+go mod tidy
+go test ./...
+# optional: make update && go run ./cmd/api
+```
 
-- Transfers, budgeting, reminders and notifications, and a public landing page
-- Shared finances for organizing money with other people
+Docs: [`apps/geo/README.md`](apps/geo/README.md), [`apps/geo/docs/cloudrun.md`](apps/geo/docs/cloudrun.md)
 
-The detailed roadmap is also available inside the Finba.se application.
+## CI / CD
 
-## Principles
+Workflows live at the repository root and use path filters:
 
-- Flexibility over rigid workflows
-- Simple UX with powerful organization
-- Productive, pragmatic engineering
-- Build in public
-- Open source by default
+| Workflow | Paths | Purpose |
+|----------|-------|---------|
+| [`web-ci.yml`](.github/workflows/web-ci.yml) | `apps/web/**` | Composer / Pint / Pest (PR and non-main pushes) |
+| [`geo-ci.yml`](.github/workflows/geo-ci.yml) | `apps/geo/**` | `gofmt` / `vet` / `go test` |
+| [`geo-deploy.yml`](.github/workflows/geo-deploy.yml) | `apps/geo/**` on `main` | OIDC → Artifact Registry → Cloud Run + smoke |
 
-## Why PHP?
 
-Because shipping a maintainable product matters more than chasing hype. The stack prioritizes delivery speed, maintainability, and developer experience.
+Web production deploy remains script-driven from `apps/web` (see [`apps/web/docs/deployment.md`](apps/web/docs/deployment.md)). Geo production deploy is GitHub Actions on `main`.
 
-## License
+## Docker
 
-Licensed under the GNU AGPL v3.
+Build contexts are **per app** (never the monorepo root):
 
-You may use, modify, and self-host Finba.se. If you modify it and offer it as a networked service, your changes must remain open as well.
+```bash
+# Web
+cd apps/web && docker build -t finba-web:local .
 
-## Author
+# Geo (requires data/geo.db — see apps/geo README)
+cd apps/geo && docker build -t finba-geo:local .
+```
 
-Created by **José Paulo Oliveira Filho**.
+## Relationship
 
-Build-in-public updates: [LinkedIn](https://www.linkedin.com/in/jose-paulo-oliveira-filho/)
+- **Geo** is the sole geographic source of truth (countries, regions, cities, timezones).
+- **Web** calls Geo over HTTP (`App\Support\Geo`); it does not own the catalog schema.
+
+Do not change `/v1/*` Geo response contracts without coordinating the Laravel client.

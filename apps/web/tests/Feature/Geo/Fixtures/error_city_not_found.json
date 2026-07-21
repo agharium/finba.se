@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "city_not_found",
+    "message": "City not found."
+  }
+}

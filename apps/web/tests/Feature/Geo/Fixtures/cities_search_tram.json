@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1001,
+    "countryId": 31,
+    "regionId": 2021,
+    "name": "Tramandaí",
+    "timezone": "America/Sao_Paulo"
+  },
+  {
+    "id": 1002,
+    "countryId": 31,
+    "regionId": 2021,
+    "name": "Porto Alegre",
+    "timezone": "America/Sao_Paulo"
+  }
+]

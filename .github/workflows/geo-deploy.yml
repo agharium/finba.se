@@ -1,0 +1,226 @@
+name: geo-deploy
+
+# Production deploy for Finba Geo → Artifact Registry + Cloud Run.
+# Auth: Workload Identity Federation (OIDC). No service-account JSON keys.
+#
+# Required GitHub environment secrets (bootstrap only):
+#   GCP_PROJECT_ID
+#   GCP_REGION
+#   ARTIFACT_REGISTRY_REPO   (e.g. finba-geo)
+#   CLOUD_RUN_SERVICE        (e.g. finba-geo)
+#   GCP_WORKLOAD_IDENTITY_PROVIDER
+#   GCP_SERVICE_ACCOUNT
+#
+# Runtime API keys live in Secret Manager (not GitHub Secrets):
+#   GEO_INTERNAL_API_KEY
+#   GEO_TRUSTED_API_KEYS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/geo/**"
+      - ".github/workflows/geo-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: geo-deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy Cloud Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    defaults:
+      run:
+        working-directory: apps/geo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/geo/go.mod
+          cache-dependency-path: apps/geo/go.sum
+
+      - name: Test
+        run: go test ./...
+
+      - name: Prepare catalog database
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          # Bake an immutable catalog into the image. Prefer a restored artifact
+          # if present; otherwise rebuild from the supplier release.
+          if [ -f data/geo.db ]; then
+            echo "Using existing data/geo.db"
+          else
+            echo "Generating data/geo.db via updater"
+            go run ./cmd/update --force
+          fi
+          go run ./cmd/inspect --database ./data/geo.db --strict
+
+      - id: auth
+        name: Authenticate to Google Cloud (OIDC)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        working-directory: .
+        run: gcloud auth configure-docker "${{ secrets.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: Build image metadata
+        id: meta
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::12}"
+          VERSION="sha-${SHORT_SHA}"
+          IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REGISTRY_REPO }}/geo-api"
+          {
+            echo "version=${VERSION}"
+            echo "short_sha=${SHORT_SHA}"
+            echo "git_commit=${GITHUB_SHA}"
+            echo "build_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "image=${IMAGE}"
+            echo "labels=service=finba-geo,environment=production,commit=${SHORT_SHA},version=${VERSION}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        run: |
+          set -euo pipefail
+          docker build \
+            --build-arg VERSION="${{ steps.meta.outputs.version }}" \
+            --build-arg GIT_COMMIT="${{ steps.meta.outputs.git_commit }}" \
+            --build-arg BUILD_DATE="${{ steps.meta.outputs.build_date }}" \
+            -t "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}" \
+            -t "${{ steps.meta.outputs.image }}:${{ github.sha }}" \
+            .
+          docker push "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}"
+          docker push "${{ steps.meta.outputs.image }}:${{ github.sha }}"
+
+      - name: Deploy Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service: ${{ secrets.CLOUD_RUN_SERVICE }}
+          region: ${{ secrets.GCP_REGION }}
+          image: ${{ steps.meta.outputs.image }}:${{ github.sha }}
+          # Rolling revision: traffic moves only after the new revision is ready.
+          # Previous revisions remain available for rollback.
+          flags: >-
+            --cpu=1
+            --memory=512Mi
+            --concurrency=80
+            --timeout=30
+            --min-instances=1
+            --max-instances=5
+            --port=8080
+            --ingress=all
+            --allow-unauthenticated
+            --execution-environment=gen2
+            --cpu-boost
+            --update-labels=${{ steps.meta.outputs.labels }}
+            --set-env-vars=GEO_ENV=production,GEO_DATABASE_PATH=/app/data/geo.db,LOG_LEVEL=info,GEO_TRUST_PROXY_HEADERS=true
+            --update-secrets=GEO_INTERNAL_API_KEY=GEO_INTERNAL_API_KEY:latest,GEO_TRUSTED_API_KEYS=GEO_TRUSTED_API_KEYS:latest
+
+      - name: Resolve service URL
+        id: url
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="${{ steps.deploy.outputs.url }}"
+          if [ -z "$URL" ]; then
+            URL="$(gcloud run services describe "${{ secrets.CLOUD_RUN_SERVICE }}" \
+              --project="${{ secrets.GCP_PROJECT_ID }}" \
+              --region="${{ secrets.GCP_REGION }}" \
+              --format='value(status.url)')"
+          fi
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+          echo "Service URL: ${URL}"
+
+      - name: Wait for revision ready
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            READY="$(gcloud run services describe "${{ secrets.CLOUD_RUN_SERVICE }}" \
+              --project="${{ secrets.GCP_PROJECT_ID }}" \
+              --region="${{ secrets.GCP_REGION }}" \
+              --format=json \
+              | python3 -c "import json,sys; c=json.load(sys.stdin); print(next((x.get('status') for x in c.get('status',{}).get('conditions',[]) if x.get('type')=='Ready'),''))")"
+            if [ "$READY" = "True" ]; then
+              echo "Cloud Run service Ready=True"
+              exit 0
+            fi
+            echo "Waiting for Ready (attempt ${i}/30, status=${READY:-unknown})..."
+            sleep 5
+          done
+          echo "Timed out waiting for Cloud Run Ready condition"
+          exit 1
+
+      - name: Smoke tests
+        working-directory: .
+        shell: bash
+        env:
+          GEO_URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -euo pipefail
+          fail() { echo "SMOKE FAIL: $*" >&2; exit 1; }
+
+          code="$(curl -sS -o /tmp/geo-health.json -w '%{http_code}' "${GEO_URL}/health")"
+          [ "$code" = "200" ] || fail "/health HTTP ${code}"
+          grep -q '"status":"ok"' /tmp/geo-health.json || fail "/health body"
+
+          code="$(curl -sS -o /tmp/geo-build.json -w '%{http_code}' "${GEO_URL}/version")"
+          [ "$code" = "200" ] || fail "/version HTTP ${code}"
+
+          code="$(curl -sS -o /tmp/geo-dataset.json -w '%{http_code}' "${GEO_URL}/v1/version")"
+          [ "$code" = "200" ] || fail "/v1/version HTTP ${code}"
+
+          # Fetch runtime key from Secret Manager (not stored in GitHub Secrets).
+          KEY="$(gcloud secrets versions access latest \
+            --secret=GEO_INTERNAL_API_KEY \
+            --project="${{ secrets.GCP_PROJECT_ID }}")"
+          [ -n "$KEY" ] || fail "empty GEO_INTERNAL_API_KEY secret"
+
+          code="$(curl -sS -o /tmp/geo-countries.json -w '%{http_code}' \
+            -H "X-API-Key: ${KEY}" \
+            "${GEO_URL}/v1/countries")"
+          unset KEY
+          [ "$code" = "200" ] || fail "/v1/countries HTTP ${code}"
+          python3 - <<'PY'
+          import json, sys
+          data = json.load(open("/tmp/geo-countries.json"))
+          if not isinstance(data, list) or len(data) < 1:
+              sys.exit("countries payload empty or not a list")
+          print(f"countries_ok count={len(data)}")
+          PY
+
+          echo "Smoke tests passed"
+
+      - name: Deployment summary
+        working-directory: .
+        run: |
+          echo "### Geo deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image:** \`${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit:** \`${{ steps.meta.outputs.short_sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **URL:** ${{ steps.url.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Smoke:** passed" >> "$GITHUB_STEP_SUMMARY"

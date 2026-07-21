@@ -1,0 +1,46 @@
+# Source CSV downloads
+*.csv
+!testdata/**/*.csv
+*.gz
+data/*.csv
+data/*.csv.gz
+data/downloads/*
+!data/downloads/.gitkeep
+data/work/
+data/update.lock
+*.db.new
+
+# Temporary download / extraction files
+*.part
+*.extract
+*.*.part
+*.*.extract
+
+# Generated SQLite databases
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.db.tmp
+data/*.db
+data/*.db.tmp
+!testdata/**/*.db
+
+# Compiled binaries
+/bin/
+/dist/
+/api
+/importer
+*.exe
+
+# Coverage and test artifacts
+coverage.out
+coverage.html
+*.test
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~

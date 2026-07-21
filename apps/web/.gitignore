@@ -1,0 +1,64 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+auth.json
+
+# Laravel
+/storage/*.key
+/storage/pail
+/storage/logs/*.log
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+/bootstrap/cache/*.php
+
+# Firebase / service accounts / secrets
+/storage/firebase/*.json
+
+# Public generated files
+/public/build/
+/public/hot
+/public/storage
+/public_html/build/
+/public_html/hot
+/public_html/storage
+
+# Testing / coverage
+.phpunit.result.cache
+/coverage/
+
+# Debug / tools
+.phpactor.json
+/.vscode/
+.idea/
+/.cursor/
+/.claude/
+/.agents/
+/agent-transcripts/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local dev / VM
+Homestead.yaml
+Homestead.json
+/.vagrant/
+
+# Composer / npm artifacts
+/.phpunit.cache/
+/.php-cs-fixer.cache
+/.pint.cache

@@ -1,0 +1,48 @@
+name: geo-ci
+
+# Fast checks for pull requests and non-main pushes.
+# Production main deploys re-run tests in geo-deploy.yml as a release gate.
+
+on:
+  pull_request:
+    paths:
+      - "apps/geo/**"
+      - ".github/workflows/geo-ci.yml"
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - "apps/geo/**"
+      - ".github/workflows/geo-ci.yml"
+
+defaults:
+  run:
+    working-directory: apps/geo
+
+jobs:
+  test:
+    name: Go test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/geo/go.mod
+          cache-dependency-path: apps/geo/go.sum
+
+      - name: Format check
+        run: |
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "gofmt needed on:"
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...

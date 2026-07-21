@@ -1,0 +1,8 @@
+id,name,state_id,state_code,state_name,country_id,country_code,country_name,latitude,longitude,timezone,wikiDataId
+1001,Tramandaí,2021,RS,Rio Grande do Sul,31,BR,Brazil,-29.98,-50.13,America/Sao_Paulo,Q999
+1002,Porto Alegre,2021,RS,Rio Grande do Sul,31,BR,Brazil,-30.03,-51.23,America/Sao_Paulo,Q998
+1003,Curitiba,2001,PR,Paraná,31,BR,Brazil,-25.42,-49.27,America/Sao_Paulo,Q997
+1004,São Paulo,2022,SP,São Paulo,31,BR,Brazil,-23.55,-46.63,America/Sao_Paulo,Q994
+1005,Córdoba,3656,X,Córdoba,11,AR,Argentina,-31.42,-64.18,America/Argentina/Cordoba,Q993
+2001,Lisbon,2233,11,Lisbon,167,PT,Portugal,38.72,-9.14,Europe/Lisbon,Q996
+2002,Orphan City,,,,31,BR,Brazil,-1.0,-1.0,America/Sao_Paulo,Q995

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 2021,
+    "countryId": 31,
+    "code": "RS",
+    "name": "Rio Grande do Sul"
+  },
+  {
+    "id": 2022,
+    "countryId": 31,
+    "code": "SP",
+    "name": "São Paulo"
+  },
+  {
+    "id": 2001,
+    "countryId": 31,
+    "code": "PR",
+    "name": "Paraná"
+  }
+]

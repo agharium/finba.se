@@ -1,0 +1,15 @@
+{
+  "id": 1001,
+  "name": "Tramandaí",
+  "timezone": "America/Sao_Paulo",
+  "region": {
+    "id": 2021,
+    "code": "RS",
+    "name": "Rio Grande do Sul"
+  },
+  "country": {
+    "id": 31,
+    "code": "BR",
+    "name": "Brazil"
+  }
+}

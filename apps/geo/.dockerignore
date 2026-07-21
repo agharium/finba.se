@@ -1,0 +1,38 @@
+# VCS / editors
+.git
+.github
+.vscode
+.idea
+*.swp
+*~
+
+# Local tooling / docs (not required at runtime)
+bin
+dist
+tmp
+coverage
+coverage.*
+*.md
+docs
+Makefile
+.editorconfig
+
+# Test-only inputs (API binary does not embed these)
+testdata
+**/*_test.go
+
+# Download / update workspaces (keep data/geo.db for image COPY)
+data/downloads
+data/work
+data/update.lock
+data/*.csv
+data/*.csv.gz
+data/*.db.new
+data/*.db.tmp
+data/geo-fixture.db
+*.part
+*.extract
+
+# OS junk
+.DS_Store
+Thumbs.db

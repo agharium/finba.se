@@ -40,6 +40,23 @@ func TestRepositoryQueries(t *testing.T) {
 		t.Fatalf("country: %+v", br)
 	}
 
+	byID, err := repo.GetCountryByID(ctx, 31)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if byID != br {
+		t.Fatalf("GetCountryByID=%+v want %+v", byID, br)
+	}
+
+	resolved, err := repo.GetCountry(ctx, "31")
+	if err != nil || resolved != br {
+		t.Fatalf("GetCountry(id)=%+v err=%v", resolved, err)
+	}
+	resolved, err = repo.GetCountry(ctx, "BR")
+	if err != nil || resolved != br {
+		t.Fatalf("GetCountry(code)=%+v err=%v", resolved, err)
+	}
+
 	regions, err := repo.ListRegionsByCountryID(ctx, br.ID)
 	if err != nil {
 		t.Fatal(err)

@@ -275,8 +275,8 @@ Behavior:
 | `GET` | `/v1/version` | **Dataset** catalog metadata (provider / schema / SHA) — public contract unchanged |
 | `GET` | `/v1/countries` | All countries |
 | `GET` | `/v1/countries/search?q=&limit=` | Accent-insensitive country name search |
-| `GET` | `/v1/countries/{code}` | Country by ISO code (case-insensitive) |
-| `GET` | `/v1/countries/{code}/regions` | Regions for country |
+| `GET` | `/v1/countries/{codeOrId}` | Country by ISO code (case-insensitive) or numeric id |
+| `GET` | `/v1/countries/{codeOrId}/regions` | Regions for country |
 | `GET` | `/v1/regions/search?q=&limit=` | Accent-insensitive region name search |
 | `GET` | `/v1/regions/{id}` | Region by id |
 | `GET` | `/v1/regions/{id}/cities` | Cities in region |

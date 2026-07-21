@@ -118,8 +118,8 @@ func (s *Server) handleListCountries(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleGetCountry(w http.ResponseWriter, r *http.Request) {
-	code := r.PathValue("code")
-	country, err := s.repo.GetCountryByCode(r.Context(), code)
+	ref := r.PathValue("code")
+	country, err := s.repo.GetCountry(r.Context(), ref)
 	if errors.Is(err, repository.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "country_not_found", "Country not found.")
 		return
@@ -132,8 +132,8 @@ func (s *Server) handleGetCountry(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleListCountryRegions(w http.ResponseWriter, r *http.Request) {
-	code := r.PathValue("code")
-	country, err := s.repo.GetCountryByCode(r.Context(), code)
+	ref := r.PathValue("code")
+	country, err := s.repo.GetCountry(r.Context(), ref)
 	if errors.Is(err, repository.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "country_not_found", "Country not found.")
 		return

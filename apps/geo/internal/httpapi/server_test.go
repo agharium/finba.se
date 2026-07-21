@@ -77,6 +77,22 @@ func TestHTTPAPI(t *testing.T) {
 		if rr.Code != http.StatusOK {
 			t.Fatalf("status=%d", rr.Code)
 		}
+		var byCode map[string]any
+		decode(t, rr, &byCode)
+		if byCode["code"] != "BR" || byCode["id"] != float64(31) {
+			t.Fatalf("by code body=%v", byCode)
+		}
+
+		rr = do(t, handler, http.MethodGet, "/v1/countries/31", "")
+		if rr.Code != http.StatusOK {
+			t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+		}
+		var byID map[string]any
+		decode(t, rr, &byID)
+		if byID["code"] != "BR" || byID["id"] != float64(31) {
+			t.Fatalf("by id body=%v", byID)
+		}
+
 		rr = do(t, handler, http.MethodGet, "/v1/countries/BR/regions", "")
 		if rr.Code != http.StatusOK {
 			t.Fatalf("status=%d", rr.Code)
@@ -85,6 +101,15 @@ func TestHTTPAPI(t *testing.T) {
 		decode(t, rr, &regions)
 		if len(regions) != 3 {
 			t.Fatalf("regions=%d", len(regions))
+		}
+
+		rr = do(t, handler, http.MethodGet, "/v1/countries/31/regions", "")
+		if rr.Code != http.StatusOK {
+			t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+		}
+		decode(t, rr, &regions)
+		if len(regions) != 3 {
+			t.Fatalf("regions by id=%d", len(regions))
 		}
 	})
 

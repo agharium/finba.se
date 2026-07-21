@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"finba.se/geo/internal/model"
 	"finba.se/geo/internal/textutil"
@@ -97,6 +99,37 @@ func (g *Geo) GetCountryByCode(ctx context.Context, code string) (model.Country,
 		return model.Country{}, fmt.Errorf("get country by code: %w", err)
 	}
 	return c, nil
+}
+
+// GetCountryByID looks up a country by primary key.
+func (g *Geo) GetCountryByID(ctx context.Context, id int64) (model.Country, error) {
+	var c model.Country
+	err := g.db.QueryRowContext(ctx, `
+		SELECT id, code, name
+		FROM countries
+		WHERE id = ?
+	`, id).Scan(&c.ID, &c.Code, &c.Name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return model.Country{}, ErrNotFound
+	}
+	if err != nil {
+		return model.Country{}, fmt.Errorf("get country by id: %w", err)
+	}
+	return c, nil
+}
+
+// GetCountry resolves a country by ISO code or numeric id.
+// A path segment that is a canonical decimal integer (e.g. "31") is treated as id;
+// otherwise it is treated as a case-insensitive ISO code (e.g. "BR").
+func (g *Geo) GetCountry(ctx context.Context, ref string) (model.Country, error) {
+	ref = strings.TrimSpace(ref)
+	if ref == "" {
+		return model.Country{}, ErrNotFound
+	}
+	if id, err := strconv.ParseInt(ref, 10, 64); err == nil && strconv.FormatInt(id, 10) == ref {
+		return g.GetCountryByID(ctx, id)
+	}
+	return g.GetCountryByCode(ctx, ref)
 }
 
 // ListRegionsByCountryID returns regions for a country ordered by name.

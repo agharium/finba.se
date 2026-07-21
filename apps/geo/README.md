@@ -576,6 +576,8 @@ curl -s http://localhost:8080/v1/version
 
 The image is immutable: the database is baked in at build time. No CSV download happens at container startup. Never bake API keys into the image.
 
+Image builds use `cloudbuild.yaml`, which passes `VERSION`, `GIT_COMMIT`, and `BUILD_DATE` into the Dockerfile so `/version` reports real deployment metadata (not `dev` / `unknown`).
+
 ### Production
 
 Full bootstrap and operations guide: **[docs/cloudrun.md](docs/cloudrun.md)** (Workload Identity Federation, Artifact Registry, Secret Manager, Cloud Run sizing, `geo.finba.se` / Cloudflare, monitoring, alerts, rollback, smoke tests).
@@ -591,7 +593,7 @@ GitHub Actions (monorepo root):
 | Workflow | When | Purpose |
 |----------|------|---------|
 | `geo-ci.yml` | PR / push on `apps/geo/**` | `gofmt`, `go vet`, `go test` |
-| `geo-deploy.yml` | `main` push on `apps/geo/**`, or `workflow_dispatch` | test → catalog → OIDC → Artifact Registry → Cloud Run → smoke |
+| `geo-deploy.yml` | `main` push on `apps/geo/**`, or `workflow_dispatch` | test → catalog → OIDC → Cloud Build (`cloudbuild.yaml` + build-args) → Cloud Run → smoke |
 
 Deploy authenticates with **Workload Identity Federation (OIDC)** — no service-account JSON keys.
 

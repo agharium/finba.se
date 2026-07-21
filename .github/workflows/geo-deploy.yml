@@ -99,18 +99,15 @@ jobs:
             echo "labels=service=finba-geo,environment=production,commit=${SHORT_SHA},version=${VERSION}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Build and push image
+      - name: Build and push image (Cloud Build)
         run: |
           set -euo pipefail
-          docker build \
-            --build-arg VERSION="${{ steps.meta.outputs.version }}" \
-            --build-arg GIT_COMMIT="${{ steps.meta.outputs.git_commit }}" \
-            --build-arg BUILD_DATE="${{ steps.meta.outputs.build_date }}" \
-            -t "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}" \
-            -t "${{ steps.meta.outputs.image }}:${{ github.sha }}" \
-            .
-          docker push "${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}"
-          docker push "${{ steps.meta.outputs.image }}:${{ github.sha }}"
+          # Cloud Build must receive Dockerfile ARGs; `gcloud builds submit --tag`
+          # alone leaves VERSION/GIT_COMMIT/BUILD_DATE at Dockerfile defaults (dev/unknown).
+          gcloud builds submit . \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --config=cloudbuild.yaml \
+            --substitutions="_IMAGE=${{ steps.meta.outputs.image }},_VERSION=${{ steps.meta.outputs.version }},_GIT_COMMIT=${{ steps.meta.outputs.git_commit }},_BUILD_DATE=${{ steps.meta.outputs.build_date }}"
 
       - name: Deploy Cloud Run
         id: deploy
@@ -190,6 +187,15 @@ jobs:
 
           code="$(curl -sS -o /tmp/geo-build.json -w '%{http_code}' "${GEO_URL}/version")"
           [ "$code" = "200" ] || fail "/version HTTP ${code}"
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("/tmp/geo-build.json"))
+          for key, bad in (("version", "dev"), ("gitCommit", "unknown"), ("buildDate", "unknown")):
+              val = d.get(key)
+              if not val or val == bad:
+                  sys.exit(f"/version missing real {key}: {d!r}")
+          print(f"version_ok {d}")
+          PY
 
           code="$(curl -sS -o /tmp/geo-dataset.json -w '%{http_code}' "${GEO_URL}/v1/version")"
           [ "$code" = "200" ] || fail "/v1/version HTTP ${code}"

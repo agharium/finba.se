@@ -1,0 +1,41 @@
+# Cloud Build for Finba Geo (apps/geo).
+#
+# Expects context = apps/geo (Dockerfile + data/geo.db already present).
+# Pass substitutions from CI — do not rely on Dockerfile ARG defaults for production.
+#
+# Required substitutions:
+#   _IMAGE       Artifact Registry repo path without tag
+#                e.g. REGION-docker.pkg.dev/PROJECT/REPO/geo-api
+#   _VERSION     Deployed version label (e.g. sha-<12-char-sha>)
+#   _GIT_COMMIT  Full Git commit SHA
+#   _BUILD_DATE  UTC ISO-8601 timestamp (e.g. 2026-07-21T18:00:00Z)
+
+substitutions:
+  _IMAGE: ""
+  _VERSION: "dev"
+  _GIT_COMMIT: "unknown"
+  _BUILD_DATE: "unknown"
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: build
+    args:
+      - build
+      - --build-arg
+      - VERSION=${_VERSION}
+      - --build-arg
+      - GIT_COMMIT=${_GIT_COMMIT}
+      - --build-arg
+      - BUILD_DATE=${_BUILD_DATE}
+      - -t
+      - ${_IMAGE}:${_VERSION}
+      - -t
+      - ${_IMAGE}:${_GIT_COMMIT}
+      - .
+
+images:
+  - ${_IMAGE}:${_VERSION}
+  - ${_IMAGE}:${_GIT_COMMIT}
+
+options:
+  logging: CLOUD_LOGGING_ONLY

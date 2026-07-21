@@ -34,6 +34,7 @@ gcloud config set project "$PROJECT_ID"
 gcloud services enable \
   run.googleapis.com \
   artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
   secretmanager.googleapis.com \
   iam.googleapis.com \
   iamcredentials.googleapis.com \
@@ -107,7 +108,8 @@ gcloud iam service-accounts create "$SA_NAME" \
 |------|-----|
 | `roles/run.admin` | Deploy / update Cloud Run services and revisions |
 | `roles/iam.serviceAccountUser` | Act as the Cloud Run runtime service account |
-| `roles/artifactregistry.writer` | Push images |
+| `roles/artifactregistry.writer` | Push images (direct) / manage tags |
+| `roles/cloudbuild.builds.editor` | Submit builds via `gcloud builds submit` + `cloudbuild.yaml` |
 | `roles/secretmanager.secretAccessor` | Mount secrets on Cloud Run + smoke-test key read |
 | `roles/logging.viewer` | Optional: diagnose failed deploys from CI |
 
@@ -116,6 +118,7 @@ for ROLE in \
   roles/run.admin \
   roles/iam.serviceAccountUser \
   roles/artifactregistry.writer \
+  roles/cloudbuild.builds.editor \
   roles/secretmanager.secretAccessor
 do
   gcloud projects add-iam-policy-binding "$PROJECT_ID" \
@@ -125,6 +128,19 @@ done
 ```
 
 Also grant the **Cloud Run runtime** service account (default compute SA or a dedicated runtime SA) Secret Manager accessor on the API key secrets if you use a custom runtime identity.
+
+Grant Artifact Registry writer to the **Cloud Build default service account** so `images:` in `cloudbuild.yaml` can push:
+
+```bash
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+CLOUDBUILD_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
+
+gcloud artifacts repositories add-iam-policy-binding "$REPO" \
+  --location="$REGION" \
+  --project="$PROJECT_ID" \
+  --member="serviceAccount:${CLOUDBUILD_SA}" \
+  --role="roles/artifactregistry.writer"
+```
 
 ### 3.3 Create the Workload Identity Pool and provider
 
@@ -491,10 +507,10 @@ Local Docker still requires `data/geo.db` (`make update` / `make import`). No Se
 3. `go test ./...`
 4. Build or reuse `data/geo.db`; strict inspect.
 5. OIDC → impersonate deploy SA (no JSON key).
-6. `docker build` + push to Artifact Registry (`finba-geo/geo-api`).
+6. Cloud Build (`cloudbuild.yaml`) builds and pushes the image with `--build-arg VERSION` / `GIT_COMMIT` / `BUILD_DATE` (so `/version` is not `dev`/`unknown`).
 7. Cloud Run deploy new revision (labels, secrets, env); traffic after ready.
 8. Wait `Ready=True`.
-9. Smoke: `/health`, `/version`, `/v1/version`, authenticated `/v1/countries`.
+9. Smoke: `/health`, `/version` (real build metadata), `/v1/version`, authenticated `/v1/countries`.
 10. Job success → production serving the new revision.
 
 ---

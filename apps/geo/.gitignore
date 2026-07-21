@@ -24,6 +24,10 @@ data/update.lock
 *.db.tmp
 data/*.db
 data/*.db.tmp
+
+# Production Geo catalog is intentionally embedded in the container image
+!data/geo.db
+
 !testdata/**/*.db
 
 # Compiled binaries

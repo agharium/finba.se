@@ -43,8 +43,8 @@ return [
     | Cache stable catalog lookups. Search endpoints are never cached.
     | Region city lists are request-memoized only (not persisted).
     |
-    | Keys use the geo:v1: namespace. Increment the version in GeoManager
-    | when CityDetail mapping changes incompatibly.
+    | Keys use the geo:v2: namespace (JSON-safe arrays only). Increment in GeoManager
+    | when the cached payload shape changes incompatibly.
     |
     */
 

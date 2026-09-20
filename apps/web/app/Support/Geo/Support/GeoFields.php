@@ -2,11 +2,12 @@
 
 namespace App\Support\Geo\Support;
 
+use App\Support\Geo\Exceptions\GeoAuthenticationException;
+use App\Support\Geo\Exceptions\GeoException;
+use App\Support\Geo\Facades\Geo;
 use App\Support\Geo\DTO\City;
 use App\Support\Geo\DTO\Country;
 use App\Support\Geo\DTO\Region;
-use App\Support\Geo\Exceptions\GeoException;
-use App\Support\Geo\Facades\Geo;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Utilities\Get;
@@ -62,7 +63,9 @@ class GeoFields
                     return Geo::countries()
                         ->mapWithKeys(fn (Country $country): array => [$country->code => $country->name])
                         ->all();
-                } catch (Throwable) {
+                } catch (Throwable $exception) {
+                    self::logCatalogFailure('country.options', $exception);
+
                     return [];
                 }
             })
@@ -110,7 +113,9 @@ class GeoFields
                                 : $region->name,
                         ])
                         ->all();
-                } catch (Throwable) {
+                } catch (Throwable $exception) {
+                    self::logCatalogFailure('region.options', $exception);
+
                     return [];
                 }
             })
@@ -186,7 +191,9 @@ class GeoFields
             return Geo::cities($regionId)
                 ->mapWithKeys(fn (City $city): array => [$city->id => $city->name])
                 ->all();
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            self::logCatalogFailure('city.options', $exception);
+
             return [];
         }
     }
@@ -197,8 +204,25 @@ class GeoFields
             Geo::countries();
 
             return null;
-        } catch (GeoException|Throwable) {
+        } catch (GeoAuthenticationException $exception) {
+            self::logCatalogFailure('country.helper', $exception);
+
+            return 'Catálogo geográfico indisponível: credenciais Geo inválidas. Confirme que GEO_INTERNAL_API_KEY é o mesmo em apps/web e apps/geo.';
+        } catch (GeoException|Throwable $exception) {
+            self::logCatalogFailure('country.helper', $exception);
+
             return 'Catálogo geográfico temporariamente indisponível. Tente novamente em instantes.';
         }
+    }
+
+    private static function logCatalogFailure(string $context, Throwable $exception): void
+    {
+        report($exception);
+
+        logger()->warning('Geo catalog unavailable in Filament field', [
+            'context' => $context,
+            'exception' => $exception::class,
+            'message' => $exception->getMessage(),
+        ]);
     }
 }

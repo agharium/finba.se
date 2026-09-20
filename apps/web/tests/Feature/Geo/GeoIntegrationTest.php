@@ -39,6 +39,21 @@ it('sends the internal API key as X-API-Key on every request', function () {
         && str_ends_with($request->url(), '/v1/countries'));
 });
 
+it('sends X-API-Key when an internal key is configured', function () {
+    config()->set('geo.internal_api_key', 'finba-local-dev-internal-key');
+    app()->forgetInstance(\App\Support\Geo\GeoClient::class);
+    app()->forgetInstance(GeoContract::class);
+
+    Http::fake([
+        'geo.test/v1/countries/search*' => Http::response([geoFixture('country_br')]),
+    ]);
+
+    expect(Geo::searchCountries('bra')->first())->toBeInstanceOf(Country::class);
+
+    Http::assertSent(fn ($request): bool => $request->hasHeader('X-API-Key', 'finba-local-dev-internal-key')
+        && str_contains($request->url(), '/v1/countries/search'));
+});
+
 it('hydrates DTOs from real Go camelCase contract fixtures', function () {
     fakeGeoContractApi();
 
@@ -77,9 +92,9 @@ it('uses versioned cache keys for non-search lookups', function () {
     Geo::city(1001);
     Geo::city(1001);
 
-    expect(Cache::has('geo:v1:countries'))->toBeTrue()
-        ->and(Cache::has('geo:v1:country:BR'))->toBeTrue()
-        ->and(Cache::has('geo:v1:city:1001'))->toBeTrue();
+    expect(Cache::has('geo:v2:countries'))->toBeTrue()
+        ->and(Cache::has('geo:v2:country:BR'))->toBeTrue()
+        ->and(Cache::has('geo:v2:city:1001'))->toBeTrue();
 
     Http::assertSentCount(3);
 });
@@ -113,6 +128,37 @@ it('maps 401 to GeoAuthenticationException', function () {
     ]);
 
     expect(fn () => Geo::countries())->toThrow(GeoAuthenticationException::class);
+});
+
+it('omits X-API-Key when the internal key is empty so local public tier works', function () {
+    config()->set('geo.internal_api_key', null);
+    app()->forgetInstance(\App\Support\Geo\GeoClient::class);
+    app()->forgetInstance(GeoContract::class);
+
+    Http::fake([
+        'geo.test/v1/countries/search*' => Http::response([geoFixture('country_br')]),
+    ]);
+
+    expect(Geo::searchCountries('bra')->first())->toBeInstanceOf(Country::class);
+
+    Http::assertSent(fn ($request): bool => ! $request->hasHeader('X-API-Key')
+        && str_contains($request->url(), '/v1/countries/search')
+        && str_contains($request->url(), 'q=bra'));
+});
+
+it('explains invalid geo credentials in the country field helper', function () {
+    Http::fake([
+        'geo.test/v1/countries' => Http::response([
+            'error' => ['code' => 'invalid_api_key', 'message' => 'Invalid API credentials.'],
+        ], 401),
+    ]);
+    app()->forgetInstance(\App\Support\Geo\GeoClient::class);
+    app()->forgetInstance(GeoContract::class);
+
+    $helper = (new ReflectionMethod(GeoFields::class, 'catalogUnavailableHelper'))->invoke(null);
+
+    expect($helper)->toContain('credenciais Geo inválidas')
+        ->and($helper)->toContain('GEO_INTERNAL_API_KEY');
 });
 
 it('maps 429 and parses Retry-After', function () {
@@ -180,4 +226,38 @@ it('loads region-scoped city options instead of global search', function () {
         ->and($options[1001])->toBe('Tramandaí')
         ->and($options)->toHaveKey(1002)
         ->and($options[1002])->toBe('Porto Alegre');
+});
+
+it('caches serializable arrays so Filament country options survive cache reads', function () {
+    fakeGeoContractApi();
+
+    Geo::countries();
+
+    $cached = Cache::get('geo:v2:countries');
+
+    expect($cached)->toBeArray()
+        ->and($cached)->toBeArray()
+        ->and(array_is_list($cached))->toBeTrue()
+        ->and($cached[0])->toBeArray()
+        ->and($cached[0])->toHaveKeys(['id', 'code', 'name']);
+
+    app()->forgetInstance(GeoContract::class);
+
+    $options = GeoFields::country()->getOptions();
+
+    expect($options)->toHaveKey('BR')
+        ->and($options['BR'])->toBe('Brazil')
+        ->and((new ReflectionMethod(GeoFields::class, 'catalogUnavailableHelper'))->invoke(null))->toBeNull();
+});
+
+it('recovers when a corrupt countries cache entry is present', function () {
+    fakeGeoContractApi();
+
+    Cache::put('geo:v2:countries', new class {});
+    app()->forgetInstance(GeoContract::class);
+
+    $options = GeoFields::country()->getOptions();
+
+    expect($options)->toHaveKey('BR')
+        ->and((new ReflectionMethod(GeoFields::class, 'catalogUnavailableHelper'))->invoke(null))->toBeNull();
 });

@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\Cache;
 class GeoManager implements GeoContract
 {
     /**
+     * Bump when cached payload shape changes (arrays vs DTO objects, etc.).
+     */
+    private const CACHE_VERSION = 'v2';
+
+    /**
      * Request-scoped memoization for hot lookups (bounded by this instance lifetime).
      *
      * @var array<string, mixed>
@@ -33,31 +38,27 @@ class GeoManager implements GeoContract
 
     public function countries(): Collection
     {
-        return $this->rememberStable(
-            'geo:v1:countries',
+        $payload = $this->rememberStablePayload(
+            $this->cacheKey('countries'),
             'countries',
-            function (): Collection {
-                return $this->mapList(
-                    $this->requireList($this->client->get('/v1/countries'), '/v1/countries'),
-                    Country::fromArray(...),
-                );
-            },
+            fn (): array => $this->requireList($this->client->get('/v1/countries'), '/v1/countries'),
         );
+
+        return $this->mapList($payload, Country::fromArray(...));
     }
 
     public function country(string $code): Country
     {
         $code = strtoupper($code);
+        $endpoint = "/v1/countries/{$code}";
 
-        return $this->rememberStable(
-            "geo:v1:country:{$code}",
+        $payload = $this->rememberStablePayload(
+            $this->cacheKey("country:{$code}"),
             'country',
-            function () use ($code): Country {
-                $endpoint = "/v1/countries/{$code}";
-
-                return Country::fromArray($this->requireObject($this->client->get($endpoint), $endpoint));
-            },
+            fn (): array => $this->requireObject($this->client->get($endpoint), $endpoint),
         );
+
+        return Country::fromArray($payload);
     }
 
     public function searchCountries(string $query, ?int $limit = null): Collection
@@ -73,32 +74,28 @@ class GeoManager implements GeoContract
     public function regions(string $countryCode): Collection
     {
         $countryCode = strtoupper($countryCode);
+        $endpoint = "/v1/countries/{$countryCode}/regions";
 
-        return $this->rememberStable(
-            "geo:v1:regions:{$countryCode}",
+        $payload = $this->rememberStablePayload(
+            $this->cacheKey("regions:{$countryCode}"),
             'regions',
-            function () use ($countryCode): Collection {
-                $endpoint = "/v1/countries/{$countryCode}/regions";
-
-                return $this->mapList(
-                    $this->requireList($this->client->get($endpoint), $endpoint),
-                    Region::fromArray(...),
-                );
-            },
+            fn (): array => $this->requireList($this->client->get($endpoint), $endpoint),
         );
+
+        return $this->mapList($payload, Region::fromArray(...));
     }
 
     public function region(int|string $id): Region
     {
-        return $this->rememberStable(
-            "geo:v1:region:{$id}",
-            'region',
-            function () use ($id): Region {
-                $endpoint = "/v1/regions/{$id}";
+        $endpoint = "/v1/regions/{$id}";
 
-                return Region::fromArray($this->requireObject($this->client->get($endpoint), $endpoint));
-            },
+        $payload = $this->rememberStablePayload(
+            $this->cacheKey("region:{$id}"),
+            'region',
+            fn (): array => $this->requireObject($this->client->get($endpoint), $endpoint),
         );
+
+        return Region::fromArray($payload);
     }
 
     public function searchRegions(string $query, ?int $limit = null): Collection
@@ -134,15 +131,15 @@ class GeoManager implements GeoContract
 
     public function city(int|string $id): CityDetail
     {
-        return $this->rememberStable(
-            "geo:v1:city:{$id}",
-            'city',
-            function () use ($id): CityDetail {
-                $endpoint = "/v1/cities/{$id}";
+        $endpoint = "/v1/cities/{$id}";
 
-                return CityDetail::fromArray($this->requireObject($this->client->get($endpoint), $endpoint));
-            },
+        $payload = $this->rememberStablePayload(
+            $this->cacheKey("city:{$id}"),
+            'city',
+            fn (): array => $this->requireObject($this->client->get($endpoint), $endpoint),
         );
+
+        return CityDetail::fromArray($payload);
     }
 
     public function searchCities(string $query, ?int $limit = null): Collection
@@ -169,15 +166,22 @@ class GeoManager implements GeoContract
         return $params;
     }
 
+    private function cacheKey(string $suffix): string
+    {
+        return 'geo:'.self::CACHE_VERSION.':'.$suffix;
+    }
+
     /**
-     * @template T
+     * Persist only JSON-safe arrays. Hydrate DTOs after read so file/redis cache
+     * never returns __PHP_Incomplete_Class for Geo DTO Collections.
      *
-     * @param  callable(): T  $callback
-     * @return T
+     * @param  callable(): array<string, mixed>|list<array<string, mixed>>  $callback
+     * @return array<string, mixed>|list<array<string, mixed>>
      */
-    private function rememberStable(string $key, string $ttlKey, callable $callback): mixed
+    private function rememberStablePayload(string $key, string $ttlKey, callable $callback): array
     {
         if (array_key_exists($key, $this->memo)) {
+            /** @var array<string, mixed>|list<array<string, mixed>> */
             return $this->memo[$key];
         }
 
@@ -189,6 +193,11 @@ class GeoManager implements GeoContract
         $stale = $fresh * 2;
 
         $value = $this->cache()->flexible($key, [$fresh, $stale], $callback);
+
+        if (! is_array($value)) {
+            $this->cache()->forget($key);
+            $value = $callback();
+        }
 
         return $this->memo[$key] = $value;
     }

@@ -12,7 +12,7 @@ Business code uses `Geo` / `GeoContract` — never `Http` directly. Finba does n
 
 ```env
 GEO_BASE_URL=http://127.0.0.1:8080
-GEO_INTERNAL_API_KEY=
+GEO_INTERNAL_API_KEY=finba-local-dev-internal-key
 GEO_TIMEOUT=5
 GEO_CONNECT_TIMEOUT=2
 GEO_RETRY_ATTEMPTS=2
@@ -28,6 +28,47 @@ GEO_CACHE_CITY_TTL=86400
 `GEO_INTERNAL_API_KEY` is server-side only. It must never appear in browser responses, Livewire payloads, or public config.
 
 All HTTP calls go through `App\Support\Geo\GeoClient`, which reads `GEO_BASE_URL` and sends `X-API-Key: {GEO_INTERNAL_API_KEY}` when the key is configured (internal rate-limit tier on the Go API). Do not call `Http` against the Geo host from controllers or other services.
+
+### Finba is an internal Geo client
+
+Normal Finba configuration (local **and** production) sets `GEO_INTERNAL_API_KEY` and sends it on every Geo request. Do not run Finba anonymously against Geo in day-to-day development.
+
+| Setup | Result |
+|-------|--------|
+| Same non-empty key in `apps/web` and `apps/geo` | **Normal** — Finba → internal tier |
+| Empty key on both | Public tier — OK for anonymous consumers / probes; **not** normal Finba |
+| Key only on Laravel (or mismatched) | **HTTP 401** — Filament shows catalog unavailable |
+
+Local setup:
+
+```bash
+# apps/geo
+cp .env.example .env   # includes GEO_INTERNAL_API_KEY=finba-local-dev-internal-key
+# edit if you want a private local value, then copy the SAME value into apps/web/.env
+
+cd apps/geo
+go run ./cmd/api       # loads ./.env automatically
+
+# apps/web
+# GEO_BASE_URL=http://127.0.0.1:8080
+# GEO_INTERNAL_API_KEY=<same as apps/geo/.env>
+php artisan config:clear
+php artisan serve
+```
+
+The Go API never silently downgrades an invalid key to public. Browser/`curl` without a header can succeed on the public tier while Laravel fails if keys are missing or mismatched.
+
+After changing env vars:
+
+```bash
+php artisan config:clear
+```
+
+Quick check from `apps/web`:
+
+```bash
+php artisan tinker --execute="dump(App\Support\Geo\Facades\Geo::searchCountries('bra')->pluck('code'));"
+```
 
 ## Meaning of `geo_city_id`
 
@@ -80,15 +121,15 @@ Do not implement these in the Laravel app; they belong in `apps/geo`.
 
 ## Caching
 
-Stable lookups use versioned keys (`geo:v1:...`) and long TTLs (default 24h):
+Stable lookups use versioned keys (`geo:v2:...`) storing **JSON-safe arrays** (DTOs are hydrated after cache read):
 
 | Lookup | Key |
 |--------|-----|
-| countries | `geo:v1:countries` |
-| country | `geo:v1:country:{CODE}` |
-| regions | `geo:v1:regions:{CODE}` |
-| region | `geo:v1:region:{id}` |
-| city | `geo:v1:city:{id}` |
+| countries | `geo:v2:countries` |
+| country | `geo:v2:country:{CODE}` |
+| regions | `geo:v2:regions:{CODE}` |
+| region | `geo:v2:region:{id}` |
+| city | `geo:v2:city:{id}` |
 
 Implementation uses `Cache::flexible()` (fresh TTL + 2× stale window) when the cache driver supports it.
 
@@ -98,7 +139,7 @@ Search endpoints are never persisted to cache.
 
 `GeoManager` is a **scoped** binding so request memoization does not grow across queue workers.
 
-Invalidate by flushing keys with prefix `geo:v1:` or clearing the configured cache store. If `CityDetail` mapping changes incompatibly, increment the `geo:v1` namespace in `GeoManager`.
+Invalidate by flushing keys with prefix `geo:v2:` or clearing the configured cache store. If the cached payload shape changes incompatibly, increment `CACHE_VERSION` in `GeoManager`.
 
 ## Availability
 

@@ -46,7 +46,10 @@ Build metadata lives in `internal/buildinfo` and is injected with `-ldflags` (`V
 # Fetch dependencies
 make tidy
 
-# Import a cities CSV (place your download at ./data/cities.csv)
+# Local env (gitignored). Uses the same GEO_INTERNAL_API_KEY placeholder as apps/web/.env.example
+cp .env.example .env
+
+# Import a cities CSV (place your download at ./data/cities.csv) — or use an existing data/geo.db
 make import \
   INPUT=./data/cities.csv \
   DATASET_VERSION=v3.2-export.6 \
@@ -55,16 +58,18 @@ make import \
 # Inspect the generated database (read-only)
 make inspect DATABASE=./data/geo.db
 
-# Run the API
+# Run the API (loads ./.env automatically — no need to export GEO_INTERNAL_API_KEY by hand)
 make run
 
 # Or:
-GEO_DATABASE_PATH=./data/geo.db go run ./cmd/api
+go run ./cmd/api
 ```
 
 Without Make:
 
 ```bash
+cp .env.example .env
+
 go run ./cmd/importer \
   --input ./data/cities.csv \
   --output ./data/geo.db \
@@ -73,8 +78,10 @@ go run ./cmd/importer \
 
 go run ./cmd/inspect --database ./data/geo.db
 
-GEO_DATABASE_PATH=./data/geo.db go run ./cmd/api
+go run ./cmd/api
 ```
+
+Keep `GEO_INTERNAL_API_KEY` in sync with `apps/web/.env` so Finba Laravel authenticates as the **internal** client.
 
 ## Make targets
 
@@ -453,7 +460,7 @@ Cloud Run must never receive catalog-tooling secrets. The production image alrea
 
 | Variable | Required on Cloud Run? | Store as | Notes |
 |----------|------------------------|----------|-------|
-| `GEO_INTERNAL_API_KEY` | **Strongly recommended** (required for Finba Laravel) | **Secret Manager** | Same value on Geo and Laravel (`apps/web` `GEO_INTERNAL_API_KEY`) |
+| `GEO_INTERNAL_API_KEY` | **Required for Finba** (local + prod) | **Secret Manager** | Same value on Geo and Laravel (`apps/web` `GEO_INTERNAL_API_KEY`). Local: set via `apps/geo/.env` (see `.env.example`). |
 | `GEO_TRUSTED_API_KEYS` | Optional (empty OK) | **Secret Manager** | Comma-separated; create secret even if empty so deploy `--update-secrets` succeeds |
 | `GEO_TRUST_PROXY_HEADERS` | Leave `false` until proxy path is locked down | Normal env var | Default `false`; enable only per checklist below — never bake into the image |
 | `GITHUB_TOKEN` | **No — do not mount on Cloud Run** | N/A at runtime | Only for local/CI catalog tooling; Actions uses the built-in workflow token during deploy jobs |

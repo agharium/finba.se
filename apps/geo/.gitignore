@@ -48,3 +48,12 @@ coverage.html
 .vscode/
 *.swp
 *~
+
+# Local secrets / env (never commit)
+.env
+.env.local
+.env.*.local
+
+# Local API runtime logs (never commit)
+data/api-*.log
+data/*.log

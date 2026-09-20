@@ -25,7 +25,13 @@ type Config struct {
 }
 
 // Load reads configuration from environment variables with sensible defaults.
+// When a local .env file is present in the process working directory, it is
+// loaded first for any keys not already set in the environment (local dev).
 func Load() (Config, error) {
+	if err := loadLocalDotEnv(); err != nil {
+		return Config{}, fmt.Errorf("load .env: %w", err)
+	}
+
 	cfg := Config{
 		Port:         getenv("PORT", "8080"),
 		Env:          strings.ToLower(getenv("GEO_ENV", "development")),

@@ -56,9 +56,9 @@ class RecurringTransaction extends Model
         return $this->belongsTo(Person::class);
     }
 
-    public function reminders(): HasMany
+    public function commitments(): HasMany
     {
-        return $this->hasMany(Reminder::class);
+        return $this->hasMany(Commitment::class);
     }
 
     public function transactions(): HasMany

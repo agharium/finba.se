@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\People;
 
+use App\Enums\Gender;
 use App\Enums\TransactionType;
 use App\Filament\Resources\People\Pages\ManagePeople;
 use App\Models\Person;
@@ -15,6 +16,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -57,10 +59,22 @@ class PersonResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->label('Nome')
-                    ->required()
-                    ->maxLength(255),
+                Grid::make(2)
+                    ->columnSpanFull()
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Nome')
+                            ->required()
+                            ->maxLength(255),
+
+                        Select::make('gender')
+                            ->options([
+                                Gender::MALE->value => __('people.gender.male'),
+                                Gender::FEMALE->value => __('people.gender.female'),
+                                Gender::OTHER->value => __('people.gender.other'),
+                            ])
+                            ->native(false),
+                    ]),
 
                 CheckboxList::make('types')
                     ->label('Tipos')

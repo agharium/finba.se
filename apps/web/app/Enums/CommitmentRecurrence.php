@@ -4,7 +4,7 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum ReminderRecurrence: string implements HasLabel
+enum CommitmentRecurrence: string implements HasLabel
 {
     case WEEKLY = 'WEEKLY';
     case MONTHLY = 'MONTHLY';

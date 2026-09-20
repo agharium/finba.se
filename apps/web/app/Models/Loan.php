@@ -52,4 +52,9 @@ class Loan extends Model
     {
         return $this->hasMany(Transaction::class, 'loan_id');
     }
+
+    public function commitments(): HasMany
+    {
+        return $this->hasMany(Commitment::class, 'loan_id');
+    }
 }

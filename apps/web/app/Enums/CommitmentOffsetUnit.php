@@ -4,7 +4,7 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum ReminderOffsetUnit: string implements HasLabel
+enum CommitmentOffsetUnit: string implements HasLabel
 {
     case DAY = 'DAY';
     case WEEK = 'WEEK';

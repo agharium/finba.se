@@ -108,7 +108,7 @@ Public changelog: [https://app.finba.se/changelog](https://app.finba.se/changelo
 
 **Planned next**
 
-- Transfers, budgeting, reminders and notifications, and a public landing page
+- Transfers, budgeting, commitments and notifications, and a public landing page
 - Shared finances for organizing money with other people
 
 The detailed roadmap is also available inside the Finba.se application.

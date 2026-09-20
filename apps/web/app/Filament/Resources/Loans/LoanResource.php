@@ -10,6 +10,8 @@ use App\Filament\Resources\Loans\Pages\ManageLoans;
 use App\Models\Category;
 use App\Models\Loan;
 use App\Models\Person;
+use App\Services\LoanBalanceService;
+use App\Services\LoanPaymentService;
 use App\Services\ReceivablePaymentService;
 use App\Support\Helpers;
 use App\Support\MoneyFormatter;
@@ -60,7 +62,7 @@ class LoanResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ])
-            ->with(['person'])
+            ->with(['person', 'commitments'])
             ->where('user_id', Auth::id());
     }
 
@@ -111,16 +113,33 @@ class LoanResource extends Resource
 
                 TextColumn::make('received_amount')
                     ->label('Recebido')
-                    ->state(fn (Loan $record): string => app(ReceivablePaymentService::class)->paidAmountFor($record))
+                    ->state(fn (Loan $record): string => app(LoanBalanceService::class)->repaidAmount($record))
                     ->money()
                     ->visibleFrom('md'),
 
                 TextColumn::make('remaining_amount')
                     ->label('Falta receber')
-                    ->state(fn (Loan $record): string => app(ReceivablePaymentService::class)->remainingBalanceFor($record))
+                    ->state(fn (Loan $record): string => app(LoanBalanceService::class)->remainingBalance($record))
                     ->money()
                     ->weight('bold')
                     ->color('warning')
+                    ->visibleFrom('md'),
+
+                TextColumn::make('commitments_progress')
+                    ->label('Compromissos')
+                    ->state(function (Loan $record): string {
+                        $total = $record->commitments()->count();
+
+                        if ($total === 0) {
+                            return '-';
+                        }
+
+                        $satisfied = $record->commitments
+                            ->filter(fn ($commitment): bool => $commitment->isSatisfied())
+                            ->count();
+
+                        return "{$satisfied}/{$total}";
+                    })
                     ->visibleFrom('md'),
 
                 TextColumn::make('status')
@@ -214,16 +233,24 @@ class LoanResource extends Resource
             ->modalHeading('Registrar pagamento')
             ->modalSubmitActionLabel('Confirmar')
             ->fillForm(fn (Loan $record): array => [
-                'amount' => app(ReceivablePaymentService::class)->remainingBalanceFor($record),
+                'amount' => app(LoanBalanceService::class)->remainingBalance($record),
                 'date' => now()->toDateString(),
             ])
             ->schema(fn (Loan $record): array => self::paymentFormSchema($record))
             ->action(function (Loan $record, array $data): void {
-                app(ReceivablePaymentService::class)->registerPayment(
-                    auth()->user(),
-                    $record,
-                    $data,
-                );
+                if ($record->type === LoanType::RECEIVABLE) {
+                    app(ReceivablePaymentService::class)->registerPayment(
+                        auth()->user(),
+                        $record,
+                        $data,
+                    );
+                } else {
+                    app(LoanPaymentService::class)->registerPayment(
+                        auth()->user(),
+                        $record,
+                        $data,
+                    );
+                }
 
                 Notification::make()
                     ->title('Pagamento registrado com sucesso.')
@@ -237,7 +264,8 @@ class LoanResource extends Resource
      */
     public static function paymentFormSchema(Loan $record): array
     {
-        $summary = app(ReceivablePaymentService::class)->summaryFor($record);
+        $summary = app(LoanBalanceService::class);
+        $user = $record->user;
 
         return [
             TextInput::make('_customer')
@@ -254,19 +282,19 @@ class LoanResource extends Resource
 
             TextInput::make('_original')
                 ->label('Valor original')
-                ->default($summary['original'])
+                ->default(app(ReceivablePaymentService::class)->formatMoney($record->original_amount, $user))
                 ->disabled()
                 ->dehydrated(false),
 
             TextInput::make('_received')
                 ->label('Já recebido')
-                ->default($summary['received'])
+                ->default(app(ReceivablePaymentService::class)->formatMoney($summary->repaidAmount($record), $user))
                 ->disabled()
                 ->dehydrated(false),
 
             TextInput::make('_remaining')
                 ->label('Falta receber')
-                ->default($summary['remaining'])
+                ->default(app(ReceivablePaymentService::class)->formatMoney($summary->remainingBalance($record), $user))
                 ->disabled()
                 ->dehydrated(false),
 
@@ -309,15 +337,17 @@ class LoanResource extends Resource
      */
     public static function mobileCardData(Loan $record): array
     {
-        $summary = app(ReceivablePaymentService::class)->summaryFor($record);
+        $balance = app(LoanBalanceService::class);
+        $formatter = app(ReceivablePaymentService::class);
+        $user = $record->user;
 
         return [
             'description' => filled($record->description) ? $record->description : 'Conta a receber',
             'customer' => $record->person?->name,
             'created_at' => $record->created_at?->format('d/m/Y'),
-            'original' => $summary['original'],
-            'received' => $summary['received'],
-            'remaining' => $summary['remaining'],
+            'original' => $formatter->formatMoney($record->original_amount, $user),
+            'received' => $formatter->formatMoney($balance->repaidAmount($record), $user),
+            'remaining' => $formatter->formatMoney($balance->remainingBalance($record), $user),
             'status_label' => $record->status->getLabel(),
             'is_open' => $record->status === LoanStatus::OPEN,
         ];
@@ -341,7 +371,7 @@ class LoanResource extends Resource
 
     private static function canRegisterPayment(Loan $record): bool
     {
-        return $record->type === LoanType::RECEIVABLE
+        return in_array($record->type, [LoanType::RECEIVABLE, LoanType::LENT, LoanType::BORROWED], true)
             && $record->status === LoanStatus::OPEN;
     }
 

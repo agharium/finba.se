@@ -95,24 +95,46 @@ Deferred for later: bulk edit of all installments, cancel future installments, e
 
 ### Loans
 
-Borrowed or lent money (`LENT`, `BORROWED`). Product work for a full loans/debts experience continues after the beta launch.
+Borrowed or lent money (`LENT`, `BORROWED`) and accounts receivable (`RECEIVABLE`).
+
+Domain invariant: a `Transaction` only exists when money actually moved.
+
+- Originating a `LENT` loan creates an `EXPENSE` transaction.
+- Originating a `BORROWED` loan creates an `INCOME` transaction.
+- `RECEIVABLE` sales create a loan without an origin transaction; payments create `INCOME` transactions later.
+- Remaining loan balance is always derived from actual repayment transactions — never from expectations alone.
+
+### Commitments
+
+A `Commitment` is an expected financial event (mutable). It replaced the earlier `Reminder` model.
+
+Typical loan flow:
+
+`Loan` → `Commitment` (expected) ↔ allocation ↔ `Transaction` (actual)
+
+- Loan repayment schedules create Commitments, not Transactions.
+- Commitments and Transactions are linked through `commitment_transaction` allocations (many-to-many with an allocation amount).
+- Partial payments, overpayments, and multiple transactions per commitment are supported.
+- Birthday / anniversary notifications are **not** Commitments; they belong on `Person` (e.g. `birth_date`) as follow-up work.
+
+`recurring_transaction_id` remains on Commitments for the planned recurring confirm-pay flow.
 
 ### Recurring transactions
 
-Standing commitments such as salary, rent, or utilities.
+Standing expectations such as salary, rent, or utilities.
 
 - Amount modes: `FIXED`, `VARIABLE`
 - Variable suggestions should use the average of the last three payments.
 
 Planned payment flow:
 
-`RecurringTransaction` → `Reminder` → confirm pay action → create `Transaction` → update `next_occurrence_at` and reminder state.
+`RecurringTransaction` → `Commitment` → confirm pay action → create `Transaction` → update `next_occurrence_at` and commitment state.
 
 The pay control must open a confirmation flow; it must not create a transaction directly.
 
-### Reminders
+### Installment purchases
 
-Reminder types include anniversary, loan, commitment, and custom events. Delivery channels and offset schedules are part of the longer-term product plan.
+Credit-card style purchases (`InstallmentGroup`) are a separate domain from loan repayment schedules. Installment groups create Transactions for each installment because those purchases are treated as recorded obligations in the existing product flow — do not merge them with loan Commitments.
 
 ## Production concerns
 
@@ -140,7 +162,8 @@ Authenticated feedback lives under the Projeto navigation group together with Ch
 ## Current product focus
 
 1. Beta stabilization (bugs, UX, performance, feedback)
-2. Loans and debts
+2. Loans and debts (Commitment allocation UX / “did they pay?” flows)
 3. Recurring transactions
-4. Reminders and notifications
-5. Automatic error monitoring
+4. Commitment notifications
+5. Person birthday notifications (from `Person.birth_date`, not Commitments)
+6. Automatic error monitoring

@@ -14,6 +14,10 @@ use App\Support\MoneyFormatter;
 
 class ReceivablePaymentService
 {
+    public function __construct(
+        private LoanBalanceService $balanceService,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -118,7 +122,7 @@ class ReceivablePaymentService
 
         $transaction = Transaction::query()->create($attributes);
 
-        $this->closeReceivableIfFullyPaid($loan);
+        $this->balanceService->closeIfFullyPaid($loan);
 
         return $transaction;
     }
@@ -156,32 +160,14 @@ class ReceivablePaymentService
         }
     }
 
-    private function closeReceivableIfFullyPaid(Loan $loan): void
-    {
-        $loan->refresh();
-
-        if (bccomp($this->paidAmount($loan), $this->formatAmount($loan->original_amount), 2) >= 0) {
-            $loan->update(['status' => LoanStatus::CLOSED]);
-        }
-    }
-
     private function paidAmount(Loan $loan): string
     {
-        $paid = $loan->transactions()
-            ->where('type', TransactionType::INCOME)
-            ->where('status', 'PAID')
-            ->sum('amount');
-
-        return $this->formatAmount($paid);
+        return $this->balanceService->repaidAmount($loan);
     }
 
     private function remainingBalance(Loan $loan): string
     {
-        return bcsub(
-            $this->formatAmount($loan->original_amount),
-            $this->paidAmount($loan),
-            2,
-        );
+        return $this->balanceService->remainingBalance($loan);
     }
 
     private function formatAmount(float|string|null $amount): string

@@ -8,17 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'reminder_id',
+    'commitment_id',
     'channel',
     'status',
     'error',
 ])]
-class ReminderLog extends Model
+class CommitmentLog extends Model
 {
     use HasUuids;
 
-    public function reminder(): BelongsTo
+    public function commitment(): BelongsTo
     {
-        return $this->belongsTo(Reminder::class);
+        return $this->belongsTo(Commitment::class);
     }
 }

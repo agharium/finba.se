@@ -4,7 +4,7 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum ReminderChannel: string implements HasLabel
+enum CommitmentChannel: string implements HasLabel
 {
     case EMAIL = 'EMAIL';
     case WHATSAPP = 'WHATSAPP';

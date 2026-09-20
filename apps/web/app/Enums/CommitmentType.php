@@ -4,19 +4,17 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-enum ReminderType: string implements HasLabel
+enum CommitmentType: string implements HasLabel
 {
-    case ANNIVERSARY = 'ANNIVERSARY';
     case LOAN = 'LOAN';
-    case COMMITMENT = 'COMMITMENT';
+    case RECURRING = 'COMMITMENT';
     case CUSTOM = 'CUSTOM';
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::ANNIVERSARY => 'Aniversário',
             self::LOAN => 'Empréstimo / dívida',
-            self::COMMITMENT => 'Compromisso recorrente',
+            self::RECURRING => 'Compromisso recorrente',
             self::CUSTOM => 'Personalizado',
         };
     }

@@ -85,4 +85,10 @@ class Transaction extends Model
             'tithe_calculation_id',
         );
     }
+
+    public function commitments(): BelongsToMany
+    {
+        return $this->belongsToMany(Commitment::class, 'commitment_transaction')
+            ->withPivot('amount');
+    }
 }

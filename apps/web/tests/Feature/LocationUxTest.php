@@ -45,6 +45,30 @@ it('initializes internal country as BR for pt_BR when absent', function () {
         ->assertSet('data.geo_country_code', 'BR');
 });
 
+it('renders profile location fields without the geo unavailable helper', function () {
+    $user = locationUxUser([
+        'geo_city_id' => null,
+        'settings' => ['advanced' => true, 'locale' => 'pt_BR'],
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(Profile::class)
+        ->assertSuccessful()
+        ->assertDontSee('Catálogo geográfico temporariamente indisponível')
+        ->assertDontSee('credenciais Geo inválidas')
+        ->assertSee('País')
+        ->set('data.geo_country_code', 'BR')
+        ->set('data.geo_region_id', 2021)
+        ->set('data.geo_city_id', 1001)
+        ->assertSet('data.geo_country_code', 'BR')
+        ->assertSet('data.geo_region_id', 2021)
+        ->assertSet('data.geo_city_id', 1001);
+
+    expect(GeoFields::country()->getOptions())->toHaveKey('BR')
+        ->and(GeoFields::country()->getOptions()['BR'])->toBe('Brazil')
+        ->and((new ReflectionMethod(GeoFields::class, 'catalogUnavailableHelper'))->invoke(null))->toBeNull();
+});
+
 it('uses geo prefixed fields in profile location preferences', function () {
     $names = collect(UserPreferenceFormFields::locationFields())
         ->map(fn ($component) => $component->getName())

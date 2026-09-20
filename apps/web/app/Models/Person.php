@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Gender;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ class Person extends Model
     protected function casts(): array
     {
         return [
+            'gender' => Gender::class,
             'types' => 'array',
             'geo_city_id' => 'integer',
         ];
@@ -46,5 +48,10 @@ class Person extends Model
     public function loans(): HasMany
     {
         return $this->hasMany(Loan::class, 'person_id');
+    }
+
+    public function commitments(): HasMany
+    {
+        return $this->hasMany(Commitment::class, 'person_id');
     }
 }
